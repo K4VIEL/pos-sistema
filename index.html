@@ -116,8 +116,8 @@
     <div class="login-box">
       <h2>Ingreso al Sistema</h2>
       <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:15px;">Ingresa tus credenciales</p>
-      <input type="text" id="login-user" placeholder="Usuario" value="admin">
-      <input type="password" id="login-pass" placeholder="Contraseña" value="admin123">
+      <input type="text" id="login-user" placeholder="Usuario" value="">
+      <input type="password" id="login-pass" placeholder="Contraseña" value="">
       <button class="btn btn-primary" onclick="iniciarSesion()">Acceder</button>
       <p id="login-error" style="color:var(--danger); font-size:0.8rem; display:none; margin-top:10px;">Usuario o contraseña incorrectos</p>
     </div>
@@ -515,7 +515,7 @@
     let dbProductos = [];
     let dbClientes = [];
     let dbVentas = [];
-    // Recuperamos la sesión previa guardada en el navegador si existe
+    
     let usuarioActual = JSON.parse(localStorage.getItem('usuarioActual')) || null;
     let carrito = [];
 
@@ -552,7 +552,6 @@
 
       if (user) {
         usuarioActual = user;
-        // Guardar sesión en el navegador
         localStorage.setItem('usuarioActual', JSON.stringify(user));
         aplicarSesionActiva();
       } else {
@@ -591,7 +590,7 @@
 
     function cerrarSesion() {
       usuarioActual = null;
-      localStorage.removeItem('usuarioActual'); // Limpiar sesión guardada
+      localStorage.removeItem('usuarioActual');
       document.getElementById('login-screen').style.display = 'flex';
     }
 
@@ -1120,13 +1119,20 @@
           <td>${u.rol}</td>
           <td>${u.localId==='TODOS'?'Todas':(dbLocales.find(l=>l.id===u.localId)?.nombre || 'N/A')}</td>
           <td>
-            ${u.id !== usuarioActual.id ? `<button class="btn btn-danger btn-sm" onclick="eliminarUsuario('${u.id}')">Eliminar</button>` : '<em>Tu cuenta</em>'}
+            ${u.id !== usuarioActual.id && u.user !== 'admin' ? `<button class="btn btn-danger btn-sm" onclick="eliminarUsuario('${u.id}')">Eliminar</button>` : '<em>Protegido</em>'}
           </td>
         </tr>
       `).join('');
     }
 
     async function eliminarUsuario(id) {
+      const usuarioAEliminar = dbUsuarios.find(u => u.id === id);
+      
+      // BLOQUEO DE SEGURIDAD CRÍTICA: Proteger la cuenta principal del admin
+      if (usuarioAEliminar && (usuarioAEliminar.user === 'admin' || usuarioAEliminar.localId === 'TODOS')) {
+        return alert("¡Acción bloqueada! No se puede eliminar al usuario administrador principal del sistema.");
+      }
+
       if (id === usuarioActual.id) {
         return alert("No puedes eliminar tu propia cuenta activa.");
       }
@@ -1145,6 +1151,12 @@
       if (usuarioActual) {
         try {
           await cargarDatosSupabase();
+          // Verificación estricta de que el usuario almacenado en local storage siga existiendo en DB
+          const existe = dbUsuarios.find(u => u.id === usuarioActual.id);
+          if (!existe) {
+            cerrarSesion();
+            return;
+          }
         } catch (e) {}
         aplicarSesionActiva();
       }
