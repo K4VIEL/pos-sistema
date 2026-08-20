@@ -538,11 +538,17 @@
       }
     }
 
-    async function iniciarSesion() {
-      await cargarDatosSupabase();
+        async function iniciarSesion() {
+      try {
+        await cargarDatosSupabase();
+      } catch (e) {
+        console.log("Continuando sin conexión a red...");
+      }
+
       const u = document.getElementById('login-user').value.trim();
       const p = document.getElementById('login-pass').value.trim();
-      const user = dbUsuarios.find(x => x.user === u && x.pass === p);
+      
+      let user = dbUsuarios.find(x => x.user === u && x.pass === p);
 
       if (user) {
         usuarioActual = user;
@@ -577,12 +583,6 @@
       }
     }
 
-    function cerrarSesion() {
-      usuarioActual = null;
-      document.getElementById('login-screen').style.display = 'flex';
-    }
-
-    function cambiarVista(vista) {
       if ((vista === 'locales' || vista === 'usuarios') && usuarioActual?.rol !== 'Administrador') {
         return alert('Acceso denegado. Función reservada para el Administrador Principal.');
       }
