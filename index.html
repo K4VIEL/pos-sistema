@@ -314,7 +314,7 @@
         </div>
 
         <div class="card">
-          <h3>Inventario</h3>
+          <h3>Inventario (Edición Directa de Stock y Precios)</h3>
           <div id="inv-filtro-container" style="display:none;">
             <select id="inv-filtro-local" onchange="renderInventario()"></select>
           </div>
@@ -325,11 +325,10 @@
                   <th>Sucursal</th>
                   <th>Código</th>
                   <th>Producto</th>
-                  <th>Costo</th>
-                  <th>P. Venta</th>
-                  <th>Ganancia</th>
+                  <th>Costo ($)</th>
+                  <th>P. Venta ($)</th>
                   <th>Stock</th>
-                  <th></th>
+                  <th>Acciones</th>
                 </tr>
               </thead>
               <tbody id="inv-tabla-catalogo"></tbody>
@@ -506,8 +505,8 @@
     // ==========================================
     // CONFIGURACIÓN DE SUPABASE
     // ==========================================
-    const SUPABASE_URL = 'https://.supabase.co'; // <--- PEGA TU URL AQUÍ
-    const SUPABASE_KEY = 'sb_publishable_';               // <--- PEGA TU CLAVE PÚBLICA AQUÍ
+    const SUPABASE_URL = 'https://ycwuzqjwmzhynhjawnqd.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inljd3V6cWp3bXpoeW5oamF3bnFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcxNzUyNjQsImV4cCI6MjEwMjc1MTI2NH0.AuU9Us6BdYDTy2np4iJY9ltCFicVbIUtQ4D7FNDgIfM';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let dbLocales = [];
@@ -534,11 +533,11 @@
         if (resCli.data) dbClientes = resCli.data;
         if (resVen.data) dbVentas = resVen.data;
       } catch (err) {
-        console.error("Error cargando datos de Supabase:", err);
+        console.error("Aviso al cargar Supabase:", err);
       }
     }
 
-        async function iniciarSesion() {
+    async function iniciarSesion() {
       try {
         await cargarDatosSupabase();
       } catch (e) {
@@ -547,7 +546,6 @@
 
       const u = document.getElementById('login-user').value.trim();
       const p = document.getElementById('login-pass').value.trim();
-      
       let user = dbUsuarios.find(x => x.user === u && x.pass === p);
 
       if (user) {
@@ -583,6 +581,12 @@
       }
     }
 
+    function cerrarSesion() {
+      usuarioActual = null;
+      document.getElementById('login-screen').style.display = 'flex';
+    }
+
+    function cambiarVista(vista) {
       if ((vista === 'locales' || vista === 'usuarios') && usuarioActual?.rol !== 'Administrador') {
         return alert('Acceso denegado. Función reservada para el Administrador Principal.');
       }
@@ -708,11 +712,12 @@
 
     function agregarAlCarrito(id) {
       const prod = dbProductos.find(p => p.id === id);
-          if (!prod) return alert('Producto no encontrado');
-    const item = carrito.find(c => c.id === id);
-    if (item) {
-      item.cantidad++;
+      if (!prod || prod.stock <= 0) return alert('Sin stock disponible');
 
+      const item = carrito.find(c => c.id === id);
+      if (item) {
+        if (item.cantidad < prod.stock) item.cantidad++;
+      } else {
         carrito.push({ id: prod.id, nombre: prod.nombre, precio: prod.precio, costo: prod.costo || 0, cantidad: 1 });
       }
       renderCarrito();
@@ -865,44 +870,22 @@
       }
     }
 
-        async function guardarProducto() {
+    async function guardarProducto() {
       const targetLocalId = usuarioActual.localId === 'TODOS' ? document.getElementById('inv-local-select').value : usuarioActual.localId;
-      const codigo = document.getElementById('inv-codigo').value.trim();
-      const nombre = document.getElementById('inv-nombre').value.trim();
+      const codigo = document.getElementById('inv-codigo').value;
+      const nombre = document.getElementById('inv-nombre').value;
       const costo = parseFloat(document.getElementById('inv-costo').value) || 0;
       const precio = parseFloat(document.getElementById('inv-precio').value);
       const stock = parseInt(document.getElementById('inv-stock').value);
 
-      if (!codigo || !nombre || isNaN(precio) || isNaN(stock)) return alert('Completa los campos requeridos');
+      if (!codigo || !nombre || isNaN(precio)) return alert('Completa los campos requeridos');
 
-      if (productoEditandoId) {
-        const { error } = await supabaseClient.from('productos').update({
-          codigo, nombre, costo, precio, stock, localId: targetLocalId
-        }).eq('id', productoEditandoId);
+      const nuevoProd = { id: Date.now().toString(), localId: targetLocalId, codigo, nombre, costo, precio, stock };
 
-        if (error) return alert("Error al actualizar producto: " + error.message);
+      const { error } = await supabaseClient.from('productos').insert([nuevoProd]);
+      if (error) return alert("Error al guardar producto: " + error.message);
 
-        const p = dbProductos.find(x => x.id === productoEditandoId);
-        if (p) {
-          p.codigo = codigo;
-          p.nombre = nombre;
-          p.costo = costo;
-          p.precio = precio;
-          p.stock = stock;
-          p.localId = targetLocalId;
-        }
-
-        productoEditandoId = null;
-        alert('Producto actualizado correctamente');
-      } else {
-        const nuevoProd = { id: Date.now().toString(), localId: targetLocalId, codigo, nombre, costo, precio, stock };
-
-        const { error } = await supabaseClient.from('productos').insert([nuevoProd]);
-        if (error) return alert("Error al guardar producto: " + error.message);
-
-        dbProductos.push(nuevoProd);
-        alert('Producto guardado correctamente');
-      }
+      dbProductos.push(nuevoProd);
 
       document.getElementById('inv-codigo').value = '';
       document.getElementById('inv-nombre').value = '';
@@ -912,7 +895,6 @@
 
       renderInventario();
     }
-
 
     function renderInventario() {
       let filtroLocal = usuarioActual.localId;
@@ -924,42 +906,44 @@
 
       document.getElementById('inv-tabla-catalogo').innerHTML = lista.map(p => {
         const costo = p.costo || 0;
-        const ganancia = p.precio - costo;
         return `
         <tr>
           <td>${dbLocales.find(l=>l.id===p.localId)?.nombre || ''}</td>
           <td>${p.codigo}</td>
           <td><b>${p.nombre}</b></td>
-          <td>$${costo.toFixed(2)}</td>
-          <td>$${p.precio.toFixed(2)}</td>
-          <td class="text-success">+$${ganancia.toFixed(2)}</td>
-                    <td>${p.stock}</td>
+          <td><input type="number" step="0.01" id="edit-costo-${p.id}" value="${costo.toFixed(2)}" style="width:80px; margin:0; padding:6px;"></td>
+          <td><input type="number" step="0.01" id="edit-precio-${p.id}" value="${p.precio.toFixed(2)}" style="width:80px; margin:0; padding:6px;"></td>
+          <td><input type="number" id="edit-stock-${p.id}" value="${p.stock}" style="width:70px; margin:0; padding:6px;"></td>
           <td>
-            <button class="btn btn-primary btn-sm" onclick="cargarProductoParaEditar('${p.id}')">Editar</button>
-            <button class="btn btn-danger btn-sm" onclick="eliminarProducto('${p.id}')">Eliminar</button>
-                let productoEditandoId = null;
-
-    function cargarProductoParaEditar(id) {
-      const p = dbProductos.find(x => x.id === id);
-      if (!p) return;
-
-      productoEditandoId = p.id;
-      document.getElementById('inv-codigo').value = p.codigo;
-      document.getElementById('inv-nombre').value = p.nombre;
-      document.getElementById('inv-costo').value = p.costo || 0;
-      document.getElementById('inv-precio').value = p.precio;
-      document.getElementById('inv-stock').value = p.stock;
-      if(document.getElementById('inv-local-select')) {
-        document.getElementById('inv-local-select').value = p.localId;
-      }
-      
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
+            <button class="btn btn-primary btn-sm" onclick="actualizarProducto('${p.id}')">Guardar</button>
+            <button class="btn btn-danger btn-sm" onclick="eliminarProducto('${p.id}')">X</button>
           </td>
         </tr>`;
-
       }).join('');
+    }
+
+    async function actualizarProducto(id) {
+      const nuevoCosto = parseFloat(document.getElementById(`edit-costo-${id}`).value) || 0;
+      const nuevoPrecio = parseFloat(document.getElementById(`edit-precio-${id}`).value) || 0;
+      const nuevoStock = parseInt(document.getElementById(`edit-stock-${id}`).value) || 0;
+
+      const { error } = await supabaseClient.from('productos').update({
+        costo: nuevoCosto,
+        precio: nuevoPrecio,
+        stock: nuevoStock
+      }).eq('id', id);
+
+      if (error) return alert("Error al actualizar producto: " + error.message);
+
+      const prod = dbProductos.find(p => p.id === id);
+      if (prod) {
+        prod.costo = nuevoCosto;
+        prod.precio = nuevoPrecio;
+        prod.stock = nuevoStock;
+      }
+
+      alert("Producto actualizado correctamente");
+      renderInventario();
     }
 
     async function eliminarProducto(id) {
@@ -1149,4 +1133,3 @@
   </script>
 </body>
 </html>
-
