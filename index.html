@@ -4,84 +4,1103 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>POS Multi-Local Centralizado</title>
-  <link rel="manifest" href="manifest.json">
   <!-- LIBRERÍA DE SUPABASE -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-@@ -330,7 +329,7 @@
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --danger: #ef4444;
+      --success: #22c55e;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { background-color: var(--bg); color: var(--text); display: flex; flex-direction: column; min-height: 100vh; }
+
+    /* LOGIN MODAL */
+    #login-screen { position: fixed; inset: 0; background: #0f172a; z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .login-box { background: white; padding: 28px; border-radius: 16px; width: 100%; max-width: 360px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+    .login-box h2 { font-size: 1.5rem; margin-bottom: 8px; color: var(--text); }
+
+    /* LAYOUT ADAPTATIVO */
+    .app-container { display: flex; flex: 1; flex-direction: column; }
+    
+    /* HEADER */
+    header { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+    .brand-title { font-size: 1.2rem; font-weight: 700; color: var(--primary); }
+    .user-badge { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; }
+    .badge { background: #dbeafe; color: var(--primary); padding: 4px 10px; border-radius: 20px; font-weight: 600; }
+
+    /* NAV NATIVA */
+    .nav-bar { background: var(--card-bg); border-top: 1px solid var(--border); position: fixed; bottom: 0; left: 0; right: 0; display: flex; justify-content: space-around; padding: 8px 0; z-index: 1000; }
+    .nav-btn { border: none; background: none; color: var(--text-muted); font-size: 0.75rem; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; flex: 1; }
+    .nav-btn.active { color: var(--primary); font-weight: 700; }
+    .nav-btn svg { width: 22px; height: 22px; fill: currentColor; }
+    
+    /* CONTROL DE VISIBILIDAD SOLO ADMIN */
+    .admin-only { display: none !important; }
+
+    /* CONTENIDO PRINCIPAL */
+    main { flex: 1; padding: 16px; padding-bottom: 80px; max-width: 1200px; margin: 0 auto; width: 100%; }
+    .page-section { display: none; }
+    .page-section.active { display: block !important; }
+
+    /* ESTILOS DE COMPONENTES UI */
+    .card { background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border); padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+    .grid-pos { display: grid; grid-template-columns: 1fr; gap: 16px; }
+
+    label { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); display: block; margin-top: 8px; }
+    input, select, button { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 1rem; margin-top: 4px; margin-bottom: 8px; outline: none; }
+    input:focus, select:focus { border-color: var(--primary); }
+    
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    .btn { font-weight: 600; border: none; cursor: pointer; transition: background 0.2s; display: inline-flex; justify-content: center; align-items: center; gap: 8px; margin-top: 8px; }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:active { background: var(--primary-hover); }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-sm { padding: 6px 12px; font-size: 0.85rem; width: auto; margin: 0; }
+
+    /* TARJETAS DE REPORTE */
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 12px; }
+    .kpi-card { background: var(--bg); border: 1px solid var(--border); padding: 16px; border-radius: 10px; text-align: center; }
+    .kpi-card .kpi-val { font-size: 1.5rem; font-weight: 800; margin-top: 4px; }
+
+    /* LISTA PRODUCTOS TÁCTIL */
+    .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+    .product-card { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center; cursor: pointer; }
+    .product-card:active { border-color: var(--primary); background: #eff6ff; }
+    .product-title { font-weight: 600; font-size: 0.9rem; margin-bottom: 4px; }
+    .product-price { color: var(--primary); font-weight: 700; font-size: 1rem; }
+    .product-stock { font-size: 0.75rem; color: var(--text-muted); }
+
+    /* TABLA RESPONSIVA Y KARDEX */
+    .table-responsive { width: 100%; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; }
+    th, td { padding: 10px; border-bottom: 1px solid var(--border); }
+    th { color: var(--text-muted); font-weight: 600; background: var(--bg); }
+    .text-success { color: var(--success); font-weight: bold; }
+    
+    .kardex-row-detail { background-color: #f1f5f9; display: none; }
+    .kardex-subtable { width: 100%; margin: 8px 0; background: white; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); }
+    .kardex-subtable th { background: #e2e8f0; font-size: 0.8rem; }
+    .kardex-subtable td { font-size: 0.8rem; padding: 6px 10px; }
+
+    @media (min-width: 768px) {
+      .app-container { flex-direction: row; }
+      .nav-bar { position: static; flex-direction: column; width: 220px; border-top: none; border-right: 1px solid var(--border); padding: 20px 10px; justify-content: flex-start; gap: 10px; }
+      .nav-btn { flex-direction: row; font-size: 0.95rem; padding: 10px 14px; border-radius: 8px; justify-content: flex-start; gap: 12px; flex: none; }
+      .nav-btn.active { background: #eff6ff; }
+      main { padding-bottom: 20px; }
+      .grid-pos { grid-template-columns: 1.6fr 1fr; }
+    }
+
+    @media print {
+      body * { visibility: hidden; }
+      #factura-impresion, #factura-impresion * { visibility: visible; }
+      #factura-impresion { position: absolute; left: 0; top: 0; width: 100%; max-width: 300px; padding: 10px; }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- LOGIN -->
+  <div id="login-screen">
+    <div class="login-box">
+      <h2>Ingreso al Sistema</h2>
+      <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:15px;">Ingresa tus credenciales</p>
+      <input type="text" id="login-user" placeholder="Usuario" value="admin">
+      <input type="password" id="login-pass" placeholder="Contraseña" value="admin123">
+      <button class="btn btn-primary" onclick="iniciarSesion()">Acceder</button>
+      <p id="login-error" style="color:var(--danger); font-size:0.8rem; display:none; margin-top:10px;">Usuario o contraseña incorrectos</p>
+    </div>
+  </div>
+
+  <!-- HEADER -->
+  <header class="no-print">
+    <div class="brand-title">POS System</div>
+    <div class="user-badge">
+      <span class="badge" id="session-local">-</span>
+      <span id="session-user" style="font-weight:600;">-</span>
+      <button class="btn btn-danger btn-sm" onclick="cerrarSesion()">Salir</button>
+    </div>
+  </header>
+
+  <div class="app-container">
+    <!-- NAVEGACIÓN -->
+    <nav class="nav-bar no-print">
+      <button class="nav-btn active" id="btn-nav-pos" onclick="cambiarVista('pos')">
+        <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
+        <span>Ventas</span>
+      </button>
+      <button class="nav-btn" id="btn-nav-kardex" onclick="cambiarVista('kardex')">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+        <span>Kardex</span>
+      </button>
+      <button class="nav-btn" id="btn-nav-clientes" onclick="cambiarVista('clientes')">
+        <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+        <span>Clientes</span>
+      </button>
+      <button class="nav-btn" id="btn-nav-inventario" onclick="cambiarVista('inventario')">
+        <svg viewBox="0 0 24 24"><path d="M20 13H4c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h16c.55 0 1-.45 1-1v-6c0-.55-.45-1-1-1zM7 19c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM20 3H4c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h16c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1zM7 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>
+        <span>Stock</span>
+      </button>
+      <button class="nav-btn" id="btn-nav-historial" onclick="cambiarVista('historial')">
+        <svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>
+        <span>Historial</span>
+      </button>
+      <button class="nav-btn" id="btn-nav-reportes" onclick="cambiarVista('reportes')">
+        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
+        <span>Reportes</span>
+      </button>
+      
+      <!-- BOTONES EXCLUSIVOS SOLO PARA EL ADMIN -->
+      <button class="nav-btn admin-only" id="btn-nav-locales" onclick="cambiarVista('locales')">
+        <svg viewBox="0 0 24 24"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg>
+        <span>Locales</span>
+      </button>
+      <button class="nav-btn admin-only" id="btn-nav-usuarios" onclick="cambiarVista('usuarios')">
+        <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+        <span>Usuarios</span>
+      </button>
+    </nav>
+
+    <main>
+      <!-- VISTA POS -->
+      <section id="vista-pos" class="page-section active">
+        <div class="grid-pos">
+          <div>
+            <div class="card">
+              <input type="text" id="pos-buscar" placeholder="🔍 Buscar por nombre o código..." oninput="renderProductosPOS()">
+              <div class="product-grid" id="pos-grid-productos"></div>
+            </div>
+          </div>
+          <div>
+            <div class="card">
+              <h3 style="margin-bottom:8px;">Carrito de Venta</h3>
+              <label>Cliente (Opcional)</label>
+              <select id="pos-cliente-select">
+                <option value="">Consumidor Final</option>
+              </select>
+              
+              <div class="table-responsive" style="margin-top:10px;">
+                <table>
+                  <thead><tr><th>Prod</th><th>Cant</th><th>Total</th><th></th></tr></thead>
+                  <tbody id="pos-tabla-carrito"></tbody>
+                </table>
+              </div>
+              <h2 style="margin-top:15px; text-align:right;">Total: $<span id="pos-total">0.00</span></h2>
+              <button class="btn btn-primary" onclick="procesarVenta()">Cobrar e Imprimir</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VISTA KARDEX DE FACTURACIÓN -->
+      <section id="vista-kardex" class="page-section">
+        <div class="card">
+          <h3>Kardex de Facturación y Salida de Productos</h3>
+          <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:12px;">Auditoría detallada de comprobantes emitidos, horas exactas y productos transferidos.</p>
+          
+          <div id="kardex-filtro-local-container" style="display:none;">
+            <label>Sucursal</label>
+            <select id="kardex-filtro-local" onchange="renderKardex()"></select>
+          </div>
+
+          <input type="text" id="kardex-buscar" placeholder="🔍 Buscar por N° ticket, cliente, RUC o producto..." oninput="renderKardex()">
+
+          <div class="table-responsive" style="margin-top:10px;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Ticket</th>
+                  <th>Fecha y Hora</th>
+                  <th>Sucursal</th>
+                  <th>Cliente</th>
+                  <th>Total</th>
+                  <th>Acción</th>
+                </tr>
+              </thead>
+              <tbody id="kardex-tabla"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- VISTA CLIENTES -->
+      <section id="vista-clientes" class="page-section">
+        <div class="card">
+          <h3>Registrar Cliente</h3>
+          <label>Cédula / RUC *</label>
+          <input type="text" id="cli-cedula" placeholder="Ej: 1312345678">
+          
+          <div class="form-row">
+            <div>
+              <label>Nombre *</label>
+              <input type="text" id="cli-nombre" placeholder="Ej: Juan">
+            </div>
+            <div>
+              <label>Apellido *</label>
+              <input type="text" id="cli-apellido" placeholder="Ej: Pérez">
+            </div>
+          </div>
+
+          <label>Correo Electrónico (Opcional)</label>
+          <input type="email" id="cli-correo" placeholder="ejemplo@correo.com">
+
+          <button class="btn btn-primary" onclick="guardarCliente()">Guardar Cliente</button>
+        </div>
+
+        <div class="card">
+          <h3>Clientes Registrados</h3>
+          <input type="text" id="cli-buscar" placeholder="🔍 Buscar cliente..." oninput="renderClientes()">
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>Cédula</th>
+                  <th>Cliente</th>
+                  <th>Correo</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="cli-tabla"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- VISTA INVENTARIO -->
+      <section id="vista-inventario" class="page-section">
+        <div class="card">
+          <h3>Gestión de Producto</h3>
+          <div id="inv-local-container" style="display:none;">
+            <label>Sucursal Destino</label>
+            <select id="inv-local-select"></select>
+          </div>
+          
+          <div class="form-row">
+            <div>
+              <label>Código de Barras</label>
+              <input type="text" id="inv-codigo" placeholder="Ej: 77001">
+            </div>
+            <div>
+              <label>Stock Inicial</label>
+              <input type="number" id="inv-stock" placeholder="Ej: 20">
+            </div>
+          </div>
+
+          <label>Nombre del Producto</label>
+          <input type="text" id="inv-nombre" placeholder="Nombre de Producto">
+
+          <div class="form-row">
+            <div>
+              <label>Costo de Compra ($)</label>
+              <input type="number" id="inv-costo" step="0.01" placeholder="Costo">
+            </div>
+            <div>
+              <label>Precio de Venta ($)</label>
+              <input type="number" id="inv-precio" step="0.01" placeholder="P. Venta">
+            </div>
+          </div>
+
+          <button class="btn btn-primary" onclick="guardarProducto()">Guardar Producto</button>
+        </div>
+
+        <div class="card">
+          <h3>Inventario</h3>
+          <div id="inv-filtro-container" style="display:none;">
+            <select id="inv-filtro-local" onchange="renderInventario()"></select>
+          </div>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>Sucursal</th>
+                  <th>Código</th>
+                  <th>Producto</th>
+                  <th>Costo</th>
                   <th>P. Venta</th>
                   <th>Ganancia</th>
                   <th>Stock</th>
                   <th></th>
-                  <th>Acciones</th>
                 </tr>
               </thead>
               <tbody id="inv-tabla-catalogo"></tbody>
-@@ -507,8 +506,8 @@
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- VISTA HISTORIAL -->
+      <section id="vista-historial" class="page-section">
+        <div class="card">
+          <h3>Historial de Ventas</h3>
+          <div id="historial-filtro-container" style="display:none;">
+            <select id="historial-filtro-local" onchange="renderHistorial()"></select>
+          </div>
+          <div class="table-responsive">
+            <table>
+              <thead><tr><th>Ticket</th><th>Sucursal</th><th>Cliente</th><th>Fecha</th><th>Total</th><th></th></tr></thead>
+              <tbody id="historial-tabla"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- VISTA REPORTES -->
+      <section id="vista-reportes" class="page-section">
+        <div class="card">
+          <h3>Reporte de Desempeño</h3>
+          
+          <div id="reportes-filtro-local-container" style="display:none; margin-bottom: 10px;">
+            <label>Sucursal</label>
+            <select id="rep-filtro-local" onchange="generarReporte()"></select>
+          </div>
+
+          <div class="form-row">
+            <div>
+              <label>Año</label>
+              <select id="rep-anio" onchange="generarReporte()"></select>
+            </div>
+            <div>
+              <label>Mes</label>
+              <select id="rep-mes" onchange="generarReporte()">
+                <option value="TODOS">Todos los meses (Anual)</option>
+                <option value="0">Enero</option>
+                <option value="1">Febrero</option>
+                <option value="2">Marzo</option>
+                <option value="3">Abril</option>
+                <option value="4">Mayo</option>
+                <option value="5">Junio</option>
+                <option value="6">Julio</option>
+                <option value="7">Agosto</option>
+                <option value="8">Septiembre</option>
+                <option value="9">Octubre</option>
+                <option value="10">Noviembre</option>
+                <option value="11">Diciembre</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <label>Ventas Totales</label>
+              <div class="kpi-val text-success" id="rep-val-ventas">$0.00</div>
+            </div>
+            <div class="kpi-card">
+              <label>Costo de Compras</label>
+              <div class="kpi-val" style="color:var(--danger);" id="rep-val-compras">$0.00</div>
+            </div>
+            <div class="kpi-card">
+              <label>Ganancia Neta</label>
+              <div class="kpi-val" style="color:var(--primary);" id="rep-val-ganancia">$0.00</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Resumen de Operación</h3>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>Métrica</th>
+                  <th>Resultado</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Transacciones / Tickets Emitidos</td>
+                  <td id="rep-stat-tickets">0</td>
+                </tr>
+                <tr>
+                  <td>Productos Vendidos (Unidades)</td>
+                  <td id="rep-stat-unidades">0</td>
+                </tr>
+                <tr>
+                  <td>Margen de Ganancia Promedio</td>
+                  <td id="rep-stat-margen">0.0%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- VISTA LOCALES (Exclusivo Admin) -->
+      <section id="vista-locales" class="page-section">
+        <div class="card">
+          <h3>Crear Nueva Sucursal</h3>
+          <input type="text" id="loc-nombre" placeholder="Nombre de Sucursal">
+          <input type="text" id="loc-direccion" placeholder="Dirección">
+          <button class="btn btn-primary" onclick="crearLocal()">Registrar Local</button>
+        </div>
+        <div class="card">
+          <h3>Locales Activos</h3>
+          <div class="table-responsive">
+            <table>
+              <thead><tr><th>ID</th><th>Nombre</th><th>Dirección</th><th>Acciones</th></tr></thead>
+              <tbody id="loc-tabla"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- VISTA USUARIOS (Exclusivo Admin) -->
+      <section id="vista-usuarios" class="page-section">
+        <div class="card">
+          <h3>Crear Credencial para Sucursal</h3>
+          <input type="text" id="usr-user" placeholder="Nombre de Usuario">
+          <input type="password" id="usr-pass" placeholder="Contraseña">
+          <select id="usr-rol">
+            <option value="Cajero">Cajero / Encargado de Sucursal</option>
+            <option value="Administrador">Administrador General</option>
+          </select>
+          <label>Sucursal Asignada</label>
+          <select id="usr-local-select"></select>
+          <button class="btn btn-primary" onclick="crearUsuario()">Guardar Credencial</button>
+        </div>
+        <div class="card">
+          <h3>Usuarios Registrados</h3>
+          <div class="table-responsive">
+            <table>
+              <thead><tr><th>Usuario</th><th>Rol</th><th>Sucursal</th><th>Acciones</th></tr></thead>
+              <tbody id="usr-tabla"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- COMPROBANTE DE IMPRESIÓN -->
+  <div id="factura-impresion" style="display:none;" class="card">
+    <div style="text-align: center;">
+      <h3 id="fac-local-nombre"></h3>
+      <p>N° Comprobante: <span id="fac-id"></span></p>
+      <p><span id="fac-fecha"></span></p>
+      <p style="margin-top: 5px;"><b>Cliente:</b> <span id="fac-cliente"></span></p>
+      <p><b>Cédula/RUC:</b> <span id="fac-cedula"></span></p>
+    </div>
+    <hr style="margin: 8px 0;">
+    <table>
+      <thead><tr><th>Cant.</th><th>Item</th><th>Total</th></tr></thead>
+      <tbody id="fac-items"></tbody>
+    </table>
+    <hr style="margin: 8px 0;">
+    <h3 style="text-align: right;">Total: $<span id="fac-total">0.00</span></h3>
+    <div class="no-print" style="margin-top: 15px; text-align: center;">
+      <button class="btn btn-primary" onclick="window.print()">Imprimir Ticket</button>
+      <button class="btn btn-danger" onclick="document.getElementById('factura-impresion').style.display='none'">Cerrar</button>
+    </div>
+  </div>
+
+  <script>
     // ==========================================
     // CONFIGURACIÓN DE SUPABASE
     // ==========================================
     const SUPABASE_URL = 'https://ycwuzqjwmzhynhjawnqd.supabase.co'; // <--- PEGA TU URL AQUÍ
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inljd3V6cWp3bXpoeW5oamF3bnFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcxNzUyNjQsImV4cCI6MjEwMjc1MTI2NH0.AuU9Us6BdYDTy2np4iJY9ltCFicVbIUtQ4D7FNDgIfM';               // <--- PEGA TU CLAVE PÚBLICA AQUÍ
-    const SUPABASE_URL = 'https://.supabase.co'; // <--- PEGA TU URL AQUÍ
-    const SUPABASE_KEY = 'sb_publishable_';               // <--- PEGA TU CLAVE PÚBLICA AQUÍ
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let dbLocales = [];
-@@ -893,6 +892,37 @@
-      renderInventario();
+    let dbUsuarios = [];
+    let dbProductos = [];
+    let dbClientes = [];
+    let dbVentas = [];
+    let usuarioActual = null;
+    let carrito = [];
+
+    async function cargarDatosSupabase() {
+      try {
+        const [resLoc, resUsr, resProd, resCli, resVen] = await Promise.all([
+          supabaseClient.from('locales').select('*'),
+          supabaseClient.from('usuarios').select('*'),
+          supabaseClient.from('productos').select('*'),
+          supabaseClient.from('clientes').select('*'),
+          supabaseClient.from('ventas').select('*')
+        ]);
+
+        if (resLoc.data) dbLocales = resLoc.data;
+        if (resUsr.data) dbUsuarios = resUsr.data;
+        if (resProd.data) dbProductos = resProd.data;
+        if (resCli.data) dbClientes = resCli.data;
+        if (resVen.data) dbVentas = resVen.data;
+      } catch (err) {
+        console.error("Error cargando datos de Supabase:", err);
+      }
     }
 
-    /* NUEVA FUNCIÓN PARA EDITAR EL STOCK */
-    async function editarStock(idProducto, stockActual) {
-      const nuevoStockStr = prompt("Ingresa la nueva cantidad en stock:", stockActual);
-      
-      // Si el usuario da clic en Cancelar o presiona Esc
-      if (nuevoStockStr === null) return;
+    async function iniciarSesion() {
+      await cargarDatosSupabase();
+      const u = document.getElementById('login-user').value.trim();
+      const p = document.getElementById('login-pass').value.trim();
+      const user = dbUsuarios.find(x => x.user === u && x.pass === p);
 
-      const nuevoStock = parseInt(nuevoStockStr);
+      if (user) {
+        usuarioActual = user;
+        document.getElementById('login-error').style.display = 'none';
+        document.getElementById('login-screen').style.setProperty('display', 'none', 'important');
+        document.getElementById('session-user').innerText = user.user;
+        
+        const loc = dbLocales.find(l => l.id === user.localId)?.nombre || 'Panel Principal (Admin)';
+        document.getElementById('session-local').innerText = loc;
 
-      if (isNaN(nuevoStock) || nuevoStock < 0) {
-        return alert("Por favor ingresa un número válido mayor o igual a 0.");
-      }
+        const esAdmin = user.rol === 'Administrador';
 
-      // Actualización en Supabase usando la instancia local 'supabaseClient'
-      const { error } = await supabaseClient
-        .from('productos')
-        .update({ stock: nuevoStock })
-        .eq('id', idProducto);
+        document.querySelectorAll('.admin-only').forEach(el => {
+          if (esAdmin) {
+            el.classList.remove('admin-only');
+            el.style.display = 'flex';
+          } else {
+            el.style.display = 'none';
+          }
+        });
 
-      if (error) {
-        alert("Error al actualizar stock: " + error.message);
+        document.getElementById('inv-local-container').style.display = esAdmin ? 'block' : 'none';
+        document.getElementById('inv-filtro-container').style.display = esAdmin ? 'block' : 'none';
+        document.getElementById('historial-filtro-container').style.display = esAdmin ? 'block' : 'none';
+        document.getElementById('reportes-filtro-local-container').style.display = esAdmin ? 'block' : 'none';
+        document.getElementById('kardex-filtro-local-container').style.display = esAdmin ? 'block' : 'none';
+
+        poblardropdowns();
+        cambiarVista('pos');
       } else {
-        // Actualizamos en la memoria local
-        const p = dbProductos.find(x => x.id === idProducto);
-        if (p) p.stock = nuevoStock;
-
-        alert("¡Stock actualizado con éxito!");
-        renderInventario();
+        document.getElementById('login-error').style.display = 'block';
       }
+    }
+
+    function cerrarSesion() {
+      usuarioActual = null;
+      document.getElementById('login-screen').style.display = 'flex';
+    }
+
+    function cambiarVista(vista) {
+      if ((vista === 'locales' || vista === 'usuarios') && usuarioActual?.rol !== 'Administrador') {
+        return alert('Acceso denegado. Función reservada para el Administrador Principal.');
+      }
+
+      document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+
+      const sec = document.getElementById(`vista-${vista}`);
+      if(sec) sec.classList.add('active');
+      
+      const btnNav = document.getElementById(`btn-nav-${vista}`);
+      if(btnNav) btnNav.classList.add('active');
+
+      if (vista === 'pos') renderProductosPOS();
+      if (vista === 'kardex') renderKardex();
+      if (vista === 'clientes') renderClientes();
+      if (vista === 'inventario') renderInventario();
+      if (vista === 'historial') renderHistorial();
+      if (vista === 'reportes') prepararVistaReportes();
+      if (vista === 'locales') renderLocales();
+      if (vista === 'usuarios') renderUsuarios();
+    }
+
+    function poblardropdowns() {
+      const opts = dbLocales.map(l => `<option value="${l.id}">${l.nombre}</option>`).join('');
+      document.getElementById('inv-local-select').innerHTML = opts;
+      document.getElementById('usr-local-select').innerHTML = opts;
+      
+      const optsFiltro = `<option value="TODOS">Todos los Locales</option>` + opts;
+      document.getElementById('inv-filtro-local').innerHTML = optsFiltro;
+      document.getElementById('historial-filtro-local').innerHTML = optsFiltro;
+      document.getElementById('reportes-filtro-local-container').style.display = usuarioActual?.rol === 'Administrador' ? 'block' : 'none';
+      document.getElementById('rep-filtro-local').innerHTML = optsFiltro;
+      document.getElementById('kardex-filtro-local').innerHTML = optsFiltro;
+
+      poblarClientesDropdown();
+    }
+
+    function poblarClientesDropdown() {
+      const clientesAislamiento = dbClientes.filter(c => c.localId === 'TODOS' || c.localId === usuarioActual.localId || usuarioActual.localId === 'TODOS');
+      const optsClientes = clientesAislamiento.map(c => `<option value="${c.id}">${c.cedula} - ${c.nombre} ${c.apellido}</option>`).join('');
+      document.getElementById('pos-cliente-select').innerHTML = `<option value="">Consumidor Final</option>` + optsClientes;
+    }
+
+    async function guardarCliente() {
+      const cedula = document.getElementById('cli-cedula').value.trim();
+      const nombre = document.getElementById('cli-nombre').value.trim();
+      const apellido = document.getElementById('cli-apellido').value.trim();
+      const correo = document.getElementById('cli-correo').value.trim();
+
+      if (!cedula || !nombre || !apellido) {
+        return alert('Cédula, Nombre y Apellido son obligatorios.');
+      }
+
+      if (dbClientes.some(c => c.cedula === cedula && (c.localId === usuarioActual.localId || usuarioActual.localId === 'TODOS'))) {
+        return alert('Ya existe un cliente con esa Cédula.');
+      }
+
+      const nuevoCliente = { 
+        id: Date.now().toString(), 
+        localId: usuarioActual.localId, 
+        cedula, 
+        nombre, 
+        apellido, 
+        correo: correo || 'Sin correo' 
+      };
+
+      const { error } = await supabaseClient.from('clientes').insert([nuevoCliente]);
+      if (error) return alert("Error al guardar cliente en Supabase: " + error.message);
+
+      dbClientes.push(nuevoCliente);
+
+      document.getElementById('cli-cedula').value = '';
+      document.getElementById('cli-nombre').value = '';
+      document.getElementById('cli-apellido').value = '';
+      document.getElementById('cli-correo').value = '';
+
+      poblarClientesDropdown();
+      renderClientes();
+      alert('Cliente registrado');
+    }
+
+    function renderClientes() {
+      const q = (document.getElementById('cli-buscar')?.value || '').toLowerCase();
+      const clientes = dbClientes.filter(c => 
+        (usuarioActual.localId === 'TODOS' || c.localId === usuarioActual.localId || c.localId === 'TODOS') &&
+        (c.cedula.toLowerCase().includes(q) || c.nombre.toLowerCase().includes(q) || c.apellido.toLowerCase().includes(q))
+      );
+
+      document.getElementById('cli-tabla').innerHTML = clientes.map(c => `
+        <tr>
+          <td><b>${c.cedula}</b></td>
+          <td>${c.nombre} ${c.apellido}</td>
+          <td>${c.correo}</td>
+          <td>${c.cedula !== '0000000000' ? `<button class="btn btn-danger btn-sm" onclick="eliminarCliente('${c.id}')">Eliminar</button>` : ''}</td>
+        </tr>
+      `).join('');
+    }
+
+    async function eliminarCliente(id) {
+      if(!confirm("¿Eliminar este cliente?")) return;
+      const { error } = await supabaseClient.from('clientes').delete().eq('id', id);
+      if (error) return alert("Error al eliminar cliente: " + error.message);
+      
+      dbClientes = dbClientes.filter(c => c.id !== id);
+      poblarClientesDropdown();
+      renderClientes();
+    }
+
+    function renderProductosPOS() {
+      const q = (document.getElementById('pos-buscar')?.value || '').toLowerCase();
+      const targetLocalId = usuarioActual.localId === 'TODOS' ? dbLocales[0]?.id : usuarioActual.localId;
+      const productos = dbProductos.filter(p => p.localId === targetLocalId && (p.nombre.toLowerCase().includes(q) || p.codigo.includes(q)));
+
+      document.getElementById('pos-grid-productos').innerHTML = productos.map(p => `
+        <div class="product-card" onclick="agregarAlCarrito('${p.id}')">
+          <div class="product-title">${p.nombre}</div>
+          <div class="product-price">$${p.precio.toFixed(2)}</div>
+          <div class="product-stock">Stock: ${p.stock}</div>
+        </div>
+      `).join('');
+    }
+
+    function agregarAlCarrito(id) {
+      const prod = dbProductos.find(p => p.id === id);
+      if (!prod || prod.stock <= 0) return alert('Sin stock disponible');
+
+      const item = carrito.find(c => c.id === id);
+      if (item) {
+        if (item.cantidad < prod.stock) item.cantidad++;
+      } else {
+        carrito.push({ id: prod.id, nombre: prod.nombre, precio: prod.precio, costo: prod.costo || 0, cantidad: 1 });
+      }
+      renderCarrito();
+    }
+
+    function renderCarrito() {
+      let total = 0;
+      document.getElementById('pos-tabla-carrito').innerHTML = carrito.map((item, idx) => {
+        const sub = item.precio * item.cantidad;
+        total += sub;
+        return `<tr>
+          <td>${item.nombre}</td>
+          <td>${item.cantidad}</td>
+          <td>$${sub.toFixed(2)}</td>
+          <td><button class="btn btn-danger btn-sm" onclick="carrito.splice(${idx},1);renderCarrito();">X</button></td>
+        </tr>`;
+      }).join('');
+      document.getElementById('pos-total').innerText = total.toFixed(2);
+    }
+
+    async function procesarVenta() {
+      if (carrito.length === 0) return alert('El carrito está vacío');
+
+      const targetLocalId = usuarioActual.localId === 'TODOS' ? dbLocales[0]?.id : usuarioActual.localId;
+      const clienteId = document.getElementById('pos-cliente-select').value;
+      const clienteObj = dbClientes.find(c => c.id === clienteId);
+
+      const clienteNombre = clienteObj ? `${clienteObj.nombre} ${clienteObj.apellido}` : 'Consumidor Final';
+      const clienteCedula = clienteObj ? clienteObj.cedula : '9999999999';
+
+      for (const i of carrito) {
+        const p = dbProductos.find(x => x.id === i.id);
+        if (p) {
+          p.stock -= i.cantidad;
+          await supabaseClient.from('productos').update({ stock: p.stock }).eq('id', p.id);
+        }
+      }
+
+      const venta = {
+        id: 'FAC-' + Date.now().toString().slice(-5),
+        localId: targetLocalId,
+        localNombre: dbLocales.find(l => l.id === targetLocalId)?.nombre,
+        clienteNombre,
+        clienteCedula,
+        fecha: new Date().toISOString(),
+        items: [...carrito],
+        total: carrito.reduce((s, x) => s + (x.precio * x.cantidad), 0)
+      };
+
+      const { error } = await supabaseClient.from('ventas').insert([venta]);
+      if (error) return alert("Error al registrar venta: " + error.message);
+
+      dbVentas.push(venta);
+
+      mostrarFactura(venta);
+      carrito = [];
+      renderCarrito();
+      renderProductosPOS();
+    }
+
+    function mostrarFactura(v) {
+      document.getElementById('fac-local-nombre').innerText = v.localNombre;
+      document.getElementById('fac-id').innerText = v.id;
+      document.getElementById('fac-fecha').innerText = new Date(v.fecha).toLocaleString();
+      document.getElementById('fac-cliente').innerText = v.clienteNombre;
+      document.getElementById('fac-cedula').innerText = v.clienteCedula;
+      document.getElementById('fac-items').innerHTML = v.items.map(i => `
+        <tr><td>${i.cantidad}</td><td>${i.nombre}</td><td>$${(i.cantidad*i.precio).toFixed(2)}</td></tr>
+      `).join('');
+      document.getElementById('fac-total').innerText = v.total.toFixed(2);
+      document.getElementById('factura-impresion').style.display = 'block';
+    }
+
+    function renderKardex() {
+      let filtroLocal = usuarioActual.localId;
+      if (usuarioActual.localId === 'TODOS') {
+        filtroLocal = document.getElementById('kardex-filtro-local')?.value || 'TODOS';
+      }
+
+      const q = (document.getElementById('kardex-buscar')?.value || '').toLowerCase();
+
+      const ventas = dbVentas.filter(v => {
+        const matchLocal = (filtroLocal === 'TODOS' || v.localId === filtroLocal);
+        const matchQuery = v.id.toLowerCase().includes(q) || 
+                           v.clienteNombre.toLowerCase().includes(q) || 
+                           v.clienteCedula.toLowerCase().includes(q) ||
+                           v.items.some(i => i.nombre.toLowerCase().includes(q));
+        return matchLocal && matchQuery;
+      }).sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
+
+      let html = '';
+
+      ventas.forEach(v => {
+        const fechaObj = new Date(v.fecha);
+        const fechaFormateada = fechaObj.toLocaleDateString();
+        const horaFormateada = fechaObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+        const itemsRows = v.items.map(i => `
+          <tr>
+            <td>${i.nombre}</td>
+            <td>${i.cantidad}</td>
+            <td>$${(i.costo || 0).toFixed(2)}</td>
+            <td>$${i.precio.toFixed(2)}</td>
+            <td>$${(i.cantidad * i.precio).toFixed(2)}</td>
+          </tr>
+        `).join('');
+
+        html += `
+          <tr>
+            <td><b>${v.id}</b></td>
+            <td>${fechaFormateada} <span style="color:var(--text-muted); font-size:0.8rem;">(${horaFormateada})</span></td>
+            <td>${v.localNombre}</td>
+            <td>${v.clienteNombre}<br><small style="color:var(--text-muted);">${v.clienteCedula}</small></td>
+            <td><b>$${v.total.toFixed(2)}</b></td>
+            <td>
+              <button class="btn btn-primary btn-sm" onclick="toggleDetalleKardex('${v.id}')">Ver Detalle</button>
+            </td>
+          </tr>
+          <tr id="kardex-det-${v.id}" class="kardex-row-detail">
+            <td colspan="6">
+              <div style="padding:10px;">
+                <h4 style="font-size:0.85rem; margin-bottom:5px;">Detalle de Ítems en Comprobante #${v.id}:</h4>
+                <table class="kardex-subtable">
+                  <thead>
+                    <tr>
+                      <th>Producto</th>
+                      <th>Cantidad</th>
+                      <th>Costo Unit.</th>
+                      <th>Precio Venta</th>
+                      <th>Subtotal</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${itemsRows}
+                  </tbody>
+                </table>
+              </div>
+            </td>
+          </tr>
+        `;
+      });
+
+      document.getElementById('kardex-tabla').innerHTML = html || `<tr><td colspan="6" style="text-align:center;">No se encontraron registros de facturación</td></tr>`;
+    }
+
+    function toggleDetalleKardex(id) {
+      const el = document.getElementById(`kardex-det-${id}`);
+      if (el) {
+        el.style.display = (el.style.display === 'table-row') ? 'none' : 'table-row';
+      }
+    }
+
+    async function guardarProducto() {
+      const targetLocalId = usuarioActual.localId === 'TODOS' ? document.getElementById('inv-local-select').value : usuarioActual.localId;
+      const codigo = document.getElementById('inv-codigo').value;
+      const nombre = document.getElementById('inv-nombre').value;
+      const costo = parseFloat(document.getElementById('inv-costo').value) || 0;
+      const precio = parseFloat(document.getElementById('inv-precio').value);
+      const stock = parseInt(document.getElementById('inv-stock').value);
+
+      if (!codigo || !nombre || isNaN(precio)) return alert('Completa los campos requeridos');
+
+      const nuevoProd = { id: Date.now().toString(), localId: targetLocalId, codigo, nombre, costo, precio, stock };
+
+      const { error } = await supabaseClient.from('productos').insert([nuevoProd]);
+      if (error) return alert("Error al guardar producto: " + error.message);
+
+      dbProductos.push(nuevoProd);
+
+      document.getElementById('inv-codigo').value = '';
+      document.getElementById('inv-nombre').value = '';
+      document.getElementById('inv-costo').value = '';
+      document.getElementById('inv-precio').value = '';
+      document.getElementById('inv-stock').value = '';
+
+      renderInventario();
     }
 
     function renderInventario() {
       let filtroLocal = usuarioActual.localId;
       if (usuarioActual.localId === 'TODOS') {
-@@ -912,8 +942,11 @@
+        filtroLocal = document.getElementById('inv-filtro-local')?.value || 'TODOS';
+      }
+
+      const lista = filtroLocal === 'TODOS' ? dbProductos : dbProductos.filter(p => p.localId === filtroLocal);
+
+      document.getElementById('inv-tabla-catalogo').innerHTML = lista.map(p => {
+        const costo = p.costo || 0;
+        const ganancia = p.precio - costo;
+        return `
+        <tr>
+          <td>${dbLocales.find(l=>l.id===p.localId)?.nombre || ''}</td>
+          <td>${p.codigo}</td>
+          <td><b>${p.nombre}</b></td>
           <td>$${costo.toFixed(2)}</td>
           <td>$${p.precio.toFixed(2)}</td>
           <td class="text-success">+$${ganancia.toFixed(2)}</td>
           <td>${p.stock}</td>
           <td><button class="btn btn-danger btn-sm" onclick="eliminarProducto('${p.id}')">Eliminar</button></td>
-          <td><b>${p.stock}</b></td>
-          <td>
-            <button class="btn btn-primary btn-sm" style="margin-right:4px;" onclick="editarStock('${p.id}', ${p.stock})">Editar Stock</button>
-            <button class="btn btn-danger btn-sm" onclick="eliminarProducto('${p.id}')">Eliminar</button>
-          </td>
         </tr>`;
       }).join('');
     }
-@@ -1105,3 +1138,4 @@
+
+    async function eliminarProducto(id) {
+      if(!confirm("¿Eliminar este producto?")) return;
+      const { error } = await supabaseClient.from('productos').delete().eq('id', id);
+      if (error) return alert("Error al eliminar producto: " + error.message);
+
+      dbProductos = dbProductos.filter(x => x.id !== id);
+      renderInventario();
+    }
+
+    function renderHistorial() {
+      let filtroLocal = usuarioActual.localId;
+      if (usuarioActual.localId === 'TODOS') {
+        filtroLocal = document.getElementById('historial-filtro-local')?.value || 'TODOS';
+      }
+
+      const lista = filtroLocal === 'TODOS' ? dbVentas : dbVentas.filter(v => v.localId === filtroLocal);
+
+      document.getElementById('historial-tabla').innerHTML = lista.map(v => `
+        <tr>
+          <td>${v.id}</td>
+          <td>${v.localNombre}</td>
+          <td>${v.clienteNombre}</td>
+          <td>${new Date(v.fecha).toLocaleString()}</td>
+          <td>$${v.total.toFixed(2)}</td>
+          <td><button class="btn btn-primary btn-sm" onclick='mostrarFactura(${JSON.stringify(v)})'>Ver</button></td>
+        </tr>
+      `).join('');
+    }
+
+    function prepararVistaReportes() {
+      const selectAnio = document.getElementById('rep-anio');
+      const anioActual = new Date().getFullYear();
+      let anios = new Set([anioActual]);
+
+      dbVentas.forEach(v => {
+        const d = new Date(v.fecha);
+        if (!isNaN(d.getFullYear())) anios.add(d.getFullYear());
+      });
+
+      selectAnio.innerHTML = Array.from(anios)
+        .sort((a,b) => b - a)
+        .map(a => `<option value="${a}">${a}</option>`)
+        .join('');
+
+      document.getElementById('rep-mes').value = "TODOS";
+      generarReporte();
+    }
+
+    function generarReporte() {
+      let filtroLocal = usuarioActual.localId;
+      if (usuarioActual.localId === 'TODOS') {
+        filtroLocal = document.getElementById('rep-filtro-local')?.value || 'TODOS';
+      }
+
+      const anioSel = parseInt(document.getElementById('rep-anio').value);
+      const mesSel = document.getElementById('rep-mes').value;
+
+      const ventasFiltradas = dbVentas.filter(v => {
+        const d = new Date(v.fecha);
+        const matchLocal = (filtroLocal === 'TODOS' || v.localId === filtroLocal);
+        const matchAnio = d.getFullYear() === anioSel;
+        const matchMes = (mesSel === 'TODOS' || d.getMonth() === parseInt(mesSel));
+        return matchLocal && matchAnio && matchMes;
+      });
+
+      let totalVentas = 0;
+      let totalCostoCompras = 0;
+      let totalUnidades = 0;
+
+      ventasFiltradas.forEach(v => {
+        totalVentas += v.total;
+        v.items.forEach(i => {
+          totalCostoCompras += ((i.costo || 0) * i.cantidad);
+          totalUnidades += i.cantidad;
+        });
+      });
+
+      const gananciaNeta = totalVentas - totalCostoCompras;
+      const margen = totalVentas > 0 ? ((gananciaNeta / totalVentas) * 100).toFixed(1) : '0.0';
+
+      document.getElementById('rep-val-ventas').innerText = `$${totalVentas.toFixed(2)}`;
+      document.getElementById('rep-val-compras').innerText = `$${totalCostoCompras.toFixed(2)}`;
+      document.getElementById('rep-val-ganancia').innerText = `$${gananciaNeta.toFixed(2)}`;
+
+      document.getElementById('rep-stat-tickets').innerText = ventasFiltradas.length;
+      document.getElementById('rep-stat-unidades').innerText = totalUnidades;
+      document.getElementById('rep-stat-margen').innerText = `${margen}%`;
+    }
+
+    async function crearLocal() {
+      if (usuarioActual?.rol !== 'Administrador') return alert('Solo el Administrador puede crear locales');
+      const nombre = document.getElementById('loc-nombre').value.trim();
+      const direccion = document.getElementById('loc-direccion').value.trim();
+      if (!nombre) return alert('Ingresa el nombre del local');
+
+      const nuevoLocal = { id: 'LOC-' + Date.now().toString().slice(-4), nombre, direccion };
+
+      const { error } = await supabaseClient.from('locales').insert([nuevoLocal]);
+      if (error) return alert("Error al guardar local: " + error.message);
+
+      dbLocales.push(nuevoLocal);
+      poblardropdowns();
+      renderLocales();
+      
+      document.getElementById('loc-nombre').value = '';
+      document.getElementById('loc-direccion').value = '';
+      alert('Sucursal registrada exitosamente');
+    }
+
+    function renderLocales() {
+      document.getElementById('loc-tabla').innerHTML = dbLocales.map(l => `
+        <tr>
+          <td>${l.id}</td>
+          <td><b>${l.nombre}</b></td>
+          <td>${l.direccion}</td>
+          <td><button class="btn btn-danger btn-sm" onclick="eliminarLocal('${l.id}')">Eliminar</button></td>
+        </tr>`).join('');
+    }
+
+    async function eliminarLocal(id) {
+      if (!confirm("¿Eliminar este local? Se borrarán todos los usuarios asignados a él.")) return;
+
+      const { error } = await supabaseClient.from('locales').delete().eq('id', id);
+      if (error) return alert("Error al eliminar local: " + error.message);
+
+      dbLocales = dbLocales.filter(l => l.id !== id);
+      dbUsuarios = dbUsuarios.filter(u => u.localId !== id || u.rol === 'Administrador');
+      
+      poblardropdowns();
+      renderLocales();
+      renderUsuarios();
+      alert('Local eliminado correctamente');
+    }
+
+    async function crearUsuario() {
+      if (usuarioActual?.rol !== 'Administrador') return alert('Solo el Administrador puede crear usuarios');
+      const user = document.getElementById('usr-user').value.trim();
+      const pass = document.getElementById('usr-pass').value.trim();
+      const rol = document.getElementById('usr-rol').value;
+      const localId = document.getElementById('usr-local-select').value;
+
+      if (!user || !pass) return alert('Ingresa usuario y contraseña');
+      if (dbUsuarios.some(u => u.user === user)) return alert('El nombre de usuario ya existe');
+
+      const nuevoUsuario = { id: Date.now().toString(), user, pass, rol, localId };
+
+      const { error } = await supabaseClient.from('usuarios').insert([nuevoUsuario]);
+      if (error) return alert("Error al guardar usuario: " + error.message);
+
+      dbUsuarios.push(nuevoUsuario);
+
+      document.getElementById('usr-user').value = '';
+      document.getElementById('usr-pass').value = '';
+
+      renderUsuarios();
+      alert(`Credencial generada para el usuario "${user}"`);
+    }
+
+    function renderUsuarios() {
+      document.getElementById('usr-tabla').innerHTML = dbUsuarios.map(u => `
+        <tr>
+          <td><b>${u.user}</b></td>
+          <td>${u.rol}</td>
+          <td>${u.localId==='TODOS'?'Todas':(dbLocales.find(l=>l.id===u.localId)?.nombre || 'N/A')}</td>
+          <td>
+            ${u.id !== usuarioActual.id ? `<button class="btn btn-danger btn-sm" onclick="eliminarUsuario('${u.id}')">Eliminar</button>` : '<em>Tu cuenta</em>'}
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    async function eliminarUsuario(id) {
+      if (id === usuarioActual.id) {
+        return alert("No puedes eliminar tu propia cuenta activa.");
+      }
+      if (!confirm("¿Estás seguro de eliminar este usuario?")) return;
+
+      const { error } = await supabaseClient.from('usuarios').delete().eq('id', id);
+      if (error) return alert("Error al eliminar usuario: " + error.message);
+
+      dbUsuarios = dbUsuarios.filter(u => u.id !== id);
+      renderUsuarios();
+      alert('Usuario eliminado correctamente');
+    }
   </script>
 </body>
-                                       </html>
-                                  
+</html>
