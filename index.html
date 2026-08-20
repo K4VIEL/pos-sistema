@@ -506,8 +506,8 @@
     // ==========================================
     // CONFIGURACIÓN DE SUPABASE
     // ==========================================
-    const SUPABASE_URL = 'https://ycwuzqjwmzhynhjawnqd.supabase.co'; // <--- PEGA TU URL AQUÍ
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inljd3V6cWp3bXpoeW5oamF3bnFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcxNzUyNjQsImV4cCI6MjEwMjc1MTI2NH0.AuU9Us6BdYDTy2np4iJY9ltCFicVbIUtQ4D7FNDgIfM';               // <--- PEGA TU CLAVE PÚBLICA AQUÍ
+    const SUPABASE_URL = 'https://.supabase.co'; // <--- PEGA TU URL AQUÍ
+    const SUPABASE_KEY = 'sb_publishable_';               // <--- PEGA TU CLAVE PÚBLICA AQUÍ
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let dbLocales = [];
@@ -708,12 +708,11 @@
 
     function agregarAlCarrito(id) {
       const prod = dbProductos.find(p => p.id === id);
-      if (!prod || prod.stock <= 0) return alert('Sin stock disponible');
+          if (!prod) return alert('Producto no encontrado');
+    const item = carrito.find(c => c.id === id);
+    if (item) {
+      item.cantidad++;
 
-      const item = carrito.find(c => c.id === id);
-      if (item) {
-        if (item.cantidad < prod.stock) item.cantidad++;
-      } else {
         carrito.push({ id: prod.id, nombre: prod.nombre, precio: prod.precio, costo: prod.costo || 0, cantidad: 1 });
       }
       renderCarrito();
@@ -866,22 +865,44 @@
       }
     }
 
-    async function guardarProducto() {
+        async function guardarProducto() {
       const targetLocalId = usuarioActual.localId === 'TODOS' ? document.getElementById('inv-local-select').value : usuarioActual.localId;
-      const codigo = document.getElementById('inv-codigo').value;
-      const nombre = document.getElementById('inv-nombre').value;
+      const codigo = document.getElementById('inv-codigo').value.trim();
+      const nombre = document.getElementById('inv-nombre').value.trim();
       const costo = parseFloat(document.getElementById('inv-costo').value) || 0;
       const precio = parseFloat(document.getElementById('inv-precio').value);
       const stock = parseInt(document.getElementById('inv-stock').value);
 
-      if (!codigo || !nombre || isNaN(precio)) return alert('Completa los campos requeridos');
+      if (!codigo || !nombre || isNaN(precio) || isNaN(stock)) return alert('Completa los campos requeridos');
 
-      const nuevoProd = { id: Date.now().toString(), localId: targetLocalId, codigo, nombre, costo, precio, stock };
+      if (productoEditandoId) {
+        const { error } = await supabaseClient.from('productos').update({
+          codigo, nombre, costo, precio, stock, localId: targetLocalId
+        }).eq('id', productoEditandoId);
 
-      const { error } = await supabaseClient.from('productos').insert([nuevoProd]);
-      if (error) return alert("Error al guardar producto: " + error.message);
+        if (error) return alert("Error al actualizar producto: " + error.message);
 
-      dbProductos.push(nuevoProd);
+        const p = dbProductos.find(x => x.id === productoEditandoId);
+        if (p) {
+          p.codigo = codigo;
+          p.nombre = nombre;
+          p.costo = costo;
+          p.precio = precio;
+          p.stock = stock;
+          p.localId = targetLocalId;
+        }
+
+        productoEditandoId = null;
+        alert('Producto actualizado correctamente');
+      } else {
+        const nuevoProd = { id: Date.now().toString(), localId: targetLocalId, codigo, nombre, costo, precio, stock };
+
+        const { error } = await supabaseClient.from('productos').insert([nuevoProd]);
+        if (error) return alert("Error al guardar producto: " + error.message);
+
+        dbProductos.push(nuevoProd);
+        alert('Producto guardado correctamente');
+      }
 
       document.getElementById('inv-codigo').value = '';
       document.getElementById('inv-nombre').value = '';
@@ -891,6 +912,7 @@
 
       renderInventario();
     }
+
 
     function renderInventario() {
       let filtroLocal = usuarioActual.localId;
@@ -911,9 +933,32 @@
           <td>$${costo.toFixed(2)}</td>
           <td>$${p.precio.toFixed(2)}</td>
           <td class="text-success">+$${ganancia.toFixed(2)}</td>
-          <td>${p.stock}</td>
-          <td><button class="btn btn-danger btn-sm" onclick="eliminarProducto('${p.id}')">Eliminar</button></td>
+                    <td>${p.stock}</td>
+          <td>
+            <button class="btn btn-primary btn-sm" onclick="cargarProductoParaEditar('${p.id}')">Editar</button>
+            <button class="btn btn-danger btn-sm" onclick="eliminarProducto('${p.id}')">Eliminar</button>
+                let productoEditandoId = null;
+
+    function cargarProductoParaEditar(id) {
+      const p = dbProductos.find(x => x.id === id);
+      if (!p) return;
+
+      productoEditandoId = p.id;
+      document.getElementById('inv-codigo').value = p.codigo;
+      document.getElementById('inv-nombre').value = p.nombre;
+      document.getElementById('inv-costo').value = p.costo || 0;
+      document.getElementById('inv-precio').value = p.precio;
+      document.getElementById('inv-stock').value = p.stock;
+      if(document.getElementById('inv-local-select')) {
+        document.getElementById('inv-local-select').value = p.localId;
+      }
+      
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+          </td>
         </tr>`;
+
       }).join('');
     }
 
@@ -1104,3 +1149,4 @@
   </script>
 </body>
 </html>
+
