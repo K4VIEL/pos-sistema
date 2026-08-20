@@ -78,6 +78,7 @@
     .product-title { font-weight: 600; font-size: 0.9rem; margin-bottom: 4px; }
     .product-price { color: var(--primary); font-weight: 700; font-size: 1rem; }
     .product-stock { font-size: 0.75rem; color: var(--text-muted); }
+    .stock-negative { color: var(--danger) !important; font-weight: bold; }
 
     /* TABLA RESPONSIVA Y KARDEX */
     .table-responsive { width: 100%; overflow-x: auto; }
@@ -705,18 +706,18 @@
         <div class="product-card" onclick="agregarAlCarrito('${p.id}')">
           <div class="product-title">${p.nombre}</div>
           <div class="product-price">$${p.precio.toFixed(2)}</div>
-          <div class="product-stock">Stock: ${p.stock}</div>
+          <div class="product-stock ${p.stock <= 0 ? 'stock-negative' : ''}">Stock: ${p.stock}</div>
         </div>
       `).join('');
     }
 
     function agregarAlCarrito(id) {
       const prod = dbProductos.find(p => p.id === id);
-      if (!prod || prod.stock <= 0) return alert('Sin stock disponible');
+      if (!prod) return alert('Producto no encontrado');
 
       const item = carrito.find(c => c.id === id);
       if (item) {
-        if (item.cantidad < prod.stock) item.cantidad++;
+        item.cantidad++;
       } else {
         carrito.push({ id: prod.id, nombre: prod.nombre, precio: prod.precio, costo: prod.costo || 0, cantidad: 1 });
       }
@@ -751,7 +752,7 @@
       for (const i of carrito) {
         const p = dbProductos.find(x => x.id === i.id);
         if (p) {
-          p.stock -= i.cantidad;
+          p.stock -= i.cantidad; // Permite stock negativo si ya estaba en 0 o menos
           await supabaseClient.from('productos').update({ stock: p.stock }).eq('id', p.id);
         }
       }
@@ -913,7 +914,7 @@
           <td><b>${p.nombre}</b></td>
           <td><input type="number" step="0.01" id="edit-costo-${p.id}" value="${costo.toFixed(2)}" style="width:80px; margin:0; padding:6px;"></td>
           <td><input type="number" step="0.01" id="edit-precio-${p.id}" value="${p.precio.toFixed(2)}" style="width:80px; margin:0; padding:6px;"></td>
-          <td><input type="number" id="edit-stock-${p.id}" value="${p.stock}" style="width:70px; margin:0; padding:6px;"></td>
+          <td><input type="number" id="edit-stock-${p.id}" value="${p.stock}" style="width:70px; margin:0; padding:6px; ${p.stock <= 0 ? 'color:var(--danger); font-weight:bold;' : ''}"></td>
           <td>
             <button class="btn btn-primary btn-sm" onclick="actualizarProducto('${p.id}')">Guardar</button>
             <button class="btn btn-danger btn-sm" onclick="eliminarProducto('${p.id}')">X</button>
@@ -1133,3 +1134,4 @@
   </script>
 </body>
 </html>
+
