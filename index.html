@@ -329,7 +329,7 @@
                   <th>P. Venta</th>
                   <th>Ganancia</th>
                   <th>Stock</th>
-                  <th>Acciones</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody id="inv-tabla-catalogo"></tbody>
@@ -508,7 +508,13 @@
     // ==========================================
     const SUPABASE_URL = 'https://.supabase.co'; // <--- PEGA TU URL AQUÍ
     const SUPABASE_KEY = 'sb_publishable_';               // <--- PEGA TU CLAVE PÚBLICA AQUÍ
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        storage: window.localStorage
+      }
+    });
 
     let dbLocales = [];
     let dbUsuarios = [];
@@ -517,6 +523,22 @@
     let dbVentas = [];
     let usuarioActual = null;
     let carrito = [];
+
+    // COMPROBAR SESIÓN AUTOMÁTICAMENTE AL CARGAR LA PÁGINA
+    document.addEventListener('DOMContentLoaded', async () => {
+      await cargarDatosSupabase();
+      
+      const usuarioGuardado = localStorage.getItem('pos_usuario_activo');
+      if (usuarioGuardado) {
+        const user = JSON.parse(usuarioGuardado);
+        const userExiste = dbUsuarios.find(x => x.id === user.id);
+        if (userExiste) {
+          configurarSesionUsuario(userExiste);
+        } else {
+          localStorage.removeItem('pos_usuario_activo');
+        }
+      }
+    });
 
     async function cargarDatosSupabase() {
       try {
@@ -538,6 +560,38 @@
       }
     }
 
+    function configurarSesionUsuario(user) {
+      usuarioActual = user;
+      localStorage.setItem('pos_usuario_activo', JSON.stringify(user));
+
+      document.getElementById('login-error').style.display = 'none';
+      document.getElementById('login-screen').style.setProperty('display', 'none', 'important');
+      document.getElementById('session-user').innerText = user.user;
+      
+      const loc = dbLocales.find(l => l.id === user.localId)?.nombre || 'Panel Principal (Admin)';
+      document.getElementById('session-local').innerText = loc;
+
+      const esAdmin = user.rol === 'Administrador';
+
+      document.querySelectorAll('.admin-only').forEach(el => {
+        if (esAdmin) {
+          el.classList.remove('admin-only');
+          el.style.display = 'flex';
+        } else {
+          el.style.display = 'none';
+        }
+      });
+
+      document.getElementById('inv-local-container').style.display = esAdmin ? 'block' : 'none';
+      document.getElementById('inv-filtro-container').style.display = esAdmin ? 'block' : 'none';
+      document.getElementById('historial-filtro-container').style.display = esAdmin ? 'block' : 'none';
+      document.getElementById('reportes-filtro-local-container').style.display = esAdmin ? 'block' : 'none';
+      document.getElementById('kardex-filtro-local-container').style.display = esAdmin ? 'block' : 'none';
+
+      poblardropdowns();
+      cambiarVista('pos');
+    }
+
     async function iniciarSesion() {
       await cargarDatosSupabase();
       const u = document.getElementById('login-user').value.trim();
@@ -545,33 +599,7 @@
       const user = dbUsuarios.find(x => x.user === u && x.pass === p);
 
       if (user) {
-        usuarioActual = user;
-        document.getElementById('login-error').style.display = 'none';
-        document.getElementById('login-screen').style.setProperty('display', 'none', 'important');
-        document.getElementById('session-user').innerText = user.user;
-        
-        const loc = dbLocales.find(l => l.id === user.localId)?.nombre || 'Panel Principal (Admin)';
-        document.getElementById('session-local').innerText = loc;
-
-        const esAdmin = user.rol === 'Administrador';
-
-        document.querySelectorAll('.admin-only').forEach(el => {
-          if (esAdmin) {
-            el.classList.remove('admin-only');
-            el.style.display = 'flex';
-          } else {
-            el.style.display = 'none';
-          }
-        });
-
-        document.getElementById('inv-local-container').style.display = esAdmin ? 'block' : 'none';
-        document.getElementById('inv-filtro-container').style.display = esAdmin ? 'block' : 'none';
-        document.getElementById('historial-filtro-container').style.display = esAdmin ? 'block' : 'none';
-        document.getElementById('reportes-filtro-local-container').style.display = esAdmin ? 'block' : 'none';
-        document.getElementById('kardex-filtro-local-container').style.display = esAdmin ? 'block' : 'none';
-
-        poblardropdowns();
-        cambiarVista('pos');
+        configurarSesionUsuario(user);
       } else {
         document.getElementById('login-error').style.display = 'block';
       }
@@ -579,6 +607,7 @@
 
     function cerrarSesion() {
       usuarioActual = null;
+      localStorage.removeItem('pos_usuario_activo');
       document.getElementById('login-screen').style.display = 'flex';
     }
 
@@ -892,37 +921,6 @@
       renderInventario();
     }
 
-    /* NUEVA FUNCIÓN PARA EDITAR EL STOCK */
-    async function editarStock(idProducto, stockActual) {
-      const nuevoStockStr = prompt("Ingresa la nueva cantidad en stock:", stockActual);
-      
-      // Si el usuario da clic en Cancelar o presiona Esc
-      if (nuevoStockStr === null) return;
-
-      const nuevoStock = parseInt(nuevoStockStr);
-
-      if (isNaN(nuevoStock) || nuevoStock < 0) {
-        return alert("Por favor ingresa un número válido mayor o igual a 0.");
-      }
-
-      // Actualización en Supabase usando la instancia local 'supabaseClient'
-      const { error } = await supabaseClient
-        .from('productos')
-        .update({ stock: nuevoStock })
-        .eq('id', idProducto);
-
-      if (error) {
-        alert("Error al actualizar stock: " + error.message);
-      } else {
-        // Actualizamos en la memoria local
-        const p = dbProductos.find(x => x.id === idProducto);
-        if (p) p.stock = nuevoStock;
-
-        alert("¡Stock actualizado con éxito!");
-        renderInventario();
-      }
-    }
-
     function renderInventario() {
       let filtroLocal = usuarioActual.localId;
       if (usuarioActual.localId === 'TODOS') {
@@ -942,11 +940,8 @@
           <td>$${costo.toFixed(2)}</td>
           <td>$${p.precio.toFixed(2)}</td>
           <td class="text-success">+$${ganancia.toFixed(2)}</td>
-          <td><b>${p.stock}</b></td>
-          <td>
-            <button class="btn btn-primary btn-sm" style="margin-right:4px;" onclick="editarStock('${p.id}', ${p.stock})">Editar Stock</button>
-            <button class="btn btn-danger btn-sm" onclick="eliminarProducto('${p.id}')">Eliminar</button>
-          </td>
+          <td>${p.stock}</td>
+          <td><button class="btn btn-danger btn-sm" onclick="eliminarProducto('${p.id}')">Eliminar</button></td>
         </tr>`;
       }).join('');
     }
