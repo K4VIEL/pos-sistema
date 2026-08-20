@@ -209,11 +209,6 @@
           <h3>Kardex de Facturación y Salida de Productos</h3>
           <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:12px;">Auditoría detallada de comprobantes emitidos, horas exactas y productos transferidos.</p>
           
-          <div id="kardex-filtro-local-container" style="display:none;">
-            <label>Sucursal</label>
-            <select id="kardex-filtro-local" onchange="renderKardex()"></select>
-          </div>
-
           <input type="text" id="kardex-buscar" placeholder="🔍 Buscar por N° ticket, cliente, RUC o producto..." oninput="renderKardex()">
 
           <div class="table-responsive" style="margin-top:10px;">
@@ -281,10 +276,6 @@
       <section id="vista-inventario" class="page-section">
         <div class="card">
           <h3>Gestión de Producto</h3>
-          <div id="inv-local-container" style="display:none;">
-            <label>Sucursal Destino</label>
-            <select id="inv-local-select"></select>
-          </div>
           
           <div class="form-row">
             <div>
@@ -316,9 +307,6 @@
 
         <div class="card">
           <h3>Inventario (Edición Directa de Stock y Precios)</h3>
-          <div id="inv-filtro-container" style="display:none;">
-            <select id="inv-filtro-local" onchange="renderInventario()"></select>
-          </div>
           <div class="table-responsive">
             <table>
               <thead>
@@ -342,9 +330,6 @@
       <section id="vista-historial" class="page-section">
         <div class="card">
           <h3>Historial de Ventas</h3>
-          <div id="historial-filtro-container" style="display:none;">
-            <select id="historial-filtro-local" onchange="renderHistorial()"></select>
-          </div>
           <div class="table-responsive">
             <table>
               <thead><tr><th>Ticket</th><th>Sucursal</th><th>Cliente</th><th>Fecha</th><th>Total</th><th></th></tr></thead>
@@ -358,11 +343,6 @@
       <section id="vista-reportes" class="page-section">
         <div class="card">
           <h3>Reporte de Desempeño</h3>
-          
-          <div id="reportes-filtro-local-container" style="display:none; margin-bottom: 10px;">
-            <label>Sucursal</label>
-            <select id="rep-filtro-local" onchange="generarReporte()"></select>
-          </div>
 
           <div class="form-row">
             <div>
@@ -564,7 +544,7 @@
       document.getElementById('login-screen').style.setProperty('display', 'none', 'important');
       document.getElementById('session-user').innerText = usuarioActual.user;
       
-      const loc = dbLocales.find(l => l.id === usuarioActual.localId)?.nombre || 'Panel Principal (Admin)';
+      const loc = dbLocales.find(l => l.id === usuarioActual.localId)?.nombre || 'Panel Principal';
       document.getElementById('session-local').innerText = loc;
 
       const esAdmin = usuarioActual.rol === 'Administrador';
@@ -578,12 +558,6 @@
         }
       });
 
-      document.getElementById('inv-local-container').style.display = esAdmin ? 'block' : 'none';
-      document.getElementById('inv-filtro-container').style.display = esAdmin ? 'block' : 'none';
-      document.getElementById('historial-filtro-container').style.display = esAdmin ? 'block' : 'none';
-      document.getElementById('reportes-filtro-local-container').style.display = esAdmin ? 'block' : 'none';
-      document.getElementById('kardex-filtro-local-container').style.display = esAdmin ? 'block' : 'none';
-
       poblardropdowns();
       cambiarVista('pos');
     }
@@ -596,7 +570,7 @@
 
     function cambiarVista(vista) {
       if ((vista === 'locales' || vista === 'usuarios') && usuarioActual?.rol !== 'Administrador') {
-        return alert('Acceso denegado. Función reservada para el Administrador Principal.');
+        return alert('Acceso denegado. Función reservada para el Administrador.');
       }
 
       document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
@@ -620,21 +594,12 @@
 
     function poblardropdowns() {
       const opts = dbLocales.map(l => `<option value="${l.id}">${l.nombre}</option>`).join('');
-      document.getElementById('inv-local-select').innerHTML = opts;
       document.getElementById('usr-local-select').innerHTML = opts;
-      
-      const optsFiltro = `<option value="TODOS">Todos los Locales</option>` + opts;
-      document.getElementById('inv-filtro-local').innerHTML = optsFiltro;
-      document.getElementById('historial-filtro-local').innerHTML = optsFiltro;
-      document.getElementById('reportes-filtro-local-container').style.display = usuarioActual?.rol === 'Administrador' ? 'block' : 'none';
-      document.getElementById('rep-filtro-local').innerHTML = optsFiltro;
-      document.getElementById('kardex-filtro-local').innerHTML = optsFiltro;
-
       poblarClientesDropdown();
     }
 
     function poblarClientesDropdown() {
-      const clientesAislamiento = dbClientes.filter(c => c.localId === 'TODOS' || c.localId === usuarioActual.localId || usuarioActual.localId === 'TODOS');
+      const clientesAislamiento = dbClientes.filter(c => c.localId === usuarioActual.localId || c.localId === 'TODOS');
       const optsClientes = clientesAislamiento.map(c => `<option value="${c.id}">${c.cedula} - ${c.nombre} ${c.apellido}</option>`).join('');
       document.getElementById('pos-cliente-select').innerHTML = `<option value="">Consumidor Final</option>` + optsClientes;
     }
@@ -649,8 +614,8 @@
         return alert('Cédula, Nombre y Apellido son obligatorios.');
       }
 
-      if (dbClientes.some(c => c.cedula === cedula && (c.localId === usuarioActual.localId || usuarioActual.localId === 'TODOS'))) {
-        return alert('Ya existe un cliente con esa Cédula.');
+      if (dbClientes.some(c => c.cedula === cedula && c.localId === usuarioActual.localId)) {
+        return alert('Ya existe un cliente con esa Cédula en tu tienda.');
       }
 
       const nuevoCliente = { 
@@ -680,7 +645,7 @@
     function renderClientes() {
       const q = (document.getElementById('cli-buscar')?.value || '').toLowerCase();
       const clientes = dbClientes.filter(c => 
-        (usuarioActual.localId === 'TODOS' || c.localId === usuarioActual.localId || c.localId === 'TODOS') &&
+        c.localId === usuarioActual.localId &&
         (c.cedula.toLowerCase().includes(q) || c.nombre.toLowerCase().includes(q) || c.apellido.toLowerCase().includes(q))
       );
 
@@ -706,8 +671,7 @@
 
     function renderProductosPOS() {
       const q = (document.getElementById('pos-buscar')?.value || '').toLowerCase();
-      const targetLocalId = usuarioActual.localId === 'TODOS' ? dbLocales[0]?.id : usuarioActual.localId;
-      const productos = dbProductos.filter(p => p.localId === targetLocalId && (p.nombre.toLowerCase().includes(q) || p.codigo.includes(q)));
+      const productos = dbProductos.filter(p => p.localId === usuarioActual.localId && (p.nombre.toLowerCase().includes(q) || p.codigo.includes(q)));
 
       document.getElementById('pos-grid-productos').innerHTML = productos.map(p => `
         <div class="product-card" onclick="agregarAlCarrito('${p.id}')">
@@ -749,7 +713,6 @@
     async function procesarVenta() {
       if (carrito.length === 0) return alert('El carrito está vacío');
 
-      const targetLocalId = usuarioActual.localId === 'TODOS' ? dbLocales[0]?.id : usuarioActual.localId;
       const clienteId = document.getElementById('pos-cliente-select').value;
       const clienteObj = dbClientes.find(c => c.id === clienteId);
 
@@ -766,8 +729,8 @@
 
       const venta = {
         id: 'FAC-' + Date.now().toString().slice(-5),
-        localId: targetLocalId,
-        localNombre: dbLocales.find(l => l.id === targetLocalId)?.nombre,
+        localId: usuarioActual.localId,
+        localNombre: dbLocales.find(l => l.id === usuarioActual.localId)?.nombre || 'Mi Tienda',
         clienteNombre,
         clienteCedula,
         fecha: new Date().toISOString(),
@@ -800,15 +763,10 @@
     }
 
     function renderKardex() {
-      let filtroLocal = usuarioActual.localId;
-      if (usuarioActual.localId === 'TODOS') {
-        filtroLocal = document.getElementById('kardex-filtro-local')?.value || 'TODOS';
-      }
-
       const q = (document.getElementById('kardex-buscar')?.value || '').toLowerCase();
 
       const ventas = dbVentas.filter(v => {
-        const matchLocal = (filtroLocal === 'TODOS' || v.localId === filtroLocal);
+        const matchLocal = v.localId === usuarioActual.localId;
         const matchQuery = v.id.toLowerCase().includes(q) || 
                            v.clienteNombre.toLowerCase().includes(q) || 
                            v.clienteCedula.toLowerCase().includes(q) ||
@@ -879,7 +837,6 @@
     }
 
     async function guardarProducto() {
-      const targetLocalId = usuarioActual.localId === 'TODOS' ? document.getElementById('inv-local-select').value : usuarioActual.localId;
       const codigo = document.getElementById('inv-codigo').value;
       const nombre = document.getElementById('inv-nombre').value;
       const costo = parseFloat(document.getElementById('inv-costo').value) || 0;
@@ -888,7 +845,7 @@
 
       if (!codigo || !nombre || isNaN(precio)) return alert('Completa los campos requeridos');
 
-      const nuevoProd = { id: Date.now().toString(), localId: targetLocalId, codigo, nombre, costo, precio, stock };
+      const nuevoProd = { id: Date.now().toString(), localId: usuarioActual.localId, codigo, nombre, costo, precio, stock };
 
       const { error } = await supabaseClient.from('productos').insert([nuevoProd]);
       if (error) return alert("Error al guardar producto: " + error.message);
@@ -902,15 +859,11 @@
       document.getElementById('inv-stock').value = '';
 
       renderInventario();
+      alert('Producto guardado correctamente en tu tienda');
     }
 
     function renderInventario() {
-      let filtroLocal = usuarioActual.localId;
-      if (usuarioActual.localId === 'TODOS') {
-        filtroLocal = document.getElementById('inv-filtro-local')?.value || 'TODOS';
-      }
-
-      const lista = filtroLocal === 'TODOS' ? dbProductos : dbProductos.filter(p => p.localId === filtroLocal);
+      const lista = dbProductos.filter(p => p.localId === usuarioActual.localId);
 
       document.getElementById('inv-tabla-catalogo').innerHTML = lista.map(p => {
         const costo = p.costo || 0;
@@ -964,12 +917,7 @@
     }
 
     function renderHistorial() {
-      let filtroLocal = usuarioActual.localId;
-      if (usuarioActual.localId === 'TODOS') {
-        filtroLocal = document.getElementById('historial-filtro-local')?.value || 'TODOS';
-      }
-
-      const lista = filtroLocal === 'TODOS' ? dbVentas : dbVentas.filter(v => v.localId === filtroLocal);
+      const lista = dbVentas.filter(v => v.localId === usuarioActual.localId);
 
       document.getElementById('historial-tabla').innerHTML = lista.map(v => `
         <tr>
@@ -1003,17 +951,12 @@
     }
 
     function generarReporte() {
-      let filtroLocal = usuarioActual.localId;
-      if (usuarioActual.localId === 'TODOS') {
-        filtroLocal = document.getElementById('rep-filtro-local')?.value || 'TODOS';
-      }
-
       const anioSel = parseInt(document.getElementById('rep-anio').value);
       const mesSel = document.getElementById('rep-mes').value;
 
       const ventasFiltradas = dbVentas.filter(v => {
         const d = new Date(v.fecha);
-        const matchLocal = (filtroLocal === 'TODOS' || v.localId === filtroLocal);
+        const matchLocal = v.localId === usuarioActual.localId;
         const matchAnio = d.getFullYear() === anioSel;
         const matchMes = (mesSel === 'TODOS' || d.getMonth() === parseInt(mesSel));
         return matchLocal && matchAnio && matchMes;
@@ -1080,7 +1023,7 @@
       if (error) return alert("Error al eliminar local: " + error.message);
 
       dbLocales = dbLocales.filter(l => l.id !== id);
-      dbUsuarios = dbUsuarios.filter(u => u.localId !== id || u.rol === 'Administrador');
+      dbUsuarios = dbUsuarios.filter(u => u.localId !== id);
       
       poblardropdowns();
       renderLocales();
@@ -1117,9 +1060,9 @@
         <tr>
           <td><b>${u.user}</b></td>
           <td>${u.rol}</td>
-          <td>${u.localId==='TODOS'?'Todas':(dbLocales.find(l=>l.id===u.localId)?.nombre || 'N/A')}</td>
+          <td>${dbLocales.find(l=>l.id===u.localId)?.nombre || 'N/A'}</td>
           <td>
-            ${u.id !== usuarioActual.id && u.user !== 'admin' ? `<button class="btn btn-danger btn-sm" onclick="eliminarUsuario('${u.id}')">Eliminar</button>` : '<em>Protegido</em>'}
+            ${u.user !== 'Blackdiamond' && u.id !== usuarioActual.id ? `<button class="btn btn-danger btn-sm" onclick="eliminarUsuario('${u.id}')">Eliminar</button>` : '<em>Protegido</em>'}
           </td>
         </tr>
       `).join('');
@@ -1128,9 +1071,8 @@
     async function eliminarUsuario(id) {
       const usuarioAEliminar = dbUsuarios.find(u => u.id === id);
       
-      // BLOQUEO DE SEGURIDAD CRÍTICA: Proteger la cuenta principal del admin
-      if (usuarioAEliminar && (usuarioAEliminar.user === 'admin' || usuarioAEliminar.localId === 'TODOS')) {
-        return alert("¡Acción bloqueada! No se puede eliminar al usuario administrador principal del sistema.");
+      if (usuarioAEliminar && usuarioAEliminar.user === 'Blackdiamond') {
+        return alert("¡Acción bloqueada! No se puede eliminar al administrador principal del sistema.");
       }
 
       if (id === usuarioActual.id) {
@@ -1146,12 +1088,10 @@
       alert('Usuario eliminado correctamente');
     }
 
-    // Comprobación automática al cargar o refrescar la página
     window.addEventListener('DOMContentLoaded', async () => {
       if (usuarioActual) {
         try {
           await cargarDatosSupabase();
-          // Verificación estricta de que el usuario almacenado en local storage siga existiendo en DB
           const existe = dbUsuarios.find(u => u.id === usuarioActual.id);
           if (!existe) {
             cerrarSesion();
