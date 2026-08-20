@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>POS Multi-Local Centralizado</title>
-  <link rel="manifest" href="manifest.json">
   <!-- LIBRERÍA DE SUPABASE -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
@@ -330,7 +329,7 @@
                   <th>P. Venta</th>
                   <th>Ganancia</th>
                   <th>Stock</th>
-                  <th></th>
+                  <th>Acciones</th>
                 </tr>
               </thead>
               <tbody id="inv-tabla-catalogo"></tbody>
@@ -507,8 +506,8 @@
     // ==========================================
     // CONFIGURACIÓN DE SUPABASE
     // ==========================================
-    const SUPABASE_URL = 'https://ycwuzqjwmzhynhjawnqd.supabase.co'; // <--- PEGA TU URL AQUÍ
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inljd3V6cWp3bXpoeW5oamF3bnFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcxNzUyNjQsImV4cCI6MjEwMjc1MTI2NH0.AuU9Us6BdYDTy2np4iJY9ltCFicVbIUtQ4D7FNDgIfM';               // <--- PEGA TU CLAVE PÚBLICA AQUÍ
+    const SUPABASE_URL = 'https://.supabase.co'; // <--- PEGA TU URL AQUÍ
+    const SUPABASE_KEY = 'sb_publishable_';               // <--- PEGA TU CLAVE PÚBLICA AQUÍ
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let dbLocales = [];
@@ -893,6 +892,37 @@
       renderInventario();
     }
 
+    /* NUEVA FUNCIÓN PARA EDITAR EL STOCK */
+    async function editarStock(idProducto, stockActual) {
+      const nuevoStockStr = prompt("Ingresa la nueva cantidad en stock:", stockActual);
+      
+      // Si el usuario da clic en Cancelar o presiona Esc
+      if (nuevoStockStr === null) return;
+
+      const nuevoStock = parseInt(nuevoStockStr);
+
+      if (isNaN(nuevoStock) || nuevoStock < 0) {
+        return alert("Por favor ingresa un número válido mayor o igual a 0.");
+      }
+
+      // Actualización en Supabase usando la instancia local 'supabaseClient'
+      const { error } = await supabaseClient
+        .from('productos')
+        .update({ stock: nuevoStock })
+        .eq('id', idProducto);
+
+      if (error) {
+        alert("Error al actualizar stock: " + error.message);
+      } else {
+        // Actualizamos en la memoria local
+        const p = dbProductos.find(x => x.id === idProducto);
+        if (p) p.stock = nuevoStock;
+
+        alert("¡Stock actualizado con éxito!");
+        renderInventario();
+      }
+    }
+
     function renderInventario() {
       let filtroLocal = usuarioActual.localId;
       if (usuarioActual.localId === 'TODOS') {
@@ -912,8 +942,11 @@
           <td>$${costo.toFixed(2)}</td>
           <td>$${p.precio.toFixed(2)}</td>
           <td class="text-success">+$${ganancia.toFixed(2)}</td>
-          <td>${p.stock}</td>
-          <td><button class="btn btn-danger btn-sm" onclick="eliminarProducto('${p.id}')">Eliminar</button></td>
+          <td><b>${p.stock}</b></td>
+          <td>
+            <button class="btn btn-primary btn-sm" style="margin-right:4px;" onclick="editarStock('${p.id}', ${p.stock})">Editar Stock</button>
+            <button class="btn btn-danger btn-sm" onclick="eliminarProducto('${p.id}')">Eliminar</button>
+          </td>
         </tr>`;
       }).join('');
     }
@@ -1105,3 +1138,4 @@
   </script>
 </body>
 </html>
+
