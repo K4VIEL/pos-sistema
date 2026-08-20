@@ -508,13 +508,7 @@
     // ==========================================
     const SUPABASE_URL = 'https://.supabase.co'; // <--- PEGA TU URL AQUÍ
     const SUPABASE_KEY = 'sb_publishable_';               // <--- PEGA TU CLAVE PÚBLICA AQUÍ
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        storage: window.localStorage
-      }
-    });
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let dbLocales = [];
     let dbUsuarios = [];
@@ -523,22 +517,6 @@
     let dbVentas = [];
     let usuarioActual = null;
     let carrito = [];
-
-    // COMPROBAR SESIÓN AUTOMÁTICAMENTE AL CARGAR LA PÁGINA
-    document.addEventListener('DOMContentLoaded', async () => {
-      await cargarDatosSupabase();
-      
-      const usuarioGuardado = localStorage.getItem('pos_usuario_activo');
-      if (usuarioGuardado) {
-        const user = JSON.parse(usuarioGuardado);
-        const userExiste = dbUsuarios.find(x => x.id === user.id);
-        if (userExiste) {
-          configurarSesionUsuario(userExiste);
-        } else {
-          localStorage.removeItem('pos_usuario_activo');
-        }
-      }
-    });
 
     async function cargarDatosSupabase() {
       try {
@@ -560,38 +538,6 @@
       }
     }
 
-    function configurarSesionUsuario(user) {
-      usuarioActual = user;
-      localStorage.setItem('pos_usuario_activo', JSON.stringify(user));
-
-      document.getElementById('login-error').style.display = 'none';
-      document.getElementById('login-screen').style.setProperty('display', 'none', 'important');
-      document.getElementById('session-user').innerText = user.user;
-      
-      const loc = dbLocales.find(l => l.id === user.localId)?.nombre || 'Panel Principal (Admin)';
-      document.getElementById('session-local').innerText = loc;
-
-      const esAdmin = user.rol === 'Administrador';
-
-      document.querySelectorAll('.admin-only').forEach(el => {
-        if (esAdmin) {
-          el.classList.remove('admin-only');
-          el.style.display = 'flex';
-        } else {
-          el.style.display = 'none';
-        }
-      });
-
-      document.getElementById('inv-local-container').style.display = esAdmin ? 'block' : 'none';
-      document.getElementById('inv-filtro-container').style.display = esAdmin ? 'block' : 'none';
-      document.getElementById('historial-filtro-container').style.display = esAdmin ? 'block' : 'none';
-      document.getElementById('reportes-filtro-local-container').style.display = esAdmin ? 'block' : 'none';
-      document.getElementById('kardex-filtro-local-container').style.display = esAdmin ? 'block' : 'none';
-
-      poblardropdowns();
-      cambiarVista('pos');
-    }
-
     async function iniciarSesion() {
       await cargarDatosSupabase();
       const u = document.getElementById('login-user').value.trim();
@@ -599,7 +545,33 @@
       const user = dbUsuarios.find(x => x.user === u && x.pass === p);
 
       if (user) {
-        configurarSesionUsuario(user);
+        usuarioActual = user;
+        document.getElementById('login-error').style.display = 'none';
+        document.getElementById('login-screen').style.setProperty('display', 'none', 'important');
+        document.getElementById('session-user').innerText = user.user;
+        
+        const loc = dbLocales.find(l => l.id === user.localId)?.nombre || 'Panel Principal (Admin)';
+        document.getElementById('session-local').innerText = loc;
+
+        const esAdmin = user.rol === 'Administrador';
+
+        document.querySelectorAll('.admin-only').forEach(el => {
+          if (esAdmin) {
+            el.classList.remove('admin-only');
+            el.style.display = 'flex';
+          } else {
+            el.style.display = 'none';
+          }
+        });
+
+        document.getElementById('inv-local-container').style.display = esAdmin ? 'block' : 'none';
+        document.getElementById('inv-filtro-container').style.display = esAdmin ? 'block' : 'none';
+        document.getElementById('historial-filtro-container').style.display = esAdmin ? 'block' : 'none';
+        document.getElementById('reportes-filtro-local-container').style.display = esAdmin ? 'block' : 'none';
+        document.getElementById('kardex-filtro-local-container').style.display = esAdmin ? 'block' : 'none';
+
+        poblardropdowns();
+        cambiarVista('pos');
       } else {
         document.getElementById('login-error').style.display = 'block';
       }
@@ -607,7 +579,6 @@
 
     function cerrarSesion() {
       usuarioActual = null;
-      localStorage.removeItem('pos_usuario_activo');
       document.getElementById('login-screen').style.display = 'flex';
     }
 
@@ -1133,4 +1104,3 @@
   </script>
 </body>
 </html>
-
