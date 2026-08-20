@@ -712,10 +712,10 @@
     }
 
     function agregarAlCarrito(id) {
-      const prod = dbProductos.find(p => p.id === id);
+      const prod = dbProductos.find(p => String(p.id) === String(id));
       if (!prod) return alert('Producto no encontrado');
 
-      const item = carrito.find(c => c.id === id);
+      const item = carrito.find(c => String(c.id) === String(id));
       if (item) {
         item.cantidad++;
       } else {
@@ -750,7 +750,7 @@
       const clienteCedula = clienteObj ? clienteObj.cedula : '9999999999';
 
       for (const i of carrito) {
-        const p = dbProductos.find(x => x.id === i.id);
+        const p = dbProductos.find(x => String(x.id) === String(i.id));
         if (p) {
           p.stock -= i.cantidad; // Permite stock negativo si ya estaba en 0 o menos
           await supabaseClient.from('productos').update({ stock: p.stock }).eq('id', p.id);
@@ -936,7 +936,7 @@
 
       if (error) return alert("Error al actualizar producto: " + error.message);
 
-      const prod = dbProductos.find(p => p.id === id);
+      const prod = dbProductos.find(p => String(p.id) === String(id));
       if (prod) {
         prod.costo = nuevoCosto;
         prod.precio = nuevoPrecio;
@@ -952,7 +952,7 @@
       const { error } = await supabaseClient.from('productos').delete().eq('id', id);
       if (error) return alert("Error al eliminar producto: " + error.message);
 
-      dbProductos = dbProductos.filter(x => x.id !== id);
+      dbProductos = dbProductos.filter(x => String(x.id) !== String(id));
       renderInventario();
     }
 
