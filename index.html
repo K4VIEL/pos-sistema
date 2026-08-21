@@ -651,7 +651,6 @@
     function abrirCamaraInventario() {
       abrirCamara(function(decodedText) {
         document.getElementById('inv-codigo').value = decodedText;
-        // Opcional: verificar si el producto ya existe en el stock al escanearlo
         const prodExistente = dbProductos.find(p => String(p.localId) === String(usuarioActual.localId) && p.codigo.trim() === decodedText.trim());
         if(prodExistente) {
           alert("Este código ya pertenece a: " + prodExistente.nombre + ". Puedes actualizar sus datos abajo.");
@@ -735,10 +734,16 @@
           <td>${item.nombre}</td>
           <td>${item.cantidad}</td>
           <td>$${sub.toFixed(2)}</td>
-          <td><button class="btn btn-danger btn-sm" onclick="cart.items.splice(${idx},1);renderizarCarritosTabs();">X</button></td>
+          <td><button class="btn btn-danger btn-sm" onclick="eliminarItemCarrito(${idx})">X</button></td>
         </tr>`;
       }).join('');
       document.getElementById('pos-total').innerText = total.toFixed(2);
+    }
+
+    function eliminarItemCarrito(index) {
+      const cart = obtenerCarritoActual();
+      cart.items.splice(index, 1);
+      renderizarCarritosTabs();
     }
     // ----------------------------------------------------
 
@@ -839,7 +844,6 @@
       dbVentas.push(venta);
       mostrarFactura(venta);
 
-      // Eliminar carrito actual o vaciarlo
       carritos = carritos.filter(c => c.id !== cart.id);
       if (carritos.length === 0) carritos.push({ id: Date.now(), nombre: 'Principal 1', items: [] });
       carritoActivoId = carritos[0].id;
@@ -869,7 +873,6 @@
         document.getElementById('arqueo-estado-cerrado').style.display = 'none';
         document.getElementById('arq-fondo').value = arqueoAbierto.fondoInicial;
         
-        // Calcular ventas del turno actual
         const ventasTurno = dbVentas.filter(v => String(v.localId) === String(usuarioActual.localId) && new Date(v.fecha) >= new Date(arqueoAbierto.fechaApertura));
         
         let tEfectivo = 0, tTarjeta = 0, tTransferencia = 0;
@@ -976,7 +979,7 @@
       `).join('') || `<tr><td colspan="5" style="text-align:center;">No hay arqueos anteriores</td></tr>`;
     }
 
-    // --- DEMÁS MÓDULOS (Clientes, Inventario, Historial, Reportes, Locales, Usuarios) ---
+    // --- DEMÁS MÓDULOS ---
     async function guardarCliente() {
       const cedula = document.getElementById('cli-cedula').value.trim();
       const nombre = document.getElementById('cli-nombre').value.trim();
