@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>POS Multi-Local Centralizado</title>
-  <!-- LIBRERÍA DE SUPABASE -->
+  <title>POS Multi-Local Centralizado Pro</title>
+  <!-- LIBRERÍAS EXTERNAS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <style>
     :root {
       --primary: #2563eb;
@@ -17,6 +18,7 @@
       --border: #e2e8f0;
       --danger: #ef4444;
       --success: #22c55e;
+      --warning: #f59e0b;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
@@ -27,9 +29,9 @@
     .login-box { background: white; padding: 28px; border-radius: 16px; width: 100%; max-width: 360px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
     .login-box h2 { font-size: 1.5rem; margin-bottom: 8px; color: var(--text); }
 
-    /* MODAL DE COBRO GENERAL */
+    /* MODAL GENERAL */
     .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 10000; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px); }
-    .modal-box { background: white; padding: 24px; border-radius: 16px; width: 100%; max-width: 380px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+    .modal-box { background: white; padding: 24px; border-radius: 16px; width: 100%; max-width: 420px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); max-height: 90vh; overflow-y: auto; }
     .modal-box h3 { font-size: 1.25rem; margin-bottom: 15px; color: var(--text); text-align: center; }
 
     /* LAYOUT ADAPTATIVO */
@@ -42,12 +44,11 @@
     .badge { background: #dbeafe; color: var(--primary); padding: 4px 10px; border-radius: 20px; font-weight: 600; }
 
     /* NAV NATIVA */
-    .nav-bar { background: var(--card-bg); border-top: 1px solid var(--border); position: fixed; bottom: 0; left: 0; right: 0; display: flex; justify-content: space-around; padding: 8px 0; z-index: 1000; }
-    .nav-btn { border: none; background: none; color: var(--text-muted); font-size: 0.75rem; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; flex: 1; }
+    .nav-bar { background: var(--card-bg); border-top: 1px solid var(--border); position: fixed; bottom: 0; left: 0; right: 0; display: flex; justify-content: space-around; padding: 8px 0; z-index: 1000; overflow-x: auto; }
+    .nav-btn { border: none; background: none; color: var(--text-muted); font-size: 0.75rem; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; flex: 1; min-width: 60px; }
     .nav-btn.active { color: var(--primary); font-weight: 700; }
     .nav-btn svg { width: 22px; height: 22px; fill: currentColor; }
     
-    /* CONTROL DE VISIBILIDAD SOLO ADMIN */
     .admin-only { display: none !important; }
 
     /* CONTENIDO PRINCIPAL */
@@ -55,7 +56,6 @@
     .page-section { display: none; }
     .page-section.active { display: block !important; }
 
-    /* ESTILOS DE COMPONENTES UI */
     .card { background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border); padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
     .grid-pos { display: grid; grid-template-columns: 1fr; gap: 16px; }
 
@@ -69,33 +69,36 @@
     .btn-primary { background: var(--primary); color: white; }
     .btn-primary:active { background: var(--primary-hover); }
     .btn-danger { background: var(--danger); color: white; }
+    .btn-warning { background: var(--warning); color: white; }
     .btn-sm { padding: 6px 12px; font-size: 0.85rem; width: auto; margin: 0; }
 
-    /* TARJETAS DE REPORTE */
-    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 12px; }
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-top: 12px; }
     .kpi-card { background: var(--bg); border: 1px solid var(--border); padding: 16px; border-radius: 10px; text-align: center; }
-    .kpi-card .kpi-val { font-size: 1.5rem; font-weight: 800; margin-top: 4px; }
+    .kpi-card .kpi-val { font-size: 1.4rem; font-weight: 800; margin-top: 4px; }
 
-    /* LISTA PRODUCTOS TÁCTIL */
-    .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
-    .product-card { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center; cursor: pointer; }
+    .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; max-height: 400px; overflow-y: auto; }
+    .product-card { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px; text-align: center; cursor: pointer; }
     .product-card:active { border-color: var(--primary); background: #eff6ff; }
-    .product-title { font-weight: 600; font-size: 0.9rem; margin-bottom: 4px; }
-    .product-price { color: var(--primary); font-weight: 700; font-size: 1rem; }
+    .product-title { font-weight: 600; font-size: 0.85rem; margin-bottom: 4px; }
+    .product-price { color: var(--primary); font-weight: 700; font-size: 0.95rem; }
     .product-stock { font-size: 0.75rem; color: var(--text-muted); }
     .stock-negative { color: var(--danger) !important; font-weight: bold; }
 
-    /* TABLA RESPONSIVA Y KARDEX */
     .table-responsive { width: 100%; overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; }
     th, td { padding: 10px; border-bottom: 1px solid var(--border); }
     th { color: var(--text-muted); font-weight: 600; background: var(--bg); }
     .text-success { color: var(--success); font-weight: bold; }
+
+    /* ESTILOS DE PESTAÑAS DE CARRITO */
+    .cart-tabs { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 10px; padding-bottom: 4px; }
+    .cart-tab-btn { padding: 6px 12px; font-size: 0.8rem; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; white-space: nowrap; }
+    .cart-tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); font-weight: bold; }
     
     @media (min-width: 768px) {
       .app-container { flex-direction: row; }
-      .nav-bar { position: static; flex-direction: column; width: 220px; border-top: none; border-right: 1px solid var(--border); padding: 20px 10px; justify-content: flex-start; gap: 10px; }
-      .nav-btn { flex-direction: row; font-size: 0.95rem; padding: 10px 14px; border-radius: 8px; justify-content: flex-start; gap: 12px; flex: none; }
+      .nav-bar { position: static; flex-direction: column; width: 220px; border-top: none; border-right: 1px solid var(--border); padding: 20px 10px; justify-content: flex-start; gap: 8px; height: calc(100vh - 57px); overflow-y: auto; }
+      .nav-btn { flex-direction: row; font-size: 0.9rem; padding: 10px 14px; border-radius: 8px; justify-content: flex-start; gap: 12px; flex: none; min-width: auto; }
       .nav-btn.active { background: #eff6ff; }
       main { padding-bottom: 20px; }
       .grid-pos { grid-template-columns: 1.6fr 1fr; }
@@ -123,7 +126,16 @@
     </div>
   </div>
 
-  <!-- MODAL DE COBRO CON MÉTODO DE PAGO Y VUELTO -->
+  <!-- MODAL DE CÁMARA PARA CÓDIGO DE BARRAS -->
+  <div id="modal-camara" class="modal-overlay">
+    <div class="modal-box" style="text-align: center;">
+      <h3>Escanear Código de Barras</h3>
+      <div id="reader" style="width: 100%; border-radius: 8px; overflow: hidden;"></div>
+      <button class="btn btn-danger" style="margin-top: 15px;" onclick="cerrarCamara()">Cerrar Cámara</button>
+    </div>
+  </div>
+
+  <!-- MODAL DE COBRO -->
   <div id="modal-cobro" class="modal-overlay">
     <div class="modal-box">
       <h3>Confirmar Pago</h3>
@@ -157,7 +169,7 @@
 
   <!-- HEADER -->
   <header class="no-print">
-    <div class="brand-title">POS System</div>
+    <div class="brand-title">POS Pro System</div>
     <div class="user-badge">
       <span class="badge" id="session-local">-</span>
       <span id="session-user" style="font-weight:600;">-</span>
@@ -171,6 +183,10 @@
       <button class="nav-btn active" id="btn-nav-pos" onclick="cambiarVista('pos')">
         <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
         <span>Ventas</span>
+      </button>
+      <button class="nav-btn" id="btn-nav-arqueo" onclick="cambiarVista('arqueo')">
+        <svg viewBox="0 0 24 24"><path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+        <span>Arqueo Caja</span>
       </button>
       <button class="nav-btn" id="btn-nav-kardex" onclick="cambiarVista('kardex')">
         <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
@@ -193,7 +209,6 @@
         <span>Reportes</span>
       </button>
       
-      <!-- BOTONES EXCLUSIVOS SOLO PARA EL ADMIN -->
       <button class="nav-btn admin-only" id="btn-nav-locales" onclick="cambiarVista('locales')">
         <svg viewBox="0 0 24 24"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg>
         <span>Locales</span>
@@ -205,22 +220,30 @@
     </nav>
 
     <main>
-      <!-- VISTA POS -->
+      <!-- VISTA POS CON MÚLTIPLES CARRITOS Y CÁMARA -->
       <section id="vista-pos" class="page-section active">
         <div class="grid-pos">
           <div>
             <div class="card">
-              <input type="text" id="pos-buscar" placeholder="🔍 Buscar por nombre o código..." oninput="renderProductosPOS()">
+              <div style="display:flex; gap:8px; margin-bottom:8px;">
+                <input type="text" id="pos-buscar" placeholder="🔍 Buscar por nombre o código..." oninput="renderProductosPOS()" style="margin:0;">
+                <button class="btn btn-primary btn-sm" onclick="abrirCamara()" style="margin:0; white-space:nowrap;">📷 Escanear</button>
+              </div>
               <div class="product-grid" id="pos-grid-productos"></div>
             </div>
           </div>
           <div>
             <div class="card">
-              <h3 style="margin-bottom:8px;">Carrito de Venta</h3>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <h3 style="margin:0;">Carrito Actual</h3>
+                <button class="btn btn-warning btn-sm" onclick="ponerCarritoEnEspera()">⏸ En espera</button>
+              </div>
+
+              <!-- Pestañas de Carritos en Espera -->
+              <div class="cart-tabs" id="pos-cart-tabs"></div>
+
               <label>Cliente (Opcional)</label>
-              <select id="pos-cliente-select">
-                <option value="">Consumidor Final</option>
-              </select>
+              <select id="pos-cliente-select"></select>
               
               <div class="table-responsive" style="margin-top:10px;">
                 <table>
@@ -235,25 +258,68 @@
         </div>
       </section>
 
+      <!-- VISTA ARQUEO DE CAJA -->
+      <section id="vista-arqueo" class="page-section">
+        <div class="card">
+          <h3>Arqueo y Cierre de Caja (Turnos)</h3>
+          <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:12px;">Control de efectivo y conciliación del turno actual.</p>
+          
+          <div id="arqueo-estado-abierto" style="display:none;">
+            <div class="form-row">
+              <div>
+                <label>Fondo Inicial en Caja ($)</label>
+                <input type="number" step="0.01" id="arq-fondo" placeholder="0.00">
+              </div>
+              <div>
+                <label>&nbsp;</label>
+                <button class="btn btn-primary" onclick="guardarFondoCaja()" style="margin-top:4px;">Actualizar Fondo</button>
+              </div>
+            </div>
+
+            <div class="kpi-grid" style="margin-top: 15px;">
+              <div class="kpi-card"><label>Fondo Inicial</label><div class="kpi-val" id="arq-lbl-fondo">$0.00</div></div>
+              <div class="kpi-card"><label>Ventas en Efectivo</label><div class="kpi-val text-success" id="arq-lbl-efectivo">$0.00</div></div>
+              <div class="kpi-card"><label>Ventas Tarjeta</label><div class="kpi-val" id="arq-lbl-tarjeta">$0.00</div></div>
+              <div class="kpi-card"><label>Ventas Transferencia</label><div class="kpi-val" id="arq-lbl-transferencia">$0.00</div></div>
+            </div>
+
+            <div style="margin-top: 20px; background:var(--bg); padding:15px; border-radius:8px;">
+              <h4>Cierre de Turno</h4>
+              <label>Conteo Físico de Efectivo en Caja ($)</label>
+              <input type="number" step="0.01" id="arq-conteo-fisico" placeholder="0.00" oninput="calcularDiferenciaArqueo()">
+              <div style="margin-top:10px;">
+                <span>Diferencia / Descuadré:</span>
+                <div style="font-size:1.3rem; font-weight:bold;" id="arq-lbl-diferencia">$0.00</div>
+              </div>
+              <button class="btn btn-danger" style="margin-top:12px;" onclick="cerrarTurnoCaja()">Cerrar Caja y Registrar Arqueo</button>
+            </div>
+          </div>
+
+          <div id="arqueo-estado-cerrado">
+            <p style="color:var(--danger); font-weight:bold; margin-bottom:10px;">No hay un turno de caja activo o ya fue cerrado.</p>
+            <button class="btn btn-primary" onclick="iniciarNuevoTurno()">Abrir Nuevo Turno de Caja</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Historial de Arqueos de Caja</h3>
+          <div class="table-responsive">
+            <table>
+              <thead><tr><th>Fecha Apertura</th><th>Fondo</th><th>Efectivo Venta</th><th>Físico Contado</th><th>Diferencia</th></tr></thead>
+              <tbody id="arqueo-historial-tabla"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
       <!-- VISTA KARDEX -->
       <section id="vista-kardex" class="page-section">
         <div class="card">
           <h3>Kardex de Facturación y Salida de Productos</h3>
-          <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:12px;">Auditoría detallada de comprobantes emitidos.</p>
-          <input type="text" id="kardex-buscar" placeholder="🔍 Buscar por N° ticket, cliente, RUC o producto..." oninput="renderKardex()">
+          <input type="text" id="kardex-buscar" placeholder="🔍 Buscar por N° ticket, cliente o producto..." oninput="renderKardex()">
           <div class="table-responsive" style="margin-top:10px;">
             <table>
-              <thead>
-                <tr>
-                  <th>Ticket</th>
-                  <th>Fecha y Hora</th>
-                  <th>Sucursal</th>
-                  <th>Cliente</th>
-                  <th>Pago</th>
-                  <th>Total</th>
-                  <th>Acción</th>
-                </tr>
-              </thead>
+              <thead><tr><th>Ticket</th><th>Fecha y Hora</th><th>Sucursal</th><th>Cliente</th><th>Pago</th><th>Total</th><th>Acción</th></tr></thead>
               <tbody id="kardex-tabla"></tbody>
             </table>
           </div>
@@ -267,33 +333,19 @@
           <label>Cédula / RUC *</label>
           <input type="text" id="cli-cedula" placeholder="Ej: 1312345678">
           <div class="form-row">
-            <div>
-              <label>Nombre *</label>
-              <input type="text" id="cli-nombre" placeholder="Ej: Juan">
-            </div>
-            <div>
-              <label>Apellido *</label>
-              <input type="text" id="cli-apellido" placeholder="Ej: Pérez">
-            </div>
+            <div><label>Nombre *</label><input type="text" id="cli-nombre" placeholder="Ej: Juan"></div>
+            <div><label>Apellido *</label><input type="text" id="cli-apellido" placeholder="Ej: Pérez"></div>
           </div>
           <label>Correo Electrónico (Opcional)</label>
           <input type="email" id="cli-correo" placeholder="ejemplo@correo.com">
           <button class="btn btn-primary" onclick="guardarCliente()">Guardar Cliente</button>
         </div>
-
         <div class="card">
           <h3>Clientes Registrados</h3>
           <input type="text" id="cli-buscar" placeholder="🔍 Buscar cliente..." oninput="renderClientes()">
           <div class="table-responsive">
             <table>
-              <thead>
-                <tr>
-                  <th>Cédula</th>
-                  <th>Cliente</th>
-                  <th>Correo</th>
-                  <th></th>
-                </tr>
-              </thead>
+              <thead><tr><th>Cédula</th><th>Cliente</th><th>Correo</th><th></th></tr></thead>
               <tbody id="cli-tabla"></tbody>
             </table>
           </div>
@@ -305,44 +357,22 @@
         <div class="card">
           <h3>Gestión de Producto</h3>
           <div class="form-row">
-            <div>
-              <label>Código de Barras</label>
-              <input type="text" id="inv-codigo" placeholder="Ej: 77001">
-            </div>
-            <div>
-              <label>Stock Inicial</label>
-              <input type="number" id="inv-stock" placeholder="Ej: 20">
-            </div>
+            <div><label>Código de Barras</label><input type="text" id="inv-codigo" placeholder="Ej: 77001"></div>
+            <div><label>Stock Inicial</label><input type="number" id="inv-stock" placeholder="Ej: 20"></div>
           </div>
           <label>Nombre del Producto</label>
           <input type="text" id="inv-nombre" placeholder="Nombre de Producto">
           <div class="form-row">
-            <div>
-              <label>Costo de Compra ($)</label>
-              <input type="number" id="inv-costo" step="0.01" placeholder="Costo">
-            </div>
-            <div>
-              <label>Precio de Venta ($)</label>
-              <input type="number" id="inv-precio" step="0.01" placeholder="P. Venta">
-            </div>
+            <div><label>Costo de Compra ($)</label><input type="number" id="inv-costo" step="0.01" placeholder="Costo"></div>
+            <div><label>Precio de Venta ($)</label><input type="number" id="inv-precio" step="0.01" placeholder="P. Venta"></div>
           </div>
           <button class="btn btn-primary" onclick="guardarProducto()">Guardar Producto</button>
         </div>
-
         <div class="card">
           <h3>Inventario de tu Tienda</h3>
           <div class="table-responsive">
             <table>
-              <thead>
-                <tr>
-                  <th>Código</th>
-                  <th>Producto</th>
-                  <th>Costo ($)</th>
-                  <th>P. Venta ($)</th>
-                  <th>Stock</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
+              <thead><tr><th>Código</th><th>Producto</th><th>Costo ($)</th><th>P. Venta ($)</th><th>Stock</th><th>Acciones</th></tr></thead>
               <tbody id="inv-tabla-catalogo"></tbody>
             </table>
           </div>
@@ -367,48 +397,24 @@
         <div class="card">
           <h3>Reporte de Desempeño</h3>
           <div class="form-row">
-            <div>
-              <label>Año</label>
-              <select id="rep-anio" onchange="generarReporte()"></select>
-            </div>
+            <div><label>Año</label><select id="rep-anio" onchange="generarReporte()"></select></div>
             <div>
               <label>Mes</label>
               <select id="rep-mes" onchange="generarReporte()">
-                <option value="TODOS">Todos los meses (Anual)</option>
-                <option value="0">Enero</option>
-                <option value="1">Febrero</option>
-                <option value="2">Marzo</option>
-                <option value="3">Abril</option>
-                <option value="4">Mayo</option>
-                <option value="5">Junio</option>
-                <option value="6">Julio</option>
-                <option value="7">Agosto</option>
-                <option value="8">Septiembre</option>
-                <option value="9">Octubre</option>
-                <option value="10">Noviembre</option>
-                <option value="11">Diciembre</option>
+                <option value="TODOS">Todos (Anual)</option>
+                <option value="0">Enero</option><option value="1">Febrero</option><option value="2">Marzo</option><option value="3">Abril</option><option value="4">Mayo</option><option value="5">Junio</option><option value="6">Julio</option><option value="7">Agosto</option><option value="8">Septiembre</option><option value="9">Octubre</option><option value="10">Noviembre</option><option value="11">Diciembre</option>
               </select>
             </div>
           </div>
-
           <div class="kpi-grid">
-            <div class="kpi-card">
-              <label>Ventas Totales</label>
-              <div class="kpi-val text-success" id="rep-val-ventas">$0.00</div>
-            </div>
-            <div class="kpi-card">
-              <label>Costo de Compras</label>
-              <div class="kpi-val" style="color:var(--danger);" id="rep-val-compras">$0.00</div>
-            </div>
-            <div class="kpi-card">
-              <label>Ganancia Neta</label>
-              <div class="kpi-val" style="color:var(--primary);" id="rep-val-ganancia">$0.00</div>
-            </div>
+            <div class="kpi-card"><label>Ventas Totales</label><div class="kpi-val text-success" id="rep-val-ventas">$0.00</div></div>
+            <div class="kpi-card"><label>Costo de Compras</label><div class="kpi-val" style="color:var(--danger);" id="rep-val-compras">$0.00</div></div>
+            <div class="kpi-card"><label>Ganancia Neta</label><div class="kpi-val" style="color:var(--primary);" id="rep-val-ganancia">$0.00</div></div>
           </div>
         </div>
       </section>
 
-      <!-- VISTA LOCALES (Exclusivo Admin) -->
+      <!-- VISTA LOCALES -->
       <section id="vista-locales" class="page-section">
         <div class="card">
           <h3>Crear Nueva Sucursal</h3>
@@ -427,14 +433,14 @@
         </div>
       </section>
 
-      <!-- VISTA USUARIOS (Exclusivo Admin) -->
+      <!-- VISTA USUARIOS -->
       <section id="vista-usuarios" class="page-section">
         <div class="card">
           <h3>Crear Credencial para Sucursal</h3>
           <input type="text" id="usr-user" placeholder="Nombre de Usuario">
           <input type="password" id="usr-pass" placeholder="Contraseña">
           <select id="usr-rol">
-            <option value="Cajero">Cajero / Encargado de Sucursal</option>
+            <option value="Cajero">Cajero / Encargado</option>
             <option value="Administrador">Administrador General</option>
           </select>
           <label>Sucursal Asignada</label>
@@ -487,18 +493,24 @@
     let dbProductos = [];
     let dbClientes = [];
     let dbVentas = [];
+    let dbArqueos = [];
     
     let usuarioActual = JSON.parse(localStorage.getItem('usuarioActual')) || null;
-    let carrito = [];
+    
+    // Múltiples Carritos en Espera
+    let carritos = [{ id: 1, nombre: 'Principal 1', items: [] }];
+    let carritoActivoId = 1;
+    let html5QrCode = null;
 
     async function cargarDatosSupabase() {
       try {
-        const [resLoc, resUsr, resProd, resCli, resVen] = await Promise.all([
+        const [resLoc, resUsr, resProd, resCli, resVen, resArq] = await Promise.all([
           supabaseClient.from('locales').select('*'),
           supabaseClient.from('usuarios').select('*'),
           supabaseClient.from('productos').select('*'),
           supabaseClient.from('clientes').select('*'),
-          supabaseClient.from('ventas').select('*')
+          supabaseClient.from('ventas').select('*'),
+          supabaseClient.from('arqueos').select('*')
         ]);
 
         if (resLoc.data) dbLocales = resLoc.data;
@@ -506,15 +518,14 @@
         if (resProd.data) dbProductos = resProd.data;
         if (resCli.data) dbClientes = resCli.data;
         if (resVen.data) dbVentas = resVen.data;
+        if (resArq.data) dbArqueos = resArq.data;
       } catch (err) {
         console.error("Aviso al cargar Supabase:", err);
       }
     }
 
     async function iniciarSesion() {
-      try {
-        await cargarDatosSupabase();
-      } catch (e) {}
+      try { await cargarDatosSupabase(); } catch (e) {}
 
       const u = document.getElementById('login-user').value.trim();
       const p = document.getElementById('login-pass').value.trim();
@@ -538,14 +549,9 @@
       document.getElementById('session-local').innerText = loc;
 
       const esAdmin = usuarioActual.rol === 'Administrador';
-
       document.querySelectorAll('.admin-only').forEach(el => {
-        if (esAdmin) {
-          el.classList.remove('admin-only');
-          el.style.display = 'flex';
-        } else {
-          el.style.display = 'none';
-        }
+        if (esAdmin) { el.classList.remove('admin-only'); el.style.display = 'flex'; }
+        else { el.style.display = 'none'; }
       });
 
       poblardropdowns();
@@ -568,11 +574,11 @@
 
       const sec = document.getElementById(`vista-${vista}`);
       if(sec) sec.classList.add('active');
-      
       const btnNav = document.getElementById(`btn-nav-${vista}`);
       if(btnNav) btnNav.classList.add('active');
 
-      if (vista === 'pos') renderProductosPOS();
+      if (vista === 'pos') renderizarCarritosTabs();
+      if (vista === 'arqueo') prepararVistaArqueo();
       if (vista === 'kardex') renderKardex();
       if (vista === 'clientes') renderClientes();
       if (vista === 'inventario') renderInventario();
@@ -596,62 +602,73 @@
       if (selectCli) selectCli.innerHTML = `<option value="">Consumidor Final</option>` + optsClientes;
     }
 
-    async function guardarCliente() {
-      const cedula = document.getElementById('cli-cedula').value.trim();
-      const nombre = document.getElementById('cli-nombre').value.trim();
-      const apellido = document.getElementById('cli-apellido').value.trim();
-      const correo = document.getElementById('cli-correo').value.trim();
-
-      if (!cedula || !nombre || !apellido) return alert('Cédula, Nombre y Apellido son obligatorios.');
-
-      const nuevoCliente = { 
-        id: Date.now().toString(), 
-        localId: String(usuarioActual.localId), 
-        cedula, 
-        nombre, 
-        apellido, 
-        correo: correo || 'Sin correo' 
-      };
-
-      const { error } = await supabaseClient.from('clientes').insert([nuevoCliente]);
-      if (error) return alert("Error al guardar cliente: " + error.message);
-
-      dbClientes.push(nuevoCliente);
-      document.getElementById('cli-cedula').value = '';
-      document.getElementById('cli-nombre').value = '';
-      document.getElementById('cli-apellido').value = '';
-      document.getElementById('cli-correo').value = '';
-
-      poblarClientesDropdown();
-      renderClientes();
-      alert('Cliente registrado');
+    // --- FUNCIONES DE MÚLTIPLES CARRITOS Y CÁMARA ---
+    function obtenerCarritoActual() {
+      return carritos.find(c => c.id === carritoActivoId) || carritos[0];
     }
 
-    function renderClientes() {
-      const q = (document.getElementById('cli-buscar')?.value || '').toLowerCase();
-      const clientes = dbClientes.filter(c => 
-        String(c.localId) === String(usuarioActual.localId) &&
-        (c.cedula.toLowerCase().includes(q) || c.nombre.toLowerCase().includes(q) || c.apellido.toLowerCase().includes(q))
-      );
+    function renderizarCarritosTabs() {
+      const container = document.getElementById('pos-cart-tabs');
+      container.innerHTML = carritos.map(c => `
+        <button class="cart-tab-btn ${c.id === carritoActivoId ? 'active' : ''}" onclick="cambiarCarritoActivo(${c.id})">
+          ${c.nombre} (${c.items.length})
+        </button>
+      `).join('') + `<button class="cart-tab-btn" onclick="crearNuevoCarrito()" style="background:#e2e8f0; color:#334155;">+ Carrito</button>`;
 
-      document.getElementById('cli-tabla').innerHTML = clientes.map(c => `
-        <tr>
-          <td><b>${c.cedula}</b></td>
-          <td>${c.nombre} ${c.apellido}</td>
-          <td>${c.correo}</td>
-          <td><button class="btn btn-danger btn-sm" onclick="eliminarCliente('${c.id}')">Eliminar</button></td>
-        </tr>
-      `).join('');
+      renderProductosPOS();
+      renderCarrito();
     }
 
-    async function eliminarCliente(id) {
-      if(!confirm("¿Eliminar este cliente?")) return;
-      const { error } = await supabaseClient.from('clientes').delete().eq('id', id);
-      if (error) return alert("Error al eliminar: " + error.message);
-      
-      dbClientes = dbClientes.filter(c => c.id !== id);
-      poblarClientesDropdown();
-      renderClientes();
+    function cambiarCarritoActivo(id) {
+      carritoActivoId = id;
+      renderizarCarritosTabs();
+    }
+
+    function crearNuevoCarrito() {
+      const nuevoId = Date.now();
+      carritos.push({ id: nuevoId, nombre: `Ticket ${carritos.length + 1}`, items: [] });
+      cambiarCarritoActivo(nuevoId);
+    }
+
+    function ponerCarritoEnEspera() {
+      const cart = obtenerCarritoActual();
+      if (cart.items.length === 0) return alert('El carrito actual está vacío');
+      crearNuevoCarrito();
+    }
+
+    function abrirCamara() {
+      document.getElementById('modal-camara').style.display = 'flex';
+      html5QrCode = new Html5Qrcode("reader");
+      html5QrCode.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 250, height: 150 } },
+        (decodedText) => {
+          cerrarCamara();
+          agregarPorCodigoBarras(decodedText);
+        },
+        (errorMessage) => {}
+      ).catch(err => {
+        alert("No se pudo iniciar la cámara: " + err);
+        cerrarCamara();
+      });
+    }
+
+    function cerrarCamara() {
+      if (html5QrCode) {
+        html5QrCode.stop().then(() => {
+          document.getElementById('modal-camara').style.display = 'none';
+        }).catch(() => {
+          document.getElementById('modal-camara').style.display = 'none';
+        });
+      } else {
+        document.getElementById('modal-camara').style.display = 'none';
+      }
+    }
+
+    function agregarPorCodigoBarras(codigo) {
+      const prod = dbProductos.find(p => String(p.localId) === String(usuarioActual.localId) && p.codigo.trim() === codigo.trim());
+      if (!prod) return alert('Producto no encontrado con código: ' + codigo);
+      agregarAlCarrito(prod.id);
     }
 
     function renderProductosPOS() {
@@ -671,35 +688,39 @@
       const prod = dbProductos.find(p => String(p.id) === String(id));
       if (!prod) return alert('Producto no encontrado');
 
-      const item = carrito.find(c => String(c.id) === String(id));
+      const cart = obtenerCarritoActual();
+      const item = cart.items.find(c => String(c.id) === String(id));
       if (item) {
         item.cantidad++;
       } else {
-        carrito.push({ id: prod.id, nombre: prod.nombre, precio: prod.precio, costo: prod.costo || 0, cantidad: 1 });
+        cart.items.push({ id: prod.id, nombre: prod.nombre, precio: prod.precio, costo: prod.costo || 0, cantidad: 1 });
       }
-      renderCarrito();
+      renderizarCarritosTabs();
     }
 
     function renderCarrito() {
+      const cart = obtenerCarritoActual();
       let total = 0;
-      document.getElementById('pos-tabla-carrito').innerHTML = carrito.map((item, idx) => {
+      document.getElementById('pos-tabla-carrito').innerHTML = cart.items.map((item, idx) => {
         const sub = item.precio * item.cantidad;
         total += sub;
         return `<tr>
           <td>${item.nombre}</td>
           <td>${item.cantidad}</td>
           <td>$${sub.toFixed(2)}</td>
-          <td><button class="btn btn-danger btn-sm" onclick="carrito.splice(${idx},1);renderCarrito();">X</button></td>
+          <td><button class="btn btn-danger btn-sm" onclick="cart.items.splice(${idx},1);renderizarCarritosTabs();">X</button></td>
         </tr>`;
       }).join('');
       document.getElementById('pos-total').innerText = total.toFixed(2);
     }
+    // ----------------------------------------------------
 
-    // --- FUNCIONES DE MODAL DE COBRO (CON MÉTODOS DE PAGO) ---
+    // --- FUNCIONES DE MODAL DE COBRO ---
     function abrirModalCobro() {
-      if (carrito.length === 0) return alert('El carrito está vacío');
+      const cart = obtenerCarritoActual();
+      if (cart.items.length === 0) return alert('El carrito está vacío');
       
-      let total = carrito.reduce((s, x) => s + (x.precio * x.cantidad), 0);
+      let total = cart.items.reduce((s, x) => s + (x.precio * x.cantidad), 0);
       document.getElementById('modal-total-txt').innerText = `$${total.toFixed(2)}`;
       document.getElementById('modal-metodo-pago').value = 'Efectivo';
       document.getElementById('modal-pago').value = total.toFixed(2);
@@ -718,7 +739,6 @@
     function cambiarMetodoPago() {
       const metodo = document.getElementById('modal-metodo-pago').value;
       const seccionEfectivo = document.getElementById('seccion-efectivo');
-      
       if (metodo === 'Efectivo') {
         seccionEfectivo.style.display = 'block';
         document.getElementById('modal-pago').focus();
@@ -729,7 +749,8 @@
     }
 
     function calcularVuelto() {
-      let total = carrito.reduce((s, x) => s + (x.precio * x.cantidad), 0);
+      const cart = obtenerCarritoActual();
+      let total = cart.items.reduce((s, x) => s + (x.precio * x.cantidad), 0);
       let pago = parseFloat(document.getElementById('modal-pago').value) || 0;
       let vuelto = pago - total;
       
@@ -745,28 +766,27 @@
 
     async function confirmarYProcesarVenta() {
       const metodo = document.getElementById('modal-metodo-pago').value;
-      let total = carrito.reduce((s, x) => s + (x.precio * x.cantidad), 0);
+      const cart = obtenerCarritoActual();
+      let total = cart.items.reduce((s, x) => s + (x.precio * x.cantidad), 0);
 
       if (metodo === 'Efectivo') {
         let pago = parseFloat(document.getElementById('modal-pago').value) || 0;
-        if (pago < total) {
-          return alert('El monto pagado es menor que el total de la venta.');
-        }
+        if (pago < total) return alert('El monto pagado es menor que el total de la venta.');
       }
 
       cerrarModalCobro();
       await procesarVenta(metodo);
     }
-    // --------------------------------------------------
 
     async function procesarVenta(metodoPago) {
+      const cart = obtenerCarritoActual();
       const clienteId = document.getElementById('pos-cliente-select').value;
       const clienteObj = dbClientes.find(c => c.id === clienteId);
 
       const clienteNombre = clienteObj ? `${clienteObj.nombre} ${clienteObj.apellido}` : 'Consumidor Final';
       const clienteCedula = clienteObj ? clienteObj.cedula : '9999999999';
 
-      for (const i of carrito) {
+      for (const i of cart.items) {
         const p = dbProductos.find(x => String(x.id) === String(i.id));
         if (p) {
           p.stock -= i.cantidad; 
@@ -782,8 +802,8 @@
         clienteCedula,
         metodoPago: metodoPago || 'Efectivo',
         fecha: new Date().toISOString(),
-        items: [...carrito],
-        total: carrito.reduce((s, x) => s + (x.precio * x.cantidad), 0)
+        items: [...cart.items],
+        total: cart.items.reduce((s, x) => s + (x.precio * x.cantidad), 0)
       };
 
       const { error } = await supabaseClient.from('ventas').insert([venta]);
@@ -791,9 +811,12 @@
 
       dbVentas.push(venta);
       mostrarFactura(venta);
-      carrito = [];
-      renderCarrito();
-      renderProductosPOS();
+
+      // Eliminar carrito actual o vaciarlo
+      carritos = carritos.filter(c => c.id !== cart.id);
+      if (carritos.length === 0) carritos.push({ id: Date.now(), nombre: 'Principal 1', items: [] });
+      carritoActivoId = carritos[0].id;
+      renderizarCarritosTabs();
     }
 
     function mostrarFactura(v) {
@@ -810,23 +833,169 @@
       document.getElementById('factura-impresion').style.display = 'block';
     }
 
+    // --- FUNCIONES DE ARQUEO Y CIERRE DE CAJA ---
+    function prepararVistaArqueo() {
+      const arqueoAbierto = dbArqueos.find(a => String(a.localId) === String(usuarioActual.localId) && a.estado === 'Abierto');
+      
+      if (arqueoAbierto) {
+        document.getElementById('arqueo-estado-abierto').style.display = 'block';
+        document.getElementById('arqueo-estado-cerrado').style.display = 'none';
+        document.getElementById('arq-fondo').value = arqueoAbierto.fondoInicial;
+        
+        // Calcular ventas del turno actual
+        const ventasTurno = dbVentas.filter(v => String(v.localId) === String(usuarioActual.localId) && new Date(v.fecha) >= new Date(arqueoAbierto.fechaApertura));
+        
+        let tEfectivo = 0, tTarjeta = 0, tTransferencia = 0;
+        ventasTurno.forEach(v => {
+          if (v.metodoPago === 'Tarjeta') tTarjeta += v.total;
+          else if (v.metodoPago === 'Transferencia') tTransferencia += v.total;
+          else tEfectivo += v.total;
+        });
+
+        document.getElementById('arq-lbl-fondo').innerText = `$${arqueoAbierto.fondoInicial.toFixed(2)}`;
+        document.getElementById('arq-lbl-efectivo').innerText = `$${tEfectivo.toFixed(2)}`;
+        document.getElementById('arq-lbl-tarjeta').innerText = `$${tTarjeta.toFixed(2)}`;
+        document.getElementById('arq-lbl-transferencia').innerText = `$${tTransferencia.toFixed(2)}`;
+        document.getElementById('arq-conteo-fisico').value = (arqueoAbierto.fondoInicial + tEfectivo).toFixed(2);
+        calcularDiferenciaArqueo();
+      } else {
+        document.getElementById('arqueo-estado-abierto').style.display = 'none';
+        document.getElementById('arqueo-estado-cerrado').style.display = 'block';
+      }
+
+      renderHistorialArqueos();
+    }
+
+    async function iniciarNuevoTurno() {
+      const fondo = prompt("Ingrese el fondo inicial en caja ($):", "0.00");
+      if (fondo === null) return;
+      const fondoInicial = parseFloat(fondo) || 0;
+
+      const nuevoArqueo = {
+        id: 'ARQ-' + Date.now(),
+        localId: String(usuarioActual.localId),
+        usuario: usuarioActual.user,
+        fechaApertura: new Date().toISOString(),
+        fondoInicial,
+        estado: 'Abierto'
+      };
+
+      const { error } = await supabaseClient.from('arqueos').insert([nuevoArqueo]);
+      if (error) return alert("Error al abrir caja: " + error.message);
+
+      dbArqueos.push(nuevoArqueo);
+      prepararVistaArqueo();
+    }
+
+    async function guardarFondoCaja() {
+      const arqueoAbierto = dbArqueos.find(a => String(a.localId) === String(usuarioActual.localId) && a.estado === 'Abierto');
+      if (!arqueoAbierto) return;
+
+      const nuevoFondo = parseFloat(document.getElementById('arq-fondo').value) || 0;
+      arqueoAbierto.fondoInicial = nuevoFondo;
+
+      await supabaseClient.from('arqueos').update({ fondoInicial: nuevoFondo }).eq('id', arqueoAbierto.id);
+      alert('Fondo actualizado');
+      prepararVistaArqueo();
+    }
+
+    function calcularDiferenciaArqueo() {
+      const arqueoAbierto = dbArqueos.find(a => String(a.localId) === String(usuarioActual.localId) && a.estado === 'Abierto');
+      if (!arqueoAbierto) return;
+
+      const ventasTurno = dbVentas.filter(v => String(v.localId) === String(usuarioActual.localId) && new Date(v.fecha) >= new Date(arqueoAbierto.fechaApertura));
+      let tEfectivo = 0;
+      ventasTurno.forEach(v => { if (!v.metodoPago || v.metodoPago === 'Efectivo') tEfectivo += v.total; });
+
+      const esperado = arqueoAbierto.fondoInicial + tEfectivo;
+      const fisico = parseFloat(document.getElementById('arq-conteo-fisico').value) || 0;
+      const diferencia = fisico - esperado;
+
+      const lbl = document.getElementById('arq-lbl-diferencia');
+      lbl.innerText = `$${diferencia.toFixed(2)}`;
+      lbl.style.color = diferencia === 0 ? 'var(--success)' : (diferencia > 0 ? 'var(--primary)' : 'var(--danger)');
+    }
+
+    async function cerrarTurnoCaja() {
+      if (!confirm("¿Está seguro de cerrar la caja de este turno?")) return;
+      const arqueoAbierto = dbArqueos.find(a => String(a.localId) === String(usuarioActual.localId) && a.estado === 'Abierto');
+      if (!arqueoAbierto) return;
+
+      const fisico = parseFloat(document.getElementById('arq-conteo-fisico').value) || 0;
+      arqueoAbierto.estado = 'Cerrado';
+      arqueoAbierto.fechaCierre = new Date().toISOString();
+      arqueoAbierto.efectivoFisico = fisico;
+
+      await supabaseClient.from('arqueos').update({
+        estado: 'Cerrado',
+        fechaCierre: arqueoAbierto.fechaCierre,
+        efectivoFisico: fisico
+      }).eq('id', arqueoAbierto.id);
+
+      alert('Turno de caja cerrado con éxito.');
+      prepararVistaArqueo();
+    }
+
+    function renderHistorialArqueos() {
+      const lista = dbArqueos.filter(a => String(a.localId) === String(usuarioActual.localId) && a.estado === 'Cerrado');
+      document.getElementById('arqueo-historial-tabla').innerHTML = lista.map(a => `
+        <tr>
+          <td>${new Date(a.fechaApertura).toLocaleString()}</td>
+          <td>$${(a.fondoInicial || 0).toFixed(2)}</td>
+          <td>-</td>
+          <td>$${(a.efectivoFisico || 0).toFixed(2)}</td>
+          <td><span class="text-success">Cerrado</span></td>
+        </tr>
+      `).join('') || `<tr><td colspan="5" style="text-align:center;">No hay arqueos anteriores</td></tr>`;
+    }
+
+    // --- DEMÁS MÓDULOS (Clientes, Inventario, Historial, Reportes, Locales, Usuarios) ---
+    async function guardarCliente() {
+      const cedula = document.getElementById('cli-cedula').value.trim();
+      const nombre = document.getElementById('cli-nombre').value.trim();
+      const apellido = document.getElementById('cli-apellido').value.trim();
+      const correo = document.getElementById('cli-correo').value.trim();
+      if (!cedula || !nombre || !apellido) return alert('Cédula, Nombre y Apellido son obligatorios.');
+
+      const nuevoCliente = { id: Date.now().toString(), localId: String(usuarioActual.localId), cedula, nombre, apellido, correo: correo || 'Sin correo' };
+      const { error } = await supabaseClient.from('clientes').insert([nuevoCliente]);
+      if (error) return alert("Error: " + error.message);
+
+      dbClientes.push(nuevoCliente);
+      document.getElementById('cli-cedula').value = '';
+      document.getElementById('cli-nombre').value = '';
+      document.getElementById('cli-apellido').value = '';
+      document.getElementById('cli-correo').value = '';
+      poblarClientesDropdown();
+      renderClientes();
+      alert('Cliente registrado');
+    }
+
+    function renderClientes() {
+      const q = (document.getElementById('cli-buscar')?.value || '').toLowerCase();
+      const clientes = dbClientes.filter(c => String(c.localId) === String(usuarioActual.localId) && (c.cedula.toLowerCase().includes(q) || c.nombre.toLowerCase().includes(q)));
+      document.getElementById('cli-tabla').innerHTML = clientes.map(c => `
+        <tr><td><b>${c.cedula}</b></td><td>${c.nombre} ${c.apellido}</td><td>${c.correo}</td><td><button class="btn btn-danger btn-sm" onclick="eliminarCliente('${c.id}')">Eliminar</button></td></tr>
+      `).join('');
+    }
+
+    async function eliminarCliente(id) {
+      if(!confirm("¿Eliminar este cliente?")) return;
+      await supabaseClient.from('clientes').delete().eq('id', id);
+      dbClientes = dbClientes.filter(c => c.id !== id);
+      poblarClientesDropdown();
+      renderClientes();
+    }
+
     function renderKardex() {
       const q = (document.getElementById('kardex-buscar')?.value || '').toLowerCase();
-      const ventas = dbVentas.filter(v => {
-        const matchLocal = String(v.localId) === String(usuarioActual.localId);
-        const matchQuery = v.id.toLowerCase().includes(q) || v.clienteNombre.toLowerCase().includes(q);
-        return matchLocal && matchQuery;
-      }).sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
+      const ventas = dbVentas.filter(v => String(v.localId) === String(usuarioActual.localId) && (v.id.toLowerCase().includes(q) || v.clienteNombre.toLowerCase().includes(q))).sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
 
       document.getElementById('kardex-tabla').innerHTML = ventas.map(v => `
         <tr>
-          <td><b>${v.id}</b></td>
-          <td>${new Date(v.fecha).toLocaleString()}</td>
-          <td>${v.localNombre}</td>
-          <td>${v.clienteNombre}<br><small>${v.clienteCedula}</small></td>
+          <td><b>${v.id}</b></td><td>${new Date(v.fecha).toLocaleString()}</td><td>${v.localNombre}</td><td>${v.clienteNombre}</td>
           <td><span class="badge" style="background:#e0f2fe; color:#0369a1;">${v.metodoPago || 'Efectivo'}</span></td>
-          <td><b>$${v.total.toFixed(2)}</b></td>
-          <td><button class="btn btn-primary btn-sm" onclick='mostrarFactura(${JSON.stringify(v)})'>Ver</button></td>
+          <td><b>$${v.total.toFixed(2)}</b></td><td><button class="btn btn-primary btn-sm" onclick='mostrarFactura(${JSON.stringify(v)})'>Ver</button></td>
         </tr>
       `).join('') || `<tr><td colspan="7" style="text-align:center;">No hay registros</td></tr>`;
     }
@@ -839,50 +1008,35 @@
       const stock = parseInt(document.getElementById('inv-stock').value);
 
       if (!codigo || !nombre || isNaN(precio)) return alert('Completa los campos requeridos');
-
-      const nuevoProd = { 
-        id: Date.now().toString(), 
-        localId: String(usuarioActual.localId), 
-        codigo, 
-        nombre, 
-        costo, 
-        precio, 
-        stock 
-      };
+      const nuevoProd = { id: Date.now().toString(), localId: String(usuarioActual.localId), codigo, nombre, costo, precio, stock };
 
       const { error } = await supabaseClient.from('productos').insert([nuevoProd]);
-      if (error) return alert("Error al guardar producto: " + error.message);
+      if (error) return alert("Error: " + error.message);
 
       dbProductos.push(nuevoProd);
-
       document.getElementById('inv-codigo').value = '';
       document.getElementById('inv-nombre').value = '';
       document.getElementById('inv-costo').value = '';
       document.getElementById('inv-precio').value = '';
       document.getElementById('inv-stock').value = '';
-
       renderInventario();
-      alert('Producto guardado correctamente en tu tienda');
+      alert('Producto guardado');
     }
 
     function renderInventario() {
       const lista = dbProductos.filter(p => String(p.localId) === String(usuarioActual.localId));
-
-      document.getElementById('inv-tabla-catalogo').innerHTML = lista.map(p => {
-        const costo = p.costo || 0;
-        return `
+      document.getElementById('inv-tabla-catalogo').innerHTML = lista.map(p => `
         <tr>
-          <td>${p.codigo}</td>
-          <td><b>${p.nombre}</b></td>
-          <td><input type="number" step="0.01" id="edit-costo-${p.id}" value="${costo.toFixed(2)}" style="width:80px; margin:0; padding:6px;"></td>
+          <td>${p.codigo}</td><td><b>${p.nombre}</b></td>
+          <td><input type="number" step="0.01" id="edit-costo-${p.id}" value="${(p.costo||0).toFixed(2)}" style="width:80px; margin:0; padding:6px;"></td>
           <td><input type="number" step="0.01" id="edit-precio-${p.id}" value="${p.precio.toFixed(2)}" style="width:80px; margin:0; padding:6px;"></td>
           <td><input type="number" id="edit-stock-${p.id}" value="${p.stock}" style="width:70px; margin:0; padding:6px;"></td>
           <td>
             <button class="btn btn-primary btn-sm" onclick="actualizarProducto('${p.id}')">Guardar</button>
             <button class="btn btn-danger btn-sm" onclick="eliminarProducto('${p.id}')">X</button>
           </td>
-        </tr>`;
-      }).join('');
+        </tr>
+      `).join('');
     }
 
     async function actualizarProducto(id) {
@@ -890,30 +1044,16 @@
       const nuevoPrecio = parseFloat(document.getElementById(`edit-precio-${id}`).value) || 0;
       const nuevoStock = parseInt(document.getElementById(`edit-stock-${id}`).value) || 0;
 
-      const { error } = await supabaseClient.from('productos').update({
-        costo: nuevoCosto,
-        precio: nuevoPrecio,
-        stock: nuevoStock
-      }).eq('id', id);
-
-      if (error) return alert("Error al actualizar: " + error.message);
-
+      await supabaseClient.from('productos').update({ costo: nuevoCosto, precio: nuevoPrecio, stock: nuevoStock }).eq('id', id);
       const prod = dbProductos.find(p => String(p.id) === String(id));
-      if (prod) {
-        prod.costo = nuevoCosto;
-        prod.precio = nuevoPrecio;
-        prod.stock = nuevoStock;
-      }
-
+      if (prod) { prod.costo = nuevoCosto; prod.precio = nuevoPrecio; prod.stock = nuevoStock; }
       alert("Actualizado correctamente");
       renderInventario();
     }
 
     async function eliminarProducto(id) {
       if(!confirm("¿Eliminar este producto?")) return;
-      const { error } = await supabaseClient.from('productos').delete().eq('id', id);
-      if (error) return alert("Error al eliminar: " + error.message);
-
+      await supabaseClient.from('productos').delete().eq('id', id);
       dbProductos = dbProductos.filter(x => String(x.id) !== String(id));
       renderInventario();
     }
@@ -921,15 +1061,7 @@
     function renderHistorial() {
       const lista = dbVentas.filter(v => String(v.localId) === String(usuarioActual.localId));
       document.getElementById('historial-tabla').innerHTML = lista.map(v => `
-        <tr>
-          <td>${v.id}</td>
-          <td>${v.localNombre}</td>
-          <td>${v.clienteNombre}</td>
-          <td>${v.metodoPago || 'Efectivo'}</td>
-          <td>${new Date(v.fecha).toLocaleString()}</td>
-          <td>$${v.total.toFixed(2)}</td>
-          <td><button class="btn btn-primary btn-sm" onclick='mostrarFactura(${JSON.stringify(v)})'>Ver</button></td>
-        </tr>
+        <tr><td>${v.id}</td><td>${v.localNombre}</td><td>${v.clienteNombre}</td><td>${v.metodoPago || 'Efectivo'}</td><td>${new Date(v.fecha).toLocaleString()}</td><td>$${v.total.toFixed(2)}</td><td><button class="btn btn-primary btn-sm" onclick='mostrarFactura(${JSON.stringify(v)})'>Ver</button></td></tr>
       `).join('');
     }
 
@@ -937,12 +1069,7 @@
       const selectAnio = document.getElementById('rep-anio');
       const anioActual = new Date().getFullYear();
       let anios = new Set([anioActual]);
-
-      dbVentas.forEach(v => {
-        const d = new Date(v.fecha);
-        if (!isNaN(d.getFullYear())) anios.add(d.getFullYear());
-      });
-
+      dbVentas.forEach(v => { const d = new Date(v.fecha); if (!isNaN(d.getFullYear())) anios.add(d.getFullYear()); });
       selectAnio.innerHTML = Array.from(anios).sort((a,b) => b - a).map(a => `<option value="${a}">${a}</option>`).join('');
       document.getElementById('rep-mes').value = "TODOS";
       generarReporte();
@@ -951,30 +1078,20 @@
     function generarReporte() {
       const anioSel = parseInt(document.getElementById('rep-anio').value);
       const mesSel = document.getElementById('rep-mes').value;
-
       const ventasFiltradas = dbVentas.filter(v => {
         const d = new Date(v.fecha);
-        const matchLocal = String(v.localId) === String(usuarioActual.localId);
-        const matchAnio = d.getFullYear() === anioSel;
-        const matchMes = (mesSel === 'TODOS' || d.getMonth() === parseInt(mesSel));
-        return matchLocal && matchAnio && matchMes;
+        return String(v.localId) === String(usuarioActual.localId) && d.getFullYear() === anioSel && (mesSel === 'TODOS' || d.getMonth() === parseInt(mesSel));
       });
 
-      let totalVentas = 0;
-      let totalCostoCompras = 0;
-
+      let totalVentas = 0, totalCostoCompras = 0;
       ventasFiltradas.forEach(v => {
         totalVentas += v.total;
-        v.items.forEach(i => {
-          totalCostoCompras += ((i.costo || 0) * i.cantidad);
-        });
+        v.items.forEach(i => { totalCostoCompras += ((i.costo || 0) * i.cantidad); });
       });
-
-      const gananciaNeta = totalVentas - totalCostoCompras;
 
       document.getElementById('rep-val-ventas').innerText = `$${totalVentas.toFixed(2)}`;
       document.getElementById('rep-val-compras').innerText = `$${totalCostoCompras.toFixed(2)}`;
-      document.getElementById('rep-val-ganancia').innerText = `$${gananciaNeta.toFixed(2)}`;
+      document.getElementById('rep-val-ganancia').innerText = `$${(totalVentas - totalCostoCompras).toFixed(2)}`;
     }
 
     async function crearLocal() {
@@ -984,14 +1101,10 @@
       if (!nombre) return alert('Ingresa el nombre');
 
       const nuevoLocal = { id: 'LOC-' + Date.now().toString().slice(-4), nombre, direccion };
-
-      const { error } = await supabaseClient.from('locales').insert([nuevoLocal]);
-      if (error) return alert("Error: " + error.message);
-
+      await supabaseClient.from('locales').insert([nuevoLocal]);
       dbLocales.push(nuevoLocal);
       poblardropdowns();
       renderLocales();
-      
       document.getElementById('loc-nombre').value = '';
       document.getElementById('loc-direccion').value = '';
       alert('Local registrado');
@@ -999,24 +1112,16 @@
 
     function renderLocales() {
       document.getElementById('loc-tabla').innerHTML = dbLocales.map(l => `
-        <tr>
-          <td>${l.id}</td>
-          <td><b>${l.nombre}</b></td>
-          <td>${l.direccion}</td>
-          <td><button class="btn btn-danger btn-sm" onclick="eliminarLocal('${l.id}')">Eliminar</button></td>
-        </tr>`).join('');
+        <tr><td>${l.id}</td><td><b>${l.nombre}</b></td><td>${l.direccion}</td><td><button class="btn btn-danger btn-sm" onclick="eliminarLocal('${l.id}')">Eliminar</button></td></tr>
+      `).join('');
     }
 
     async function eliminarLocal(id) {
       if (!confirm("¿Eliminar este local?")) return;
-      const { error } = await supabaseClient.from('locales').delete().eq('id', id);
-      if (error) return alert("Error: " + error.message);
-
+      await supabaseClient.from('locales').delete().eq('id', id);
       dbLocales = dbLocales.filter(l => l.id !== id);
-      dbUsuarios = dbUsuarios.filter(u => u.localId !== id);
       poblardropdowns();
       renderLocales();
-      renderUsuarios();
     }
 
     async function crearUsuario() {
@@ -1025,53 +1130,34 @@
       const pass = document.getElementById('usr-pass').value.trim();
       const rol = document.getElementById('usr-rol').value;
       const localId = document.getElementById('usr-local-select').value;
-
       if (!user || !pass) return alert('Completa los campos');
 
       const nuevoUsuario = { id: Date.now().toString(), user, pass, rol, localId: String(localId) };
-
-      const { error } = await supabaseClient.from('usuarios').insert([nuevoUsuario]);
-      if (error) return alert("Error: " + error.message);
-
+      await supabaseClient.from('usuarios').insert([nuevoUsuario]);
       dbUsuarios.push(nuevoUsuario);
       document.getElementById('usr-user').value = '';
       document.getElementById('usr-pass').value = '';
       renderUsuarios();
-      alert(`Usuario creado`);
+      alert('Usuario creado');
     }
 
     function renderUsuarios() {
       document.getElementById('usr-tabla').innerHTML = dbUsuarios.map(u => `
-        <tr>
-          <td><b>${u.user}</b></td>
-          <td>${u.rol}</td>
-          <td>${dbLocales.find(l=>String(l.id)===String(u.localId))?.nombre || 'N/A'}</td>
-          <td>
-            ${u.user !== 'Blackdiamond' && u.id !== usuarioActual.id ? `<button class="btn btn-danger btn-sm" onclick="eliminarUsuario('${u.id}')">Eliminar</button>` : '<em>Protegido</em>'}
-          </td>
-        </tr>
+        <tr><td><b>${u.user}</b></td><td>${u.rol}</td><td>${dbLocales.find(l=>String(l.id)===String(u.localId))?.nombre || 'N/A'}</td>
+        <td>${u.user !== 'Blackdiamond' ? `<button class="btn btn-danger btn-sm" onclick="eliminarUsuario('${u.id}')">Eliminar</button>` : '<em>Protegido</em>'}</td></tr>
       `).join('');
     }
 
     async function eliminarUsuario(id) {
-      const usr = dbUsuarios.find(u => u.id === id);
-      if (usr && usr.user === 'Blackdiamond') return alert("No se puede eliminar al administrador principal.");
       if (!confirm("¿Eliminar usuario?")) return;
-
-      const { error } = await supabaseClient.from('usuarios').delete().eq('id', id);
-      if (error) return alert("Error: " + error.message);
-
+      await supabaseClient.from('usuarios').delete().eq('id', id);
       dbUsuarios = dbUsuarios.filter(u => u.id !== id);
       renderUsuarios();
     }
 
     window.addEventListener('DOMContentLoaded', async () => {
       if (usuarioActual) {
-        try {
-          await cargarDatosSupabase();
-          const existe = dbUsuarios.find(u => u.id === usuarioActual.id);
-          if (!existe) { cerrarSesion(); return; }
-        } catch (e) {}
+        try { await cargarDatosSupabase(); } catch (e) {}
         aplicarSesionActiva();
       }
     });
