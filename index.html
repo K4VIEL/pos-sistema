@@ -27,6 +27,11 @@
     .login-box { background: white; padding: 28px; border-radius: 16px; width: 100%; max-width: 360px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
     .login-box h2 { font-size: 1.5rem; margin-bottom: 8px; color: var(--text); }
 
+    /* MODAL DE COBRO GENERAL */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 10000; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px); }
+    .modal-box { background: white; padding: 24px; border-radius: 16px; width: 100%; max-width: 380px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+    .modal-box h3 { font-size: 1.25rem; margin-bottom: 15px; color: var(--text); text-align: center; }
+
     /* LAYOUT ADAPTATIVO */
     .app-container { display: flex; flex: 1; flex-direction: column; }
     
@@ -87,11 +92,6 @@
     th { color: var(--text-muted); font-weight: 600; background: var(--bg); }
     .text-success { color: var(--success); font-weight: bold; }
     
-    .kardex-row-detail { background-color: #f1f5f9; display: none; }
-    .kardex-subtable { width: 100%; margin: 8px 0; background: white; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); }
-    .kardex-subtable th { background: #e2e8f0; font-size: 0.8rem; }
-    .kardex-subtable td { font-size: 0.8rem; padding: 6px 10px; }
-
     @media (min-width: 768px) {
       .app-container { flex-direction: row; }
       .nav-bar { position: static; flex-direction: column; width: 220px; border-top: none; border-right: 1px solid var(--border); padding: 20px 10px; justify-content: flex-start; gap: 10px; }
@@ -120,6 +120,38 @@
       <input type="password" id="login-pass" placeholder="Contraseña" value="">
       <button class="btn btn-primary" onclick="iniciarSesion()">Acceder</button>
       <p id="login-error" style="color:var(--danger); font-size:0.8rem; display:none; margin-top:10px;">Usuario o contraseña incorrectos</p>
+    </div>
+  </div>
+
+  <!-- MODAL DE COBRO CON MÉTODO DE PAGO Y VUELTO -->
+  <div id="modal-cobro" class="modal-overlay">
+    <div class="modal-box">
+      <h3>Confirmar Pago</h3>
+      <div style="background:var(--bg); padding:12px; border-radius:8px; margin-bottom:12px; text-align:center;">
+        <span style="font-size:0.85rem; color:var(--text-muted);">Total a pagar:</span>
+        <div style="font-size:1.8rem; font-weight:800; color:var(--primary);" id="modal-total-txt">$0.00</div>
+      </div>
+
+      <label>Método de Pago</label>
+      <select id="modal-metodo-pago" onchange="cambiarMetodoPago()">
+        <option value="Efectivo">Efectivo</option>
+        <option value="Tarjeta">Tarjeta</option>
+        <option value="Transferencia">Transferencia</option>
+      </select>
+
+      <div id="seccion-efectivo">
+        <label>Efectivo Recibido ($)</label>
+        <input type="number" step="0.01" id="modal-pago" placeholder="0.00" oninput="calcularVuelto()" style="font-size: 1.2rem; text-align: center;">
+        <div style="margin: 10px 0; text-align: center;">
+          <span style="font-size:0.9rem; color:var(--text-muted);">Cambio / Vuelto:</span>
+          <div style="font-size:1.4rem; font-weight:700; color:var(--success);" id="modal-vuelto-txt">$0.00</div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 10px; margin-top: 15px;">
+        <button class="btn btn-danger" style="flex:1; margin:0;" onclick="cerrarModalCobro()">Cancelar</button>
+        <button class="btn btn-primary" style="flex:1; margin:0;" onclick="confirmarYProcesarVenta()">Confirmar Cobro</button>
+      </div>
     </div>
   </div>
 
@@ -197,20 +229,18 @@
                 </table>
               </div>
               <h2 style="margin-top:15px; text-align:right;">Total: $<span id="pos-total">0.00</span></h2>
-              <button class="btn btn-primary" onclick="procesarVenta()">Cobrar e Imprimir</button>
+              <button class="btn btn-primary" onclick="abrirModalCobro()">Cobrar e Imprimir</button>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- VISTA KARDEX DE FACTURACIÓN -->
+      <!-- VISTA KARDEX -->
       <section id="vista-kardex" class="page-section">
         <div class="card">
           <h3>Kardex de Facturación y Salida de Productos</h3>
-          <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:12px;">Auditoría detallada de comprobantes emitidos, horas exactas y productos transferidos.</p>
-          
+          <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:12px;">Auditoría detallada de comprobantes emitidos.</p>
           <input type="text" id="kardex-buscar" placeholder="🔍 Buscar por N° ticket, cliente, RUC o producto..." oninput="renderKardex()">
-
           <div class="table-responsive" style="margin-top:10px;">
             <table>
               <thead>
@@ -219,6 +249,7 @@
                   <th>Fecha y Hora</th>
                   <th>Sucursal</th>
                   <th>Cliente</th>
+                  <th>Pago</th>
                   <th>Total</th>
                   <th>Acción</th>
                 </tr>
@@ -235,7 +266,6 @@
           <h3>Registrar Cliente</h3>
           <label>Cédula / RUC *</label>
           <input type="text" id="cli-cedula" placeholder="Ej: 1312345678">
-          
           <div class="form-row">
             <div>
               <label>Nombre *</label>
@@ -246,10 +276,8 @@
               <input type="text" id="cli-apellido" placeholder="Ej: Pérez">
             </div>
           </div>
-
           <label>Correo Electrónico (Opcional)</label>
           <input type="email" id="cli-correo" placeholder="ejemplo@correo.com">
-
           <button class="btn btn-primary" onclick="guardarCliente()">Guardar Cliente</button>
         </div>
 
@@ -276,7 +304,6 @@
       <section id="vista-inventario" class="page-section">
         <div class="card">
           <h3>Gestión de Producto</h3>
-          
           <div class="form-row">
             <div>
               <label>Código de Barras</label>
@@ -287,10 +314,8 @@
               <input type="number" id="inv-stock" placeholder="Ej: 20">
             </div>
           </div>
-
           <label>Nombre del Producto</label>
           <input type="text" id="inv-nombre" placeholder="Nombre de Producto">
-
           <div class="form-row">
             <div>
               <label>Costo de Compra ($)</label>
@@ -301,17 +326,15 @@
               <input type="number" id="inv-precio" step="0.01" placeholder="P. Venta">
             </div>
           </div>
-
           <button class="btn btn-primary" onclick="guardarProducto()">Guardar Producto</button>
         </div>
 
         <div class="card">
-          <h3>Inventario (Edición Directa de Stock y Precios)</h3>
+          <h3>Inventario de tu Tienda</h3>
           <div class="table-responsive">
             <table>
               <thead>
                 <tr>
-                  <th>Sucursal</th>
                   <th>Código</th>
                   <th>Producto</th>
                   <th>Costo ($)</th>
@@ -332,7 +355,7 @@
           <h3>Historial de Ventas</h3>
           <div class="table-responsive">
             <table>
-              <thead><tr><th>Ticket</th><th>Sucursal</th><th>Cliente</th><th>Fecha</th><th>Total</th><th></th></tr></thead>
+              <thead><tr><th>Ticket</th><th>Sucursal</th><th>Cliente</th><th>Método</th><th>Fecha</th><th>Total</th><th></th></tr></thead>
               <tbody id="historial-tabla"></tbody>
             </table>
           </div>
@@ -343,7 +366,6 @@
       <section id="vista-reportes" class="page-section">
         <div class="card">
           <h3>Reporte de Desempeño</h3>
-
           <div class="form-row">
             <div>
               <label>Año</label>
@@ -382,34 +404,6 @@
               <label>Ganancia Neta</label>
               <div class="kpi-val" style="color:var(--primary);" id="rep-val-ganancia">$0.00</div>
             </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <h3>Resumen de Operación</h3>
-          <div class="table-responsive">
-            <table>
-              <thead>
-                <tr>
-                  <th>Métrica</th>
-                  <th>Resultado</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Transacciones / Tickets Emitidos</td>
-                  <td id="rep-stat-tickets">0</td>
-                </tr>
-                <tr>
-                  <td>Productos Vendidos (Unidades)</td>
-                  <td id="rep-stat-unidades">0</td>
-                </tr>
-                <tr>
-                  <td>Margen de Ganancia Promedio</td>
-                  <td id="rep-stat-margen">0.0%</td>
-                </tr>
-              </tbody>
-            </table>
           </div>
         </div>
       </section>
@@ -468,6 +462,7 @@
       <p><span id="fac-fecha"></span></p>
       <p style="margin-top: 5px;"><b>Cliente:</b> <span id="fac-cliente"></span></p>
       <p><b>Cédula/RUC:</b> <span id="fac-cedula"></span></p>
+      <p><b>Método de Pago:</b> <span id="fac-metodo"></span></p>
     </div>
     <hr style="margin: 8px 0;">
     <table>
@@ -483,9 +478,6 @@
   </div>
 
   <script>
-    // ==========================================
-    // CONFIGURACIÓN DE SUPABASE Y ESTADO
-    // ==========================================
     const SUPABASE_URL = 'https://ycwuzqjwmzhynhjawnqd.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inljd3V6cWp3bXpoeW5oamF3bnFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcxNzUyNjQsImV4cCI6MjEwMjc1MTI2NH0.AuU9Us6BdYDTy2np4iJY9ltCFicVbIUtQ4D7FNDgIfM';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -522,9 +514,7 @@
     async function iniciarSesion() {
       try {
         await cargarDatosSupabase();
-      } catch (e) {
-        console.log("Continuando sin conexión a red...");
-      }
+      } catch (e) {}
 
       const u = document.getElementById('login-user').value.trim();
       const p = document.getElementById('login-pass').value.trim();
@@ -544,7 +534,7 @@
       document.getElementById('login-screen').style.setProperty('display', 'none', 'important');
       document.getElementById('session-user').innerText = usuarioActual.user;
       
-      const loc = dbLocales.find(l => l.id === usuarioActual.localId)?.nombre || 'Panel Principal';
+      const loc = dbLocales.find(l => String(l.id) === String(usuarioActual.localId))?.nombre || 'Panel Principal';
       document.getElementById('session-local').innerText = loc;
 
       const esAdmin = usuarioActual.rol === 'Administrador';
@@ -570,7 +560,7 @@
 
     function cambiarVista(vista) {
       if ((vista === 'locales' || vista === 'usuarios') && usuarioActual?.rol !== 'Administrador') {
-        return alert('Acceso denegado. Función reservada para el Administrador.');
+        return alert('Acceso denegado.');
       }
 
       document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
@@ -594,14 +584,16 @@
 
     function poblardropdowns() {
       const opts = dbLocales.map(l => `<option value="${l.id}">${l.nombre}</option>`).join('');
-      document.getElementById('usr-local-select').innerHTML = opts;
+      const selectUsr = document.getElementById('usr-local-select');
+      if (selectUsr) selectUsr.innerHTML = opts;
       poblarClientesDropdown();
     }
 
     function poblarClientesDropdown() {
-      const clientesAislamiento = dbClientes.filter(c => c.localId === usuarioActual.localId || c.localId === 'TODOS');
+      const clientesAislamiento = dbClientes.filter(c => String(c.localId) === String(usuarioActual.localId));
       const optsClientes = clientesAislamiento.map(c => `<option value="${c.id}">${c.cedula} - ${c.nombre} ${c.apellido}</option>`).join('');
-      document.getElementById('pos-cliente-select').innerHTML = `<option value="">Consumidor Final</option>` + optsClientes;
+      const selectCli = document.getElementById('pos-cliente-select');
+      if (selectCli) selectCli.innerHTML = `<option value="">Consumidor Final</option>` + optsClientes;
     }
 
     async function guardarCliente() {
@@ -610,17 +602,11 @@
       const apellido = document.getElementById('cli-apellido').value.trim();
       const correo = document.getElementById('cli-correo').value.trim();
 
-      if (!cedula || !nombre || !apellido) {
-        return alert('Cédula, Nombre y Apellido son obligatorios.');
-      }
-
-      if (dbClientes.some(c => c.cedula === cedula && c.localId === usuarioActual.localId)) {
-        return alert('Ya existe un cliente con esa Cédula en tu tienda.');
-      }
+      if (!cedula || !nombre || !apellido) return alert('Cédula, Nombre y Apellido son obligatorios.');
 
       const nuevoCliente = { 
         id: Date.now().toString(), 
-        localId: usuarioActual.localId, 
+        localId: String(usuarioActual.localId), 
         cedula, 
         nombre, 
         apellido, 
@@ -628,10 +614,9 @@
       };
 
       const { error } = await supabaseClient.from('clientes').insert([nuevoCliente]);
-      if (error) return alert("Error al guardar cliente en Supabase: " + error.message);
+      if (error) return alert("Error al guardar cliente: " + error.message);
 
       dbClientes.push(nuevoCliente);
-
       document.getElementById('cli-cedula').value = '';
       document.getElementById('cli-nombre').value = '';
       document.getElementById('cli-apellido').value = '';
@@ -645,7 +630,7 @@
     function renderClientes() {
       const q = (document.getElementById('cli-buscar')?.value || '').toLowerCase();
       const clientes = dbClientes.filter(c => 
-        c.localId === usuarioActual.localId &&
+        String(c.localId) === String(usuarioActual.localId) &&
         (c.cedula.toLowerCase().includes(q) || c.nombre.toLowerCase().includes(q) || c.apellido.toLowerCase().includes(q))
       );
 
@@ -654,7 +639,7 @@
           <td><b>${c.cedula}</b></td>
           <td>${c.nombre} ${c.apellido}</td>
           <td>${c.correo}</td>
-          <td>${c.cedula !== '0000000000' ? `<button class="btn btn-danger btn-sm" onclick="eliminarCliente('${c.id}')">Eliminar</button>` : ''}</td>
+          <td><button class="btn btn-danger btn-sm" onclick="eliminarCliente('${c.id}')">Eliminar</button></td>
         </tr>
       `).join('');
     }
@@ -662,7 +647,7 @@
     async function eliminarCliente(id) {
       if(!confirm("¿Eliminar este cliente?")) return;
       const { error } = await supabaseClient.from('clientes').delete().eq('id', id);
-      if (error) return alert("Error al eliminar cliente: " + error.message);
+      if (error) return alert("Error al eliminar: " + error.message);
       
       dbClientes = dbClientes.filter(c => c.id !== id);
       poblarClientesDropdown();
@@ -671,7 +656,7 @@
 
     function renderProductosPOS() {
       const q = (document.getElementById('pos-buscar')?.value || '').toLowerCase();
-      const productos = dbProductos.filter(p => p.localId === usuarioActual.localId && (p.nombre.toLowerCase().includes(q) || p.codigo.includes(q)));
+      const productos = dbProductos.filter(p => String(p.localId) === String(usuarioActual.localId) && (p.nombre.toLowerCase().includes(q) || p.codigo.includes(q)));
 
       document.getElementById('pos-grid-productos').innerHTML = productos.map(p => `
         <div class="product-card" onclick="agregarAlCarrito('${p.id}')">
@@ -710,9 +695,71 @@
       document.getElementById('pos-total').innerText = total.toFixed(2);
     }
 
-    async function procesarVenta() {
+    // --- FUNCIONES DE MODAL DE COBRO (CON MÉTODOS DE PAGO) ---
+    function abrirModalCobro() {
       if (carrito.length === 0) return alert('El carrito está vacío');
+      
+      let total = carrito.reduce((s, x) => s + (x.precio * x.cantidad), 0);
+      document.getElementById('modal-total-txt').innerText = `$${total.toFixed(2)}`;
+      document.getElementById('modal-metodo-pago').value = 'Efectivo';
+      document.getElementById('modal-pago').value = total.toFixed(2);
+      document.getElementById('modal-vuelto-txt').innerText = '$0.00';
+      document.getElementById('seccion-efectivo').style.display = 'block';
+      
+      document.getElementById('modal-cobro').style.display = 'flex';
+      document.getElementById('modal-pago').focus();
+      document.getElementById('modal-pago').select();
+    }
 
+    function cerrarModalCobro() {
+      document.getElementById('modal-cobro').style.display = 'none';
+    }
+
+    function cambiarMetodoPago() {
+      const metodo = document.getElementById('modal-metodo-pago').value;
+      const seccionEfectivo = document.getElementById('seccion-efectivo');
+      
+      if (metodo === 'Efectivo') {
+        seccionEfectivo.style.display = 'block';
+        document.getElementById('modal-pago').focus();
+        document.getElementById('modal-pago').select();
+      } else {
+        seccionEfectivo.style.display = 'none';
+      }
+    }
+
+    function calcularVuelto() {
+      let total = carrito.reduce((s, x) => s + (x.precio * x.cantidad), 0);
+      let pago = parseFloat(document.getElementById('modal-pago').value) || 0;
+      let vuelto = pago - total;
+      
+      const vueltoTxt = document.getElementById('modal-vuelto-txt');
+      if (vuelto >= 0) {
+        vueltoTxt.style.color = 'var(--success)';
+        vueltoTxt.innerText = `$${vuelto.toFixed(2)}`;
+      } else {
+        vueltoTxt.style.color = 'var(--danger)';
+        vueltoTxt.innerText = `Faltan $${Math.abs(vuelto).toFixed(2)}`;
+      }
+    }
+
+    async function confirmarYProcesarVenta() {
+      const metodo = document.getElementById('modal-metodo-pago').value;
+      let total = carrito.reduce((s, x) => s + (x.precio * x.cantidad), 0);
+
+      if (metodo === 'Efectivo') {
+        let pago = parseFloat(document.getElementById('modal-pago').value) || 0;
+        if (pago < total) {
+          return alert('El monto pagado es menor que el total de la venta.');
+        }
+      }
+
+      cerrarModalCobro();
+      await procesarVenta(metodo);
+    }
+    // --------------------------------------------------
+
+    async function procesarVenta(metodoPago) {
       const clienteId = document.getElementById('pos-cliente-select').value;
       const clienteObj = dbClientes.find(c => c.id === clienteId);
 
@@ -729,10 +776,11 @@
 
       const venta = {
         id: 'FAC-' + Date.now().toString().slice(-5),
-        localId: usuarioActual.localId,
-        localNombre: dbLocales.find(l => l.id === usuarioActual.localId)?.nombre || 'Mi Tienda',
+        localId: String(usuarioActual.localId),
+        localNombre: dbLocales.find(l => String(l.id) === String(usuarioActual.localId))?.nombre || 'Mi Tienda',
         clienteNombre,
         clienteCedula,
+        metodoPago: metodoPago || 'Efectivo',
         fecha: new Date().toISOString(),
         items: [...carrito],
         total: carrito.reduce((s, x) => s + (x.precio * x.cantidad), 0)
@@ -742,7 +790,6 @@
       if (error) return alert("Error al registrar venta: " + error.message);
 
       dbVentas.push(venta);
-
       mostrarFactura(venta);
       carrito = [];
       renderCarrito();
@@ -755,6 +802,7 @@
       document.getElementById('fac-fecha').innerText = new Date(v.fecha).toLocaleString();
       document.getElementById('fac-cliente').innerText = v.clienteNombre;
       document.getElementById('fac-cedula').innerText = v.clienteCedula;
+      document.getElementById('fac-metodo').innerText = v.metodoPago || 'Efectivo';
       document.getElementById('fac-items').innerHTML = v.items.map(i => `
         <tr><td>${i.cantidad}</td><td>${i.nombre}</td><td>$${(i.cantidad*i.precio).toFixed(2)}</td></tr>
       `).join('');
@@ -764,88 +812,43 @@
 
     function renderKardex() {
       const q = (document.getElementById('kardex-buscar')?.value || '').toLowerCase();
-
       const ventas = dbVentas.filter(v => {
-        const matchLocal = v.localId === usuarioActual.localId;
-        const matchQuery = v.id.toLowerCase().includes(q) || 
-                           v.clienteNombre.toLowerCase().includes(q) || 
-                           v.clienteCedula.toLowerCase().includes(q) ||
-                           v.items.some(i => i.nombre.toLowerCase().includes(q));
+        const matchLocal = String(v.localId) === String(usuarioActual.localId);
+        const matchQuery = v.id.toLowerCase().includes(q) || v.clienteNombre.toLowerCase().includes(q);
         return matchLocal && matchQuery;
       }).sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
 
-      let html = '';
-
-      ventas.forEach(v => {
-        const fechaObj = new Date(v.fecha);
-        const fechaFormateada = fechaObj.toLocaleDateString();
-        const horaFormateada = fechaObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-        const itemsRows = v.items.map(i => `
-          <tr>
-            <td>${i.nombre}</td>
-            <td>${i.cantidad}</td>
-            <td>$${(i.costo || 0).toFixed(2)}</td>
-            <td>$${i.precio.toFixed(2)}</td>
-            <td>$${(i.cantidad * i.precio).toFixed(2)}</td>
-          </tr>
-        `).join('');
-
-        html += `
-          <tr>
-            <td><b>${v.id}</b></td>
-            <td>${fechaFormateada} <span style="color:var(--text-muted); font-size:0.8rem;">(${horaFormateada})</span></td>
-            <td>${v.localNombre}</td>
-            <td>${v.clienteNombre}<br><small style="color:var(--text-muted);">${v.clienteCedula}</small></td>
-            <td><b>$${v.total.toFixed(2)}</b></td>
-            <td>
-              <button class="btn btn-primary btn-sm" onclick="toggleDetalleKardex('${v.id}')">Ver Detalle</button>
-            </td>
-          </tr>
-          <tr id="kardex-det-${v.id}" class="kardex-row-detail">
-            <td colspan="6">
-              <div style="padding:10px;">
-                <h4 style="font-size:0.85rem; margin-bottom:5px;">Detalle de Ítems en Comprobante #${v.id}:</h4>
-                <table class="kardex-subtable">
-                  <thead>
-                    <tr>
-                      <th>Producto</th>
-                      <th>Cantidad</th>
-                      <th>Costo Unit.</th>
-                      <th>Precio Venta</th>
-                      <th>Subtotal</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${itemsRows}
-                  </tbody>
-                </table>
-              </div>
-            </td>
-          </tr>
-        `;
-      });
-
-      document.getElementById('kardex-tabla').innerHTML = html || `<tr><td colspan="6" style="text-align:center;">No se encontraron registros de facturación</td></tr>`;
-    }
-
-    function toggleDetalleKardex(id) {
-      const el = document.getElementById(`kardex-det-${id}`);
-      if (el) {
-        el.style.display = (el.style.display === 'table-row') ? 'none' : 'table-row';
-      }
+      document.getElementById('kardex-tabla').innerHTML = ventas.map(v => `
+        <tr>
+          <td><b>${v.id}</b></td>
+          <td>${new Date(v.fecha).toLocaleString()}</td>
+          <td>${v.localNombre}</td>
+          <td>${v.clienteNombre}<br><small>${v.clienteCedula}</small></td>
+          <td><span class="badge" style="background:#e0f2fe; color:#0369a1;">${v.metodoPago || 'Efectivo'}</span></td>
+          <td><b>$${v.total.toFixed(2)}</b></td>
+          <td><button class="btn btn-primary btn-sm" onclick='mostrarFactura(${JSON.stringify(v)})'>Ver</button></td>
+        </tr>
+      `).join('') || `<tr><td colspan="7" style="text-align:center;">No hay registros</td></tr>`;
     }
 
     async function guardarProducto() {
-      const codigo = document.getElementById('inv-codigo').value;
-      const nombre = document.getElementById('inv-nombre').value;
+      const codigo = document.getElementById('inv-codigo').value.trim();
+      const nombre = document.getElementById('inv-nombre').value.trim();
       const costo = parseFloat(document.getElementById('inv-costo').value) || 0;
       const precio = parseFloat(document.getElementById('inv-precio').value);
       const stock = parseInt(document.getElementById('inv-stock').value);
 
       if (!codigo || !nombre || isNaN(precio)) return alert('Completa los campos requeridos');
 
-      const nuevoProd = { id: Date.now().toString(), localId: usuarioActual.localId, codigo, nombre, costo, precio, stock };
+      const nuevoProd = { 
+        id: Date.now().toString(), 
+        localId: String(usuarioActual.localId), 
+        codigo, 
+        nombre, 
+        costo, 
+        precio, 
+        stock 
+      };
 
       const { error } = await supabaseClient.from('productos').insert([nuevoProd]);
       if (error) return alert("Error al guardar producto: " + error.message);
@@ -863,18 +866,17 @@
     }
 
     function renderInventario() {
-      const lista = dbProductos.filter(p => p.localId === usuarioActual.localId);
+      const lista = dbProductos.filter(p => String(p.localId) === String(usuarioActual.localId));
 
       document.getElementById('inv-tabla-catalogo').innerHTML = lista.map(p => {
         const costo = p.costo || 0;
         return `
         <tr>
-          <td>${dbLocales.find(l=>l.id===p.localId)?.nombre || ''}</td>
           <td>${p.codigo}</td>
           <td><b>${p.nombre}</b></td>
           <td><input type="number" step="0.01" id="edit-costo-${p.id}" value="${costo.toFixed(2)}" style="width:80px; margin:0; padding:6px;"></td>
           <td><input type="number" step="0.01" id="edit-precio-${p.id}" value="${p.precio.toFixed(2)}" style="width:80px; margin:0; padding:6px;"></td>
-          <td><input type="number" id="edit-stock-${p.id}" value="${p.stock}" style="width:70px; margin:0; padding:6px; ${p.stock <= 0 ? 'color:var(--danger); font-weight:bold;' : ''}"></td>
+          <td><input type="number" id="edit-stock-${p.id}" value="${p.stock}" style="width:70px; margin:0; padding:6px;"></td>
           <td>
             <button class="btn btn-primary btn-sm" onclick="actualizarProducto('${p.id}')">Guardar</button>
             <button class="btn btn-danger btn-sm" onclick="eliminarProducto('${p.id}')">X</button>
@@ -894,7 +896,7 @@
         stock: nuevoStock
       }).eq('id', id);
 
-      if (error) return alert("Error al actualizar producto: " + error.message);
+      if (error) return alert("Error al actualizar: " + error.message);
 
       const prod = dbProductos.find(p => String(p.id) === String(id));
       if (prod) {
@@ -903,27 +905,27 @@
         prod.stock = nuevoStock;
       }
 
-      alert("Producto actualizado correctamente");
+      alert("Actualizado correctamente");
       renderInventario();
     }
 
     async function eliminarProducto(id) {
       if(!confirm("¿Eliminar este producto?")) return;
       const { error } = await supabaseClient.from('productos').delete().eq('id', id);
-      if (error) return alert("Error al eliminar producto: " + error.message);
+      if (error) return alert("Error al eliminar: " + error.message);
 
       dbProductos = dbProductos.filter(x => String(x.id) !== String(id));
       renderInventario();
     }
 
     function renderHistorial() {
-      const lista = dbVentas.filter(v => v.localId === usuarioActual.localId);
-
+      const lista = dbVentas.filter(v => String(v.localId) === String(usuarioActual.localId));
       document.getElementById('historial-tabla').innerHTML = lista.map(v => `
         <tr>
           <td>${v.id}</td>
           <td>${v.localNombre}</td>
           <td>${v.clienteNombre}</td>
+          <td>${v.metodoPago || 'Efectivo'}</td>
           <td>${new Date(v.fecha).toLocaleString()}</td>
           <td>$${v.total.toFixed(2)}</td>
           <td><button class="btn btn-primary btn-sm" onclick='mostrarFactura(${JSON.stringify(v)})'>Ver</button></td>
@@ -941,11 +943,7 @@
         if (!isNaN(d.getFullYear())) anios.add(d.getFullYear());
       });
 
-      selectAnio.innerHTML = Array.from(anios)
-        .sort((a,b) => b - a)
-        .map(a => `<option value="${a}">${a}</option>`)
-        .join('');
-
+      selectAnio.innerHTML = Array.from(anios).sort((a,b) => b - a).map(a => `<option value="${a}">${a}</option>`).join('');
       document.getElementById('rep-mes').value = "TODOS";
       generarReporte();
     }
@@ -956,7 +954,7 @@
 
       const ventasFiltradas = dbVentas.filter(v => {
         const d = new Date(v.fecha);
-        const matchLocal = v.localId === usuarioActual.localId;
+        const matchLocal = String(v.localId) === String(usuarioActual.localId);
         const matchAnio = d.getFullYear() === anioSel;
         const matchMes = (mesSel === 'TODOS' || d.getMonth() === parseInt(mesSel));
         return matchLocal && matchAnio && matchMes;
@@ -964,38 +962,31 @@
 
       let totalVentas = 0;
       let totalCostoCompras = 0;
-      let totalUnidades = 0;
 
       ventasFiltradas.forEach(v => {
         totalVentas += v.total;
         v.items.forEach(i => {
           totalCostoCompras += ((i.costo || 0) * i.cantidad);
-          totalUnidades += i.cantidad;
         });
       });
 
       const gananciaNeta = totalVentas - totalCostoCompras;
-      const margen = totalVentas > 0 ? ((gananciaNeta / totalVentas) * 100).toFixed(1) : '0.0';
 
       document.getElementById('rep-val-ventas').innerText = `$${totalVentas.toFixed(2)}`;
       document.getElementById('rep-val-compras').innerText = `$${totalCostoCompras.toFixed(2)}`;
       document.getElementById('rep-val-ganancia').innerText = `$${gananciaNeta.toFixed(2)}`;
-
-      document.getElementById('rep-stat-tickets').innerText = ventasFiltradas.length;
-      document.getElementById('rep-stat-unidades').innerText = totalUnidades;
-      document.getElementById('rep-stat-margen').innerText = `${margen}%`;
     }
 
     async function crearLocal() {
-      if (usuarioActual?.rol !== 'Administrador') return alert('Solo el Administrador puede crear locales');
+      if (usuarioActual?.rol !== 'Administrador') return alert('Acceso denegado');
       const nombre = document.getElementById('loc-nombre').value.trim();
       const direccion = document.getElementById('loc-direccion').value.trim();
-      if (!nombre) return alert('Ingresa el nombre del local');
+      if (!nombre) return alert('Ingresa el nombre');
 
       const nuevoLocal = { id: 'LOC-' + Date.now().toString().slice(-4), nombre, direccion };
 
       const { error } = await supabaseClient.from('locales').insert([nuevoLocal]);
-      if (error) return alert("Error al guardar local: " + error.message);
+      if (error) return alert("Error: " + error.message);
 
       dbLocales.push(nuevoLocal);
       poblardropdowns();
@@ -1003,7 +994,7 @@
       
       document.getElementById('loc-nombre').value = '';
       document.getElementById('loc-direccion').value = '';
-      alert('Sucursal registrada exitosamente');
+      alert('Local registrado');
     }
 
     function renderLocales() {
@@ -1017,42 +1008,36 @@
     }
 
     async function eliminarLocal(id) {
-      if (!confirm("¿Eliminar este local? Se borrarán todos los usuarios asignados a él.")) return;
-
+      if (!confirm("¿Eliminar este local?")) return;
       const { error } = await supabaseClient.from('locales').delete().eq('id', id);
-      if (error) return alert("Error al eliminar local: " + error.message);
+      if (error) return alert("Error: " + error.message);
 
       dbLocales = dbLocales.filter(l => l.id !== id);
       dbUsuarios = dbUsuarios.filter(u => u.localId !== id);
-      
       poblardropdowns();
       renderLocales();
       renderUsuarios();
-      alert('Local eliminado correctamente');
     }
 
     async function crearUsuario() {
-      if (usuarioActual?.rol !== 'Administrador') return alert('Solo el Administrador puede crear usuarios');
+      if (usuarioActual?.rol !== 'Administrador') return alert('Acceso denegado');
       const user = document.getElementById('usr-user').value.trim();
       const pass = document.getElementById('usr-pass').value.trim();
       const rol = document.getElementById('usr-rol').value;
       const localId = document.getElementById('usr-local-select').value;
 
-      if (!user || !pass) return alert('Ingresa usuario y contraseña');
-      if (dbUsuarios.some(u => u.user === user)) return alert('El nombre de usuario ya existe');
+      if (!user || !pass) return alert('Completa los campos');
 
-      const nuevoUsuario = { id: Date.now().toString(), user, pass, rol, localId };
+      const nuevoUsuario = { id: Date.now().toString(), user, pass, rol, localId: String(localId) };
 
       const { error } = await supabaseClient.from('usuarios').insert([nuevoUsuario]);
-      if (error) return alert("Error al guardar usuario: " + error.message);
+      if (error) return alert("Error: " + error.message);
 
       dbUsuarios.push(nuevoUsuario);
-
       document.getElementById('usr-user').value = '';
       document.getElementById('usr-pass').value = '';
-
       renderUsuarios();
-      alert(`Credencial generada para el usuario "${user}"`);
+      alert(`Usuario creado`);
     }
 
     function renderUsuarios() {
@@ -1060,7 +1045,7 @@
         <tr>
           <td><b>${u.user}</b></td>
           <td>${u.rol}</td>
-          <td>${dbLocales.find(l=>l.id===u.localId)?.nombre || 'N/A'}</td>
+          <td>${dbLocales.find(l=>String(l.id)===String(u.localId))?.nombre || 'N/A'}</td>
           <td>
             ${u.user !== 'Blackdiamond' && u.id !== usuarioActual.id ? `<button class="btn btn-danger btn-sm" onclick="eliminarUsuario('${u.id}')">Eliminar</button>` : '<em>Protegido</em>'}
           </td>
@@ -1069,23 +1054,15 @@
     }
 
     async function eliminarUsuario(id) {
-      const usuarioAEliminar = dbUsuarios.find(u => u.id === id);
-      
-      if (usuarioAEliminar && usuarioAEliminar.user === 'Blackdiamond') {
-        return alert("¡Acción bloqueada! No se puede eliminar al administrador principal del sistema.");
-      }
-
-      if (id === usuarioActual.id) {
-        return alert("No puedes eliminar tu propia cuenta activa.");
-      }
-      if (!confirm("¿Estás seguro de eliminar este usuario?")) return;
+      const usr = dbUsuarios.find(u => u.id === id);
+      if (usr && usr.user === 'Blackdiamond') return alert("No se puede eliminar al administrador principal.");
+      if (!confirm("¿Eliminar usuario?")) return;
 
       const { error } = await supabaseClient.from('usuarios').delete().eq('id', id);
-      if (error) return alert("Error al eliminar usuario: " + error.message);
+      if (error) return alert("Error: " + error.message);
 
       dbUsuarios = dbUsuarios.filter(u => u.id !== id);
       renderUsuarios();
-      alert('Usuario eliminado correctamente');
     }
 
     window.addEventListener('DOMContentLoaded', async () => {
@@ -1093,10 +1070,7 @@
         try {
           await cargarDatosSupabase();
           const existe = dbUsuarios.find(u => u.id === usuarioActual.id);
-          if (!existe) {
-            cerrarSesion();
-            return;
-          }
+          if (!existe) { cerrarSesion(); return; }
         } catch (e) {}
         aplicarSesionActiva();
       }
