@@ -227,7 +227,7 @@
             <div class="card">
               <div style="display:flex; gap:8px; margin-bottom:8px;">
                 <input type="text" id="pos-buscar" placeholder="🔍 Buscar por nombre o código..." oninput="renderProductosPOS()" style="margin:0;">
-                <button class="btn btn-primary btn-sm" onclick="abrirCamara()" style="margin:0; white-space:nowrap;">📷 Escanear</button>
+                <button class="btn btn-primary btn-sm" onclick="abrirCamaraPOS()" style="margin:0; white-space:nowrap;">📷 Escanear</button>
               </div>
               <div class="product-grid" id="pos-grid-productos"></div>
             </div>
@@ -352,12 +352,18 @@
         </div>
       </section>
 
-      <!-- VISTA INVENTARIO -->
+      <!-- VISTA INVENTARIO (CON BOTÓN DE ESCANEO DE CÓDIGO DE BARRAS) -->
       <section id="vista-inventario" class="page-section">
         <div class="card">
           <h3>Gestión de Producto</h3>
           <div class="form-row">
-            <div><label>Código de Barras</label><input type="text" id="inv-codigo" placeholder="Ej: 77001"></div>
+            <div>
+              <label>Código de Barras</label>
+              <div style="display:flex; gap:6px;">
+                <input type="text" id="inv-codigo" placeholder="Ej: 77001" style="margin:0;">
+                <button class="btn btn-primary btn-sm" onclick="abrirCamaraInventario()" style="margin:0; white-space:nowrap;">📷 Escanear</button>
+              </div>
+            </div>
             <div><label>Stock Inicial</label><input type="number" id="inv-stock" placeholder="Ej: 20"></div>
           </div>
           <label>Nombre del Producto</label>
@@ -602,7 +608,7 @@
       if (selectCli) selectCli.innerHTML = `<option value="">Consumidor Final</option>` + optsClientes;
     }
 
-    // --- FUNCIONES DE MÚLTIPLES CARRITOS Y CÁMARA ---
+    // --- FUNCIONES DE MÚLTIPLES CARRITOS Y CÁMARA (POS) ---
     function obtenerCarritoActual() {
       return carritos.find(c => c.id === carritoActivoId) || carritos[0];
     }
@@ -636,7 +642,28 @@
       crearNuevoCarrito();
     }
 
-    function abrirCamara() {
+    function abrirCamaraPOS() {
+      abrirCamara(function(decodedText) {
+        agregarPorCodigoBarras(decodedText);
+      });
+    }
+
+    function abrirCamaraInventario() {
+      abrirCamara(function(decodedText) {
+        document.getElementById('inv-codigo').value = decodedText;
+        // Opcional: verificar si el producto ya existe en el stock al escanearlo
+        const prodExistente = dbProductos.find(p => String(p.localId) === String(usuarioActual.localId) && p.codigo.trim() === decodedText.trim());
+        if(prodExistente) {
+          alert("Este código ya pertenece a: " + prodExistente.nombre + ". Puedes actualizar sus datos abajo.");
+          document.getElementById('inv-nombre').value = prodExistente.nombre;
+          document.getElementById('inv-costo').value = prodExistente.costo || 0;
+          document.getElementById('inv-precio').value = prodExistente.precio;
+          document.getElementById('inv-stock').value = prodExistente.stock;
+        }
+      });
+    }
+
+    function abrirCamara(onScanSuccessCallback) {
       document.getElementById('modal-camara').style.display = 'flex';
       html5QrCode = new Html5Qrcode("reader");
       html5QrCode.start(
@@ -644,7 +671,7 @@
         { fps: 10, qrbox: { width: 250, height: 150 } },
         (decodedText) => {
           cerrarCamara();
-          agregarPorCodigoBarras(decodedText);
+          onScanSuccessCallback(decodedText);
         },
         (errorMessage) => {}
       ).catch(err => {
