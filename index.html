@@ -352,7 +352,7 @@
         </div>
       </section>
 
-      <!-- VISTA INVENTARIO (CON BOTÓN DE ESCANEO DE CÓDIGO DE BARRAS) -->
+      <!-- VISTA INVENTARIO -->
       <section id="vista-inventario" class="page-section">
         <div class="card">
           <h3>Gestión de Producto</h3>
@@ -503,7 +503,6 @@
     
     let usuarioActual = JSON.parse(localStorage.getItem('usuarioActual')) || null;
     
-    // Múltiples Carritos en Espera
     let carritos = [{ id: 1, nombre: 'Principal 1', items: [] }];
     let carritoActivoId = 1;
     let html5QrCode = null;
@@ -519,12 +518,38 @@
           supabaseClient.from('arqueos').select('*')
         ]);
 
-        if (resLoc.data) dbLocales = resLoc.data;
-        if (resUsr.data) dbUsuarios = resUsr.data;
-        if (resProd.data) dbProductos = resProd.data;
-        if (resCli.data) dbClientes = resCli.data;
-        if (resVen.data) dbVentas = resVen.data;
-        if (resArq.data) dbArqueos = resArq.data;
+        // Mapeo seguro para transformar snake_case de Supabase a las variables internas de JS
+        if (resLoc.data) dbLocales = resLoc.data.map(l => ({ id: l.id, nombre: l.nombre, direccion: l.direccion }));
+        if (resUsr.data) dbUsuarios = resUsr.data.map(u => ({ id: u.id, user: u.user || u.usuario, pass: u.pass || u.password, rol: u.rol, localId: u.local_id || u.localId }));
+        if (resProd.data) dbProductos = resProd.data.map(p => ({ id: p.id, localId: p.local_id || p.localId, codigo: p.codigo, nombre: p.nombre, costo: p.costo, precio: p.precio, stock: p.stock }));
+        if (resCli.data) dbClientes = resCli.data.map(c => ({ id: c.id, localId: c.local_id || c.localId, cedula: c.cedula || c.cliente_cedula, nombre: c.nombre, apellido: c.apellido, correo: c.correo }));
+        
+        if (resVen.data) {
+          dbVentas = resVen.data.map(v => ({
+            id: v.id,
+            localId: v.local_id || v.localId,
+            localNombre: v.local_nombre || v.localNombre,
+            clienteNombre: v.cliente_nombre || v.clienteNombre,
+            clienteCedula: v.cliente_cedula || v.clienteCedula,
+            metodoPago: v.metodo_pago || v.metodoPago,
+            fecha: v.fecha,
+            items: v.items || [],
+            total: v.total
+          }));
+        }
+
+        if (resArq.data) {
+          dbArqueos = resArq.data.map(a => ({
+            id: a.id,
+            localId: a.local_id || a.localId,
+            usuario: a.usuario,
+            fechaApertura: a.fecha_apertura || a.fechaApertura,
+            fondoInicial: a.fondo_inicial || a.fondoInicial,
+            estado: a.estado,
+            fechaCierre: a.fecha_cierre || a.fechaCierre,
+            efectivoFisico: a.efectivo_fisico || a.efectivoFisico
+          }));
+        }
       } catch (err) {
         console.error("Aviso al cargar Supabase:", err);
       }
@@ -608,7 +633,6 @@
       if (selectCli) selectCli.innerHTML = `<option value="">Consumidor Final</option>` + optsClientes;
     }
 
-    // --- FUNCIONES DE MÚLTIPLES CARRITOS Y CÁMARA (POS) ---
     function obtenerCarritoActual() {
       return carritos.find(c => c.id === carritoActivoId) || carritos[0];
     }
@@ -745,9 +769,7 @@
       cart.items.splice(index, 1);
       renderizarCarritosTabs();
     }
-    // ----------------------------------------------------
 
-    // --- FUNCIONES DE MODAL DE COBRO ---
     function abrirModalCobro() {
       const cart = obtenerCarritoActual();
       if (cart.items.length === 0) return alert('El carrito está vacío');
@@ -826,23 +848,36 @@
         }
       }
 
-      const venta = {
+      // Estructura adaptada estrictamente a snake_case para evitar errores de columnas faltantes
+      const ventaSupabase = {
         id: 'FAC-' + Date.now().toString().slice(-5),
-        localId: String(usuarioActual.localId),
-        localNombre: dbLocales.find(l => String(l.id) === String(usuarioActual.localId))?.nombre || 'Mi Tienda',
-        clienteNombre,
-        clienteCedula,
-        metodoPago: metodoPago || 'Efectivo',
+        local_id: String(usuarioActual.localId),
+        local_nombre: dbLocales.find(l => String(l.id) === String(usuarioActual.localId))?.nombre || 'Mi Tienda',
+        cliente_nombre: clienteNombre,
+        cliente_cedula: clienteCedula,
+        metodo_pago: metodoPago || 'Efectivo',
         fecha: new Date().toISOString(),
         items: [...cart.items],
         total: cart.items.reduce((s, x) => s + (x.precio * x.cantidad), 0)
       };
 
-      const { error } = await supabaseClient.from('ventas').insert([venta]);
+      const { error } = await supabaseClient.from('ventas').insert([ventaSupabase]);
       if (error) return alert("Error al registrar venta: " + error.message);
 
-      dbVentas.push(venta);
-      mostrarFactura(venta);
+      const ventaLocal = {
+        id: ventaSupabase.id,
+        localId: ventaSupabase.local_id,
+        localNombre: ventaSupabase.local_nombre,
+        clienteNombre: ventaSupabase.cliente_nombre,
+        clienteCedula: ventaSupabase.cliente_cedula,
+        metodoPago: ventaSupabase.metodo_pago,
+        fecha: ventaSupabase.fecha,
+        items: ventaSupabase.items,
+        total: ventaSupabase.total
+      };
+
+      dbVentas.push(ventaLocal);
+      mostrarFactura(ventaLocal);
 
       carritos = carritos.filter(c => c.id !== cart.id);
       if (carritos.length === 0) carritos.push({ id: Date.now(), nombre: 'Principal 1', items: [] });
@@ -864,7 +899,6 @@
       document.getElementById('factura-impresion').style.display = 'block';
     }
 
-    // --- FUNCIONES DE ARQUEO Y CIERRE DE CAJA ---
     function prepararVistaArqueo() {
       const arqueoAbierto = dbArqueos.find(a => String(a.localId) === String(usuarioActual.localId) && a.estado === 'Abierto');
       
@@ -901,19 +935,26 @@
       if (fondo === null) return;
       const fondoInicial = parseFloat(fondo) || 0;
 
-      const nuevoArqueo = {
+      const nuevoArqueoSupabase = {
         id: 'ARQ-' + Date.now(),
-        localId: String(usuarioActual.localId),
+        local_id: String(usuarioActual.localId),
         usuario: usuarioActual.user,
-        fechaApertura: new Date().toISOString(),
-        fondoInicial,
+        fecha_apertura: new Date().toISOString(),
+        fondo_inicial: fondoInicial,
         estado: 'Abierto'
       };
 
-      const { error } = await supabaseClient.from('arqueos').insert([nuevoArqueo]);
+      const { error } = await supabaseClient.from('arqueos').insert([nuevoArqueoSupabase]);
       if (error) return alert("Error al abrir caja: " + error.message);
 
-      dbArqueos.push(nuevoArqueo);
+      dbArqueos.push({
+        id: nuevoArqueoSupabase.id,
+        localId: nuevoArqueoSupabase.local_id,
+        usuario: nuevoArqueoSupabase.usuario,
+        fechaApertura: nuevoArqueoSupabase.fecha_apertura,
+        fondoInicial: nuevoArqueoSupabase.fondo_inicial,
+        estado: nuevoArqueoSupabase.estado
+      });
       prepararVistaArqueo();
     }
 
@@ -924,7 +965,7 @@
       const nuevoFondo = parseFloat(document.getElementById('arq-fondo').value) || 0;
       arqueoAbierto.fondoInicial = nuevoFondo;
 
-      await supabaseClient.from('arqueos').update({ fondoInicial: nuevoFondo }).eq('id', arqueoAbierto.id);
+      await supabaseClient.from('arqueos').update({ fondo_inicial: nuevoFondo }).eq('id', arqueoAbierto.id);
       alert('Fondo actualizado');
       prepararVistaArqueo();
     }
@@ -958,8 +999,8 @@
 
       await supabaseClient.from('arqueos').update({
         estado: 'Cerrado',
-        fechaCierre: arqueoAbierto.fechaCierre,
-        efectivoFisico: fisico
+        fecha_cierre: arqueoAbierto.fechaCierre,
+        efectivo_fisico: fisico
       }).eq('id', arqueoAbierto.id);
 
       alert('Turno de caja cerrado con éxito.');
@@ -979,7 +1020,6 @@
       `).join('') || `<tr><td colspan="5" style="text-align:center;">No hay arqueos anteriores</td></tr>`;
     }
 
-    // --- DEMÁS MÓDULOS ---
     async function guardarCliente() {
       const cedula = document.getElementById('cli-cedula').value.trim();
       const nombre = document.getElementById('cli-nombre').value.trim();
@@ -987,11 +1027,27 @@
       const correo = document.getElementById('cli-correo').value.trim();
       if (!cedula || !nombre || !apellido) return alert('Cédula, Nombre y Apellido son obligatorios.');
 
-      const nuevoCliente = { id: Date.now().toString(), localId: String(usuarioActual.localId), cedula, nombre, apellido, correo: correo || 'Sin correo' };
-      const { error } = await supabaseClient.from('clientes').insert([nuevoCliente]);
+      const nuevoClienteSupabase = { 
+        id: Date.now().toString(), 
+        local_id: String(usuarioActual.localId), 
+        cedula, 
+        nombre, 
+        apellido, 
+        correo: correo || 'Sin correo' 
+      };
+      
+      const { error } = await supabaseClient.from('clientes').insert([nuevoClienteSupabase]);
       if (error) return alert("Error: " + error.message);
 
-      dbClientes.push(nuevoCliente);
+      dbClientes.push({
+        id: nuevoClienteSupabase.id,
+        localId: nuevoClienteSupabase.local_id,
+        cedula: nuevoClienteSupabase.cedula,
+        nombre: nuevoClienteSupabase.nombre,
+        apellido: nuevoClienteSupabase.apellido,
+        correo: nuevoClienteSupabase.correo
+      });
+
       document.getElementById('cli-cedula').value = '';
       document.getElementById('cli-nombre').value = '';
       document.getElementById('cli-apellido').value = '';
@@ -1038,12 +1094,30 @@
       const stock = parseInt(document.getElementById('inv-stock').value);
 
       if (!codigo || !nombre || isNaN(precio)) return alert('Completa los campos requeridos');
-      const nuevoProd = { id: Date.now().toString(), localId: String(usuarioActual.localId), codigo, nombre, costo, precio, stock };
+      
+      const nuevoProdSupabase = { 
+        id: Date.now().toString(), 
+        local_id: String(usuarioActual.localId), 
+        codigo, 
+        nombre, 
+        costo, 
+        precio, 
+        stock 
+      };
 
-      const { error } = await supabaseClient.from('productos').insert([nuevoProd]);
+      const { error } = await supabaseClient.from('productos').insert([nuevoProdSupabase]);
       if (error) return alert("Error: " + error.message);
 
-      dbProductos.push(nuevoProd);
+      dbProductos.push({
+        id: nuevoProdSupabase.id,
+        localId: nuevoProdSupabase.local_id,
+        codigo: nuevoProdSupabase.codigo,
+        nombre: nuevoProdSupabase.nombre,
+        costo: nuevoProdSupabase.costo,
+        precio: nuevoProdSupabase.precio,
+        stock: nuevoProdSupabase.stock
+      });
+
       document.getElementById('inv-codigo').value = '';
       document.getElementById('inv-nombre').value = '';
       document.getElementById('inv-costo').value = '';
@@ -1162,9 +1236,17 @@
       const localId = document.getElementById('usr-local-select').value;
       if (!user || !pass) return alert('Completa los campos');
 
-      const nuevoUsuario = { id: Date.now().toString(), user, pass, rol, localId: String(localId) };
-      await supabaseClient.from('usuarios').insert([nuevoUsuario]);
-      dbUsuarios.push(nuevoUsuario);
+      const nuevoUsuarioSupabase = { id: Date.now().toString(), user, pass, rol, local_id: String(localId) };
+      await supabaseClient.from('usuarios').insert([nuevoUsuarioSupabase]);
+      
+      dbUsuarios.push({
+        id: nuevoUsuarioSupabase.id,
+        user: nuevoUsuarioSupabase.user,
+        pass: nuevoUsuarioSupabase.pass,
+        rol: nuevoUsuarioSupabase.rol,
+        localId: nuevoUsuarioSupabase.local_id
+      });
+
       document.getElementById('usr-user').value = '';
       document.getElementById('usr-pass').value = '';
       renderUsuarios();
@@ -1194,4 +1276,3 @@
   </script>
 </body>
 </html>
-
