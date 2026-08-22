@@ -409,10 +409,12 @@
             <div><label>Precio 1 (Base) ($)</label><input type="number" id="inv-p1" step="0.01" placeholder="0.00"></div>
           </div>
 
-          <!-- SECCIÓN OPCIONAL RETRAÍDA PARA PRECIOS 2 AL 5 -->
-          <div style="background: var(--bg); padding: 12px; border-radius: 8px; margin-top: 10px; border:1px solid var(--border);">
-            <label style="color:var(--primary); font-weight:700;">⚙️ Configurar Opciones de Precios Adicionales (Opcional)</label>
-            <div class="form-row" style="margin-top:8px;">
+          <!-- SECCIÓN DESPLEGABLE PARA PRECIOS 2 AL 5 -->
+          <details style="background: var(--bg); padding: 12px; border-radius: 8px; margin-top: 10px; border:1px solid var(--border);">
+            <summary style="cursor: pointer; color: var(--primary); font-weight: 700; user-select: none;">
+              ⚙️ Configurar Opciones de Precios Adicionales (Opcional)
+            </summary>
+            <div class="form-row" style="margin-top:12px;">
               <div><label>Precio 2 ($)</label><input type="number" id="inv-p2" step="0.01" placeholder="0.00"></div>
               <div><label>Precio 3 ($)</label><input type="number" id="inv-p3" step="0.01" placeholder="0.00"></div>
             </div>
@@ -420,7 +422,7 @@
               <div><label>Precio 4 ($)</label><input type="number" id="inv-p4" step="0.01" placeholder="0.00"></div>
               <div><label>Precio 5 ($)</label><input type="number" id="inv-p5" step="0.01" placeholder="0.00"></div>
             </div>
-          </div>
+          </details>
 
           <button class="btn btn-primary" style="margin-top:12px;" onclick="guardarProducto()">Guardar Producto</button>
         </div>
@@ -559,7 +561,6 @@
     
     let usuarioActual = JSON.parse(localStorage.getItem('usuarioActual')) || null;
     
-    // Persistencia del carrito en LocalStorage para evitar que se borre al refrescar
     let carritos = JSON.parse(localStorage.getItem('carritos_pos')) || [{ id: 1, nombre: 'Principal 1', items: [] }];
     let carritoActivoId = carritos.length > 0 ? carritos[0].id : 1;
     let html5QrCode = null;
@@ -1090,7 +1091,6 @@
       const costo = parseFloat(document.getElementById('inv-costo').value) || 0;
       const p1 = parseFloat(document.getElementById('inv-p1').value) || 0;
       
-      // Si las opciones adicionales están vacías, heredan el valor de P1 por defecto
       const p2 = parseFloat(document.getElementById('inv-p2').value) || p1;
       const p3 = parseFloat(document.getElementById('inv-p3').value) || p1;
       const p4 = parseFloat(document.getElementById('inv-p4').value) || p1;
@@ -1120,7 +1120,6 @@
         stock
       });
 
-      // Limpiar formulario
       document.getElementById('inv-codigo').value = '';
       document.getElementById('inv-nombre').value = '';
       document.getElementById('inv-costo').value = '';
@@ -1302,7 +1301,6 @@
       renderUsuarios();
     }
 
-    // Inicialización general con control de promesas síncronas para evitar borrados al refrescar
     window.addEventListener('DOMContentLoaded', async () => {
       if (usuarioActual) {
         try { 
@@ -1316,3 +1314,4 @@
   </script>
 </body>
 </html>
+
