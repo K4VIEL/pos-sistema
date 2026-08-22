@@ -305,7 +305,16 @@
           <h3>Historial de Arqueos de Caja</h3>
           <div class="table-responsive">
             <table>
-              <thead><tr><th>Fecha Apertura</th><th>Fondo</th><th>Efectivo Venta</th><th>Físico Contado</th><th>Diferencia</th></tr></thead>
+              <thead>
+                <tr>
+                  <th>Usuario</th>
+                  <th>Apertura</th>
+                  <th>Cierre</th>
+                  <th>Fondo Inicial</th>
+                  <th>Efectivo Físico</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
               <tbody id="arqueo-historial-tabla"></tbody>
             </table>
           </div>
@@ -515,7 +524,7 @@
           supabaseClient.from('productos').select('*'),
           supabaseClient.from('clientes').select('*'),
           supabaseClient.from('ventas').select('*'),
-          supabaseClient.from('arqueos').select('*')
+          supabaseClient.from('arqueos').select('*').order('fecha_apertura', { ascending: false })
         ]);
 
         if (resLoc.data) dbLocales = resLoc.data.map(l => ({ id: l.id, nombre: l.nombre, direccion: l.direccion }));
@@ -543,10 +552,10 @@
             localId: a.local_id || a.localId,
             usuario: a.usuario,
             fechaApertura: a.fecha_apertura || a.fechaApertura,
-            fondoInicial: a.fondo_inicial || a.fondoInicial,
+            fondoInicial: parseFloat(a.fondo_inicial || a.fondoInicial || 0),
             estado: a.estado,
             fechaCierre: a.fecha_cierre || a.fechaCierre,
-            efectivoFisico: a.efectivo_fisico || a.efectivoFisico
+            efectivoFisico: a.efectivo_fisico !== null && a.efectivo_fisico !== undefined ? parseFloat(a.efectivo_fisico) : null
           }));
         }
       } catch (err) {
@@ -594,7 +603,7 @@
       document.getElementById('login-screen').style.display = 'flex';
     }
 
-    function cambiarVista(vista) {
+    async function cambiarVista(vista) {
       if ((vista === 'locales' || vista === 'usuarios') && usuarioActual?.rol !== 'Administrador') {
         return alert('Acceso denegado.');
       }
@@ -608,7 +617,7 @@
       if(btnNav) btnNav.classList.add('active');
 
       if (vista === 'pos') renderizarCarritosTabs();
-      if (vista === 'arqueo') prepararVistaArqueo();
+      if (vista === 'arqueo') await prepararVistaArqueo();
       if (vista === 'kardex') renderKardex();
       if (vista === 'clientes') renderClientes();
       if (vista === 'inventario') renderInventario();
@@ -897,7 +906,10 @@
       document.getElementById('factura-impresion').style.display = 'block';
     }
 
-    function prepararVistaArqueo() {
+    async function prepararVistaArqueo() {
+      // Re-consultar arqueos desde Supabase para tener el estado en tiempo real
+      await cargarDatosSupabase();
+
       const arqueoAbierto = dbArqueos.find(a => String(a.localId) === String(usuarioActual.localId) && a.estado === 'Abierto');
       
       if (arqueoAbierto) {
@@ -945,15 +957,7 @@
       const { error } = await supabaseClient.from('arqueos').insert([nuevoArqueoSupabase]);
       if (error) return alert("Error al abrir caja: " + error.message);
 
-      dbArqueos.push({
-        id: nuevoArqueoSupabase.id,
-        localId: nuevoArqueoSupabase.local_id,
-        usuario: nuevoArqueoSupabase.usuario,
-        fechaApertura: nuevoArqueoSupabase.fecha_apertura,
-        fondoInicial: nuevoArqueoSupabase.fondo_inicial,
-        estado: nuevoArqueoSupabase.estado
-      });
-      prepararVistaArqueo();
+      await prepararVistaArqueo();
     }
 
     async function guardarFondoCaja() {
@@ -961,11 +965,12 @@
       if (!arqueoAbierto) return;
 
       const nuevoFondo = parseFloat(document.getElementById('arq-fondo').value) || 0;
-      arqueoAbierto.fondoInicial = nuevoFondo;
 
-      await supabaseClient.from('arqueos').update({ fondo_inicial: nuevoFondo }).eq('id', arqueoAbierto.id);
+      const { error } = await supabaseClient.from('arqueos').update({ fondo_inicial: nuevoFondo }).eq('id', arqueoAbierto.id);
+      if (error) return alert("Error al actualizar fondo: " + error.message);
+      
       alert('Fondo actualizado');
-      prepararVistaArqueo();
+      await prepararVistaArqueo();
     }
 
     function calcularDiferenciaArqueo() {
@@ -991,31 +996,56 @@
       if (!arqueoAbierto) return;
 
       const fisico = parseFloat(document.getElementById('arq-conteo-fisico').value) || 0;
-      arqueoAbierto.estado = 'Cerrado';
-      arqueoAbierto.fechaCierre = new Date().toISOString();
-      arqueoAbierto.efectivoFisico = fisico;
+      const fechaCierre = new Date().toISOString();
 
-      await supabaseClient.from('arqueos').update({
+      const { error } = await supabaseClient.from('arqueos').update({
         estado: 'Cerrado',
-        fecha_cierre: arqueoAbierto.fechaCierre,
+        fecha_cierre: fechaCierre,
         efectivo_fisico: fisico
       }).eq('id', arqueoAbierto.id);
 
+      if (error) return alert("Error al cerrar turno en Supabase: " + error.message);
+
       alert('Turno de caja cerrado con éxito.');
-      prepararVistaArqueo();
+      await prepararVistaArqueo();
     }
 
     function renderHistorialArqueos() {
-      const lista = dbArqueos.filter(a => String(a.localId) === String(usuarioActual.localId) && a.estado === 'Cerrado');
-      document.getElementById('arqueo-historial-tabla').innerHTML = lista.map(a => `
-        <tr>
-          <td>${new Date(a.fechaApertura).toLocaleString()}</td>
-          <td>$${(a.fondoInicial || 0).toFixed(2)}</td>
-          <td>-</td>
-          <td>$${(a.efectivoFisico || 0).toFixed(2)}</td>
-          <td><span class="text-success">Cerrado</span></td>
-        </tr>
-      `).join('') || `<tr><td colspan="5" style="text-align:center;">No hay arqueos anteriores</td></tr>`;
+      const lista = dbArqueos.filter(a => String(a.localId) === String(usuarioActual.localId));
+      
+      if (!lista || lista.length === 0) {
+        document.getElementById('arqueo-historial-tabla').innerHTML = `<tr><td colspan="6" style="text-align:center;">No hay arqueos registrados</td></tr>`;
+        return;
+      }
+
+      document.getElementById('arqueo-historial-tabla').innerHTML = lista.map(a => {
+        const fApertura = new Date(a.fechaApertura).toLocaleString('es-EC');
+        const fCierre = a.fechaCierre ? new Date(a.fechaCierre).toLocaleString('es-EC') : 'En curso';
+        const estadoBadge = a.estado === 'Abierto' 
+          ? '<span style="color: green; font-weight: bold;">Abierto</span>' 
+          : '<span style="color: red; font-weight: bold;">Cerrado</span>';
+
+        // Calcular efectivo vendido durante ese turno
+        const ventasTurno = dbVentas.filter(v => {
+          const fVenta = new Date(v.fecha);
+          const desde = new Date(a.fechaApertura);
+          const hasta = a.fechaCierre ? new Date(a.fechaCierre) : new Date();
+          return String(v.localId) === String(a.localId) && fVenta >= desde && fVenta <= hasta && (!v.metodoPago || v.metodoPago === 'Efectivo');
+        });
+
+        const efecVendido = ventasTurno.reduce((sum, v) => sum + v.total, 0);
+
+        return `
+          <tr>
+            <td><b>${a.usuario || 'N/A'}</b></td>
+            <td>${fApertura}</td>
+            <td>${fCierre}</td>
+            <td>$${(a.fondoInicial || 0).toFixed(2)}</td>
+            <td>$${a.efectivoFisico !== null ? a.efectivoFisico.toFixed(2) : '-'}</td>
+            <td>${estadoBadge}</td>
+          </tr>
+        `;
+      }).join('');
     }
 
     async function guardarCliente() {
