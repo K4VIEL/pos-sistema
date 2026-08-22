@@ -518,7 +518,6 @@
           supabaseClient.from('arqueos').select('*')
         ]);
 
-        // Mapeo seguro para transformar snake_case de Supabase a las variables internas de JS
         if (resLoc.data) dbLocales = resLoc.data.map(l => ({ id: l.id, nombre: l.nombre, direccion: l.direccion }));
         if (resUsr.data) dbUsuarios = resUsr.data.map(u => ({ id: u.id, user: u.user || u.usuario, pass: u.pass || u.password, rol: u.rol, localId: u.local_id || u.localId }));
         if (resProd.data) dbProductos = resProd.data.map(p => ({ id: p.id, localId: p.local_id || p.localId, codigo: p.codigo, nombre: p.nombre, costo: p.costo, precio: p.precio, stock: p.stock }));
@@ -556,7 +555,7 @@
     }
 
     async function iniciarSesion() {
-      try { await cargarDatosSupabase(); } catch (e) {}
+      await cargarDatosSupabase();
 
       const u = document.getElementById('login-user').value.trim();
       const p = document.getElementById('login-pass').value.trim();
@@ -848,7 +847,6 @@
         }
       }
 
-      // Estructura adaptada estrictamente a snake_case para evitar errores de columnas faltantes
       const ventaSupabase = {
         id: 'FAC-' + Date.now().toString().slice(-5),
         local_id: String(usuarioActual.localId),
@@ -1269,10 +1267,11 @@
 
     window.addEventListener('DOMContentLoaded', async () => {
       if (usuarioActual) {
-        try { await cargarDatosSupabase(); } catch (e) {}
+        await cargarDatosSupabase();
         aplicarSesionActiva();
       }
     });
   </script>
 </body>
 </html>
+
