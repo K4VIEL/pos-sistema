@@ -44,7 +44,7 @@
     .badge { background: #dbeafe; color: var(--primary); padding: 4px 10px; border-radius: 20px; font-weight: 600; }
 
     /* NAV NATIVA */
-    .nav-bar { background: var(--card-bg); border-top: 1px solid var(--border); position: fixed; bottom: 0; left: 0; right: 0; display: flex; justify-content: space-around; padding: 8px 0; z-index: 1000; overflow-x: auto; }
+    .nav-bar { background: var(--card-bg); border-top: 1px solid var(--border); position: fixed; bottom: 0; left: 0; right: 0; display: flex; justify-around; padding: 8px 0; z-index: 1000; overflow-x: auto; }
     .nav-btn { border: none; background: none; color: var(--text-muted); font-size: 0.75rem; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; flex: 1; min-width: 60px; }
     .nav-btn.active { color: var(--primary); font-weight: 700; }
     .nav-btn svg { width: 22px; height: 22px; fill: currentColor; }
@@ -907,7 +907,6 @@
     }
 
     async function prepararVistaArqueo() {
-      // Re-consultar arqueos desde Supabase para tener el estado en tiempo real
       await cargarDatosSupabase();
 
       const arqueoAbierto = dbArqueos.find(a => String(a.localId) === String(usuarioActual.localId) && a.estado === 'Abierto');
@@ -1025,7 +1024,6 @@
           ? '<span style="color: green; font-weight: bold;">Abierto</span>' 
           : '<span style="color: red; font-weight: bold;">Cerrado</span>';
 
-        // Calcular efectivo vendido durante ese turno
         const ventasTurno = dbVentas.filter(v => {
           const fVenta = new Date(v.fecha);
           const desde = new Date(a.fechaApertura);
@@ -1242,13 +1240,27 @@
       alert('Local registrado');
     }
 
+    /* VISTA Y ELIMINACIÓN DE LOCALES CON PROTECCIÓN PARA MATRIZ (LOC-001) */
     function renderLocales() {
-      document.getElementById('loc-tabla').innerHTML = dbLocales.map(l => `
-        <tr><td>${l.id}</td><td><b>${l.nombre}</b></td><td>${l.direccion}</td><td><button class="btn btn-danger btn-sm" onclick="eliminarLocal('${l.id}')">Eliminar</button></td></tr>
-      `).join('');
+      document.getElementById('loc-tabla').innerHTML = dbLocales.map(l => {
+        const esMatriz = String(l.id).toUpperCase() === 'LOC-001';
+        const accionBtn = esMatriz 
+          ? '<span style="color:var(--text-muted); font-size:0.8rem; font-style:italic;">Protegido</span>' 
+          : `<button class="btn btn-danger btn-sm" onclick="eliminarLocal('${l.id}')">Eliminar</button>`;
+
+        return `<tr>
+          <td>${l.id}</td>
+          <td><b>${l.nombre}</b></td>
+          <td>${l.direccion}</td>
+          <td>${accionBtn}</td>
+        </tr>`;
+      }).join('');
     }
 
     async function eliminarLocal(id) {
+      if (String(id).toUpperCase() === 'LOC-001') {
+        return alert('La Matriz Principal (LOC-001) está protegida y no se puede eliminar.');
+      }
       if (!confirm("¿Eliminar este local?")) return;
       await supabaseClient.from('locales').delete().eq('id', id);
       dbLocales = dbLocales.filter(l => l.id !== id);
