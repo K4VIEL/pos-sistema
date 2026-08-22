@@ -649,7 +649,6 @@
     async function cambiarVista(vista) {
       if ((vista === 'locales' || vista === 'usuarios') && usuarioActual?.rol !== 'Administrador') return alert('Acceso denegado.');
       
-      // Recargar datos siempre al cambiar de vista para evitar desincronización
       try { await cargarDatosSupabase(); } catch(e) {}
 
       document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
@@ -689,6 +688,7 @@
 
     function renderizarCarritosTabs() {
       const container = document.getElementById('pos-cart-tabs');
+      if(!container) return;
       container.innerHTML = carritos.map(c => `
         <button class="cart-tab-btn ${c.id === carritoActivoId ? 'active' : ''}" onclick="cambiarCarritoActivo(${c.id})">${c.nombre} (${c.items.length})</button>
       `).join('') + `<button class="cart-tab-btn" onclick="crearNuevoCarrito()" style="background:#e2e8f0; color:#334155;">+ Carrito</button>`;
@@ -734,8 +734,16 @@
     }
 
     function cerrarCamara() {
-      if (html5QrCode) { html5QrCode.stop().then(() => document.getElementById('modal-camara').style.display = 'none').catch(() => document.getElementById('modal-camara').style.display = 'none'); }
-      else { document.getElementById('modal-camara').style.display = 'none'; }
+      if (html5QrCode) { 
+        html5QrCode.stop().then(() => {
+          document.getElementById('modal-camara').style.display = 'none';
+          html5QrCode.clear();
+        }).catch(() => { 
+          document.getElementById('modal-camara').style.display = 'none'; 
+        }); 
+      } else { 
+        document.getElementById('modal-camara').style.display = 'none'; 
+      }
     }
 
     function agregarPorCodigoBarras(codigo) {
@@ -748,7 +756,9 @@
       const q = (document.getElementById('pos-buscar')?.value || '').toLowerCase();
       const prods = dbProductos.filter(p => String(p.localId) === String(usuarioActual.localId) && (p.nombre.toLowerCase().includes(q) || p.codigo.includes(q)));
       
-      document.getElementById('pos-grid-productos').innerHTML = prods.map(p => {
+      const grid = document.getElementById('pos-grid-productos');
+      if(!grid) return;
+      grid.innerHTML = prods.map(p => {
         return `
           <div class="product-card" onclick="agregarAlCarrito('${p.id}')">
             <div class="product-title">${p.nombre}</div>
@@ -818,7 +828,10 @@
 
     function renderCarrito() {
       const cart = obtenerCarritoActual();
-      document.getElementById('pos-tabla-carrito').innerHTML = cart.items.map((item, idx) => {
+      const tabla = document.getElementById('pos-tabla-carrito');
+      if(!tabla) return;
+      
+      tabla.innerHTML = cart.items.map((item, idx) => {
         const prod = dbProductos.find(p => String(p.id) === String(item.id));
         return `
           <tr>
