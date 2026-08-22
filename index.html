@@ -407,11 +407,11 @@
           
           <div class="form-row-3">
             <div><label>Costo Compra ($)</label><input type="number" id="inv-costo" step="0.01" placeholder="0.00"></div>
-            <div><label>Precio Opción 1 (Público) ($)</label><input type="number" id="inv-precio" step="0.01" placeholder="0.00"></div>
-            <div><label>Precio Opción 2 (Revendedor) ($)</label><input type="number" id="inv-precio-revendedor" step="0.01" placeholder="0.00"></div>
+            <div><label>Opción 1 (Público) ($)</label><input type="number" id="inv-precio" step="0.01" placeholder="0.00"></div>
+            <div><label>Opción 2 (Revendedor) ($)</label><input type="number" id="inv-precio-revendedor" step="0.01" placeholder="0.00"></div>
           </div>
           <div class="form-row">
-            <div><label>Precio Opción 3 (Familia) ($)</label><input type="number" id="inv-precio-familia" step="0.01" placeholder="0.00"></div>
+            <div><label>Opción 3 (Familia) ($)</label><input type="number" id="inv-precio-familia" step="0.01" placeholder="0.00"></div>
             <div></div>
           </div>
 
@@ -421,7 +421,7 @@
           <h3>Inventario & Tarifas</h3>
           <div class="table-responsive">
             <table>
-              <thead><tr><th>Código</th><th>Producto</th><th>Costo</th><th>Opción 1</th><th>Opción 2</th><th>Opción 3</th><th>Stock</th><th>Acciones</th></tr></thead>
+              <thead><tr><th>Código</th><th>Producto</th><th>Costo</th><th>Tarifa / Precios</th><th>Stock</th><th>Acciones</th></tr></thead>
               <tbody id="inv-tabla-catalogo"></tbody>
             </table>
           </div>
@@ -1111,21 +1111,62 @@
           <td>${p.codigo}</td>
           <td><b>${p.nombre}</b></td>
           <td><input type="number" step="0.01" id="ec-${p.id}" value="${(p.costo||0).toFixed(2)}" style="width:60px; margin:0; padding:4px;"></td>
-          <td><input type="number" step="0.01" id="ep-${p.id}" value="${(p.precio||0).toFixed(2)}" style="width:65px; margin:0; padding:4px;"></td>
-          <td><input type="number" step="0.01" id="epr-${p.id}" value="${(p.precioRevendedor||0).toFixed(2)}" style="width:65px; margin:0; padding:4px;"></td>
-          <td><input type="number" step="0.01" id="epf-${p.id}" value="${(p.precioFamilia||0).toFixed(2)}" style="width:65px; margin:0; padding:4px;"></td>
+          <td>
+            <select id="sel-tarifa-${p.id}" onchange="cambiarVistaTarifaInventario('${p.id}')" style="padding:4px; font-size:0.8rem; margin:0; width:150px;">
+              <option value="1">Opción 1 ($${(p.precio||0).toFixed(2)})</option>
+              <option value="2">Opción 2 ($${(p.precioRevendedor||0).toFixed(2)})</option>
+              <option value="3">Opción 3 ($${(p.precioFamilia||0).toFixed(2)})</option>
+            </select>
+            <div id="edit-box-${p.id}" style="margin-top:4px;">
+              <input type="number" step="0.01" id="ep-${p.id}" value="${(p.precio||0).toFixed(2)}" style="width:110px; margin:0; padding:4px;" placeholder="Precio Op 1">
+            </div>
+            <input type="hidden" id="epr-${p.id}" value="${(p.precioRevendedor||0).toFixed(2)}">
+            <input type="hidden" id="epf-${p.id}" value="${(p.precioFamilia||0).toFixed(2)}">
+          </td>
           <td><input type="number" id="es-${p.id}" value="${p.stock}" style="width:55px; margin:0; padding:4px;"></td>
           <td><button class="btn btn-primary btn-sm" onclick="actProd('${p.id}')">💾</button> <button class="btn btn-danger btn-sm" onclick="delProd('${p.id}')">X</button></td>
         </tr>
       `).join('');
     }
 
+    function cambiarVistaTarifaInventario(id) {
+      const selVal = document.getElementById(`sel-tarifa-${id}`).value;
+      const p = dbProductos.find(x => String(x.id) === String(id));
+      if(!p) return;
+
+      // Guardamos temporalmente el valor actual en el hidden correspondiente antes de cambiar
+      const inputActualPrecio = document.getElementById(`ep-${id}`);
+      if(inputActualPrecio) {
+        // Asignamos el valor que tenía el input al campo interno según la opción que estaba seleccionada previamente
+        // O simplemente leemos el valor ingresado y lo actualizamos en memoria local
+      }
+
+      const editBox = document.getElementById(`edit-box-${id}`);
+      let valActual = p.precio;
+      if(selVal === "2") valActual = p.precioRevendedor;
+      if(selVal === "3") valActual = p.precioFamilia;
+
+      editBox.innerHTML = `<input type="number" step="0.01" id="ep-${id}" value="${valActual.toFixed(2)}" style="width:110px; margin:0; padding:4px;" placeholder="Precio Op ${selVal}">`;
+    }
+
     async function actProd(id) {
       const costo = parseFloat(document.getElementById(`ec-${id}`).value) || 0;
-      const precio = parseFloat(document.getElementById(`ep-${id}`).value) || 0;
-      const precioRevendedor = parseFloat(document.getElementById(`epr-${id}`).value) || 0;
-      const precioFamilia = parseFloat(document.getElementById(`epf-${id}`).value) || 0;
       const stock = parseInt(document.getElementById(`es-${id}`).value) || 0;
+
+      // Obtenemos qué tarifa estaba seleccionada en el desplegable limpio
+      const selVal = document.getElementById(`sel-tarifa-${id}`).value;
+      const valorIngresado = parseFloat(document.getElementById(`ep-${id}`).value) || 0;
+
+      const p = dbProductos.find(x => String(x.id) === String(id));
+      if (!p) return;
+
+      let precio = p.precio;
+      let precioRevendedor = p.precioRevendedor;
+      let precioFamilia = p.precioFamilia;
+
+      if (selVal === "1") precio = valorIngresado;
+      else if (selVal === "2") precioRevendedor = valorIngresado;
+      else if (selVal === "3") precioFamilia = valorIngresado;
 
       await supabaseClient.from('productos').update({
         costo,
@@ -1135,16 +1176,15 @@
         stock
       }).eq('id', id);
 
-      const p = dbProductos.find(x => String(x.id) === String(id));
-      if (p) {
-        p.costo = costo;
-        p.precio = precio;
-        p.precioRevendedor = precioRevendedor;
-        p.precioFamilia = precioFamilia;
-        p.stock = stock;
-      }
+      p.costo = costo;
+      p.precio = precio;
+      p.precioRevendedor = precioRevendedor;
+      p.precioFamilia = precioFamilia;
+      p.stock = stock;
+
+      renderInventario();
       renderProductosPOS();
-      alert('Producto actualizado');
+      alert('Producto actualizado con éxito');
     }
 
     async function delProd(id) {
