@@ -1126,21 +1126,17 @@
           <td><b>${p.nombre}</b></td>
           <td><input type="number" step="0.01" id="ec-${p.id}" value="${(p.costo||0).toFixed(2)}" style="width:60px; margin:0; padding:4px;"></td>
           <td>
-            <select id="sel-tarifa-${p.id}" onchange="cambiarVistaTarifaInventario('${p.id}')" style="padding:4px; font-size:0.8rem; margin:0; width:70px;">
-              <option value="1">1 ($${(p.p1||0).toFixed(2)})</option>
-              <option value="2">2 ($${(p.p2||0).toFixed(2)})</option>
-              <option value="3">3 ($${(p.p3||0).toFixed(2)})</option>
-              <option value="4">4 ($${(p.p4||0).toFixed(2)})</option>
-              <option value="5">5 ($${(p.p5||0).toFixed(2)})</option>
+            <!-- ÁREA LIMPIA: Por defecto muestra Opción 1, y se despliega si se quiere otra -->
+            <select id="sel-tarifa-${p.id}" onchange="cambiarVistaTarifaInventario('${p.id}')" style="padding:6px; font-size:0.85rem; margin:0 0 4px 0; width:130px; background:#f8fafc; font-weight:600; cursor:pointer;">
+              <option value="1" selected>Opción 1 ($${(p.p1||0).toFixed(2)})</option>
+              <option value="2">Opción 2 ($${(p.p2||0).toFixed(2)})</option>
+              <option value="3">Opción 3 ($${(p.p3||0).toFixed(2)})</option>
+              <option value="4">Opción 4 ($${(p.p4||0).toFixed(2)})</option>
+              <option value="5">Opción 5 ($${(p.p5||0).toFixed(2)})</option>
             </select>
-            <div id="edit-box-${p.id}" style="margin-top:4px;">
-              <input type="number" step="0.01" id="ep-${p.id}" value="${(p.p1||0).toFixed(2)}" style="width:90px; margin:0; padding:4px;" placeholder="Precio 1">
+            <div id="edit-box-${p.id}">
+              <input type="number" step="0.01" id="ep-${p.id}" value="${(p.p1||0).toFixed(2)}" style="width:110px; margin:0; padding:4px;" placeholder="Editar Precio">
             </div>
-            <input type="hidden" id="ep1-${p.id}" value="${(p.p1||0).toFixed(2)}">
-            <input type="hidden" id="ep2-${p.id}" value="${(p.p2||0).toFixed(2)}">
-            <input type="hidden" id="ep3-${p.id}" value="${(p.p3||0).toFixed(2)}">
-            <input type="hidden" id="ep4-${p.id}" value="${(p.p4||0).toFixed(2)}">
-            <input type="hidden" id="ep5-${p.id}" value="${(p.p5||0).toFixed(2)}">
           </td>
           <td><input type="number" id="es-${p.id}" value="${p.stock}" style="width:55px; margin:0; padding:4px;"></td>
           <td><button class="btn btn-primary btn-sm" onclick="actProd('${p.id}')">💾</button> <button class="btn btn-danger btn-sm" onclick="delProd('${p.id}')">X</button></td>
@@ -1160,7 +1156,7 @@
       if(selVal === "4") valActual = p.p4;
       if(selVal === "5") valActual = p.p5;
 
-      editBox.innerHTML = `<input type="number" step="0.01" id="ep-${id}" value="${valActual.toFixed(2)}" style="width:90px; margin:0; padding:4px;" placeholder="Precio ${selVal}">`;
+      editBox.innerHTML = `<input type="number" step="0.01" id="ep-${id}" value="${valActual.toFixed(2)}" style="width:110px; margin:0; padding:4px;" placeholder="Editar Opción ${selVal}">`;
     }
 
     async function actProd(id) {
@@ -1298,4 +1294,3 @@
   </script>
 </body>
 </html>
-
