@@ -228,16 +228,6 @@
                 <input type="text" id="pos-buscar" placeholder="🔍 Buscar por nombre o código..." oninput="renderProductosPOS()" style="margin:0;">
                 <button class="btn btn-primary btn-sm" onclick="abrirCamaraPOS()" style="margin:0; white-space:nowrap;">📷 Escanear</button>
               </div>
-              
-              <!-- SELECTOR DE TARIFA GENERAL PARA EL CARRITO -->
-              <div style="background:var(--bg); padding:10px; border-radius:8px; margin-bottom:10px; display:flex; align-items:center; justify-content:space-between;">
-                <span style="font-size:0.85rem; font-weight:600; color:var(--text-muted);">Tarifa Predeterminada de Venta:</span>
-                <select id="pos-tipo-precio-global" onchange="cambiarTarifaGlobal()" style="width:160px; margin:0; padding:6px;">
-                  <option value="publico">Precio Final / Público</option>
-                  <option value="revendedor">Precio Revendedor</option>
-                  <option value="familia">Precio Familia</option>
-                </select>
-              </div>
 
               <div class="product-grid" id="pos-grid-productos"></div>
             </div>
@@ -267,7 +257,7 @@
               
               <div class="table-responsive" style="margin-top:10px;">
                 <table>
-                  <thead><tr><th>Prod</th><th>Tarifa</th><th>Cant</th><th>Subt</th><th></th></tr></thead>
+                  <thead><tr><th>Prod</th><th>Tarifa / Opción</th><th>Cant</th><th>Subt</th><th></th></tr></thead>
                   <tbody id="pos-tabla-carrito"></tbody>
                 </table>
               </div>
@@ -417,11 +407,11 @@
           
           <div class="form-row-3">
             <div><label>Costo Compra ($)</label><input type="number" id="inv-costo" step="0.01" placeholder="0.00"></div>
-            <div><label>Precio Público ($)</label><input type="number" id="inv-precio" step="0.01" placeholder="0.00"></div>
-            <div><label>Precio Revendedor ($)</label><input type="number" id="inv-precio-revendedor" step="0.01" placeholder="0.00"></div>
+            <div><label>Precio Opción 1 (Público) ($)</label><input type="number" id="inv-precio" step="0.01" placeholder="0.00"></div>
+            <div><label>Precio Opción 2 (Revendedor) ($)</label><input type="number" id="inv-precio-revendedor" step="0.01" placeholder="0.00"></div>
           </div>
           <div class="form-row">
-            <div><label>Precio Familia ($)</label><input type="number" id="inv-precio-familia" step="0.01" placeholder="0.00"></div>
+            <div><label>Precio Opción 3 (Familia) ($)</label><input type="number" id="inv-precio-familia" step="0.01" placeholder="0.00"></div>
             <div></div>
           </div>
 
@@ -431,7 +421,7 @@
           <h3>Inventario & Tarifas</h3>
           <div class="table-responsive">
             <table>
-              <thead><tr><th>Código</th><th>Producto</th><th>Costo</th><th>Público</th><th>Revend.</th><th>Familia</th><th>Stock</th><th>Acciones</th></tr></thead>
+              <thead><tr><th>Código</th><th>Producto</th><th>Costo</th><th>Opción 1</th><th>Opción 2</th><th>Opción 3</th><th>Stock</th><th>Acciones</th></tr></thead>
               <tbody id="inv-tabla-catalogo"></tbody>
             </table>
           </div>
@@ -561,7 +551,7 @@
     let dbMovimientosCaja = [];
     
     let usuarioActual = JSON.parse(localStorage.getItem('usuarioActual')) || null;
-    let carritos = [{ id: 1, nombre: 'Principal 1', items: [], tipoPrecio: 'publico' }];
+    let carritos = [{ id: 1, nombre: 'Principal 1', items: [] }];
     let carritoActivoId = 1;
     let html5QrCode = null;
 
@@ -587,9 +577,9 @@
             codigo: p.codigo,
             nombre: p.nombre,
             costo: p.costo || 0,
-            precio: p.precio || 0, // Precio Público
-            precioRevendedor: p.precio_revendedor || p.precioRevendedor || p.precio || 0,
-            precioFamilia: p.precio_familia || p.precioFamilia || p.precio || 0,
+            precio: p.precio || 0, // Opción 1 (Público)
+            precioRevendedor: p.precio_revendedor || p.precioRevendedor || p.precio || 0, // Opción 2
+            precioFamilia: p.precio_familia || p.precioFamilia || p.precio || 0, // Opción 3
             stock: p.stock
           }));
         }
@@ -680,9 +670,6 @@
       container.innerHTML = carritos.map(c => `
         <button class="cart-tab-btn ${c.id === carritoActivoId ? 'active' : ''}" onclick="cambiarCarritoActivo(${c.id})">${c.nombre} (${c.items.length})</button>
       `).join('') + `<button class="cart-tab-btn" onclick="crearNuevoCarrito()" style="background:#e2e8f0; color:#334155;">+ Carrito</button>`;
-      
-      const cart = obtenerCarritoActual();
-      document.getElementById('pos-tipo-precio-global').value = cart.tipoPrecio || 'publico';
 
       renderProductosPOS();
       renderCarrito();
@@ -691,31 +678,12 @@
     function cambiarCarritoActivo(id) { carritoActivoId = id; renderizarCarritosTabs(); }
     function crearNuevoCarrito() {
       const nuevoId = Date.now();
-      carritos.push({ id: nuevoId, nombre: `Ticket ${carritos.length + 1}`, items: [], tipoPrecio: 'publico' });
+      carritos.push({ id: nuevoId, nombre: `Ticket ${carritos.length + 1}`, items: [] });
       cambiarCarritoActivo(nuevoId);
     }
     function ponerCarritoEnEspera() {
       if (obtenerCarritoActual().items.length === 0) return alert('El carrito está vacío');
       crearNuevoCarrito();
-    }
-
-    function cambiarTarifaGlobal() {
-      const tipo = document.getElementById('pos-tipo-precio-global').value;
-      const cart = obtenerCarritoActual();
-      cart.tipoPrecio = tipo;
-      
-      // Actualizar el precio de los items actuales en el carrito según la nueva tarifa seleccionada
-      cart.items.forEach(item => {
-        const p = dbProductos.find(x => String(x.id) === String(item.id));
-        if (p) {
-          if (tipo === 'revendedor') item.precio = p.precioRevendedor;
-          else if (tipo === 'familia') item.precio = p.precioFamilia;
-          else item.precio = p.precio;
-          item.tarifaNombre = tipo;
-        }
-      });
-      renderCarrito();
-      renderProductosPOS();
     }
 
     function abrirCamaraPOS() { abrirCamara(decodedText => agregarPorCodigoBarras(decodedText)); }
@@ -753,22 +721,14 @@
 
     function renderProductosPOS() {
       const q = (document.getElementById('pos-buscar')?.value || '').toLowerCase();
-      const cart = obtenerCarritoActual();
-      const tarifaActual = cart.tipoPrecio || 'publico';
-
       const prods = dbProductos.filter(p => String(p.localId) === String(usuarioActual.localId) && (p.nombre.toLowerCase().includes(q) || p.codigo.includes(q)));
       
       document.getElementById('pos-grid-productos').innerHTML = prods.map(p => {
-        let precioMostrar = p.precio;
-        let etiquetaTarifa = 'Público';
-        if (tarifaActual === 'revendedor') { precioMostrar = p.precioRevendedor; etiquetaTarifa = 'Revend.'; }
-        else if (tarifaActual === 'familia') { precioMostrar = p.precioFamilia; etiquetaTarifa = 'Familia'; }
-
         return `
           <div class="product-card" onclick="agregarAlCarrito('${p.id}')">
             <div class="product-title">${p.nombre}</div>
-            <div class="product-price">$${precioMostrar.toFixed(2)}</div>
-            <div style="font-size:0.7rem; color:var(--primary); font-weight:600;">[${etiquetaTarifa}]</div>
+            <div class="product-price">$${p.precio.toFixed(2)}</div>
+            <div style="font-size:0.7rem; color:var(--primary); font-weight:600;">[Opción 1]</div>
             <div class="product-stock ${p.stock <= 0 ? 'stock-negative' : ''}">Stock: ${p.stock}</div>
           </div>
         `;
@@ -779,13 +739,12 @@
       const prod = dbProductos.find(p => String(p.id) === String(id));
       if (!prod) return;
       const cart = obtenerCarritoActual();
-      const tarifa = cart.tipoPrecio || 'publico';
 
-      let precioElegido = prod.precio;
-      if (tarifa === 'revendedor') precioElegido = prod.precioRevendedor;
-      else if (tarifa === 'familia') precioElegido = prod.precioFamilia;
+      // SIEMPRE PREDETERMINADO A LA OPCIÓN 1 (Precio Público)
+      const opcionInicial = 1;
+      const precioElegido = prod.precio;
 
-      const item = cart.items.find(c => String(c.id) === String(id) && c.tarifaNombre === tarifa);
+      const item = cart.items.find(c => String(c.id) === String(id) && c.opcionPrecio === opcionInicial);
       if (item) {
         item.cantidad++;
       } else {
@@ -794,11 +753,27 @@
           nombre: prod.nombre,
           precio: precioElegido,
           costo: prod.costo || 0,
-          tarifaNombre: tarifa,
+          opcionPrecio: opcionInicial,
           cantidad: 1
         });
       }
       renderizarCarritosTabs();
+    }
+
+    function cambiarOpcPrecioItem(index, selectElement) {
+      const cart = obtenerCarritoActual();
+      const item = cart.items[index];
+      const prod = dbProductos.find(p => String(p.id) === String(item.id));
+      if (!prod) return;
+
+      const nuevaOpcion = parseInt(selectElement.value);
+      item.opcionPrecio = nuevaOpcion;
+
+      if (nuevaOpcion === 1) item.precio = prod.precio;
+      else if (nuevaOpcion === 2) item.precio = prod.precioRevendedor;
+      else if (nuevaOpcion === 3) item.precio = prod.precioFamilia;
+
+      renderCarrito();
     }
 
     function calcularTotalesCarrito() {
@@ -820,7 +795,13 @@
       document.getElementById('pos-tabla-carrito').innerHTML = cart.items.map((item, idx) => `
         <tr>
           <td>${item.nombre}</td>
-          <td><span class="badge" style="font-size:0.7rem; padding:2px 6px;">${item.tarifaNombre}</span></td>
+          <td>
+            <select onchange="cambiarOpcPrecioItem(${idx}, this)" style="padding:4px; font-size:0.8rem; margin:0; width:110px;">
+              <option value="1" ${item.opcionPrecio === 1 ? 'selected' : ''}>Opción 1 ($${dbProductos.find(p=>String(p.id)===String(item.id))?.precio.toFixed(2)})</option>
+              <option value="2" ${item.opcionPrecio === 2 ? 'selected' : ''}>Opción 2 ($${dbProductos.find(p=>String(p.id)===String(item.id))?.precioRevendedor.toFixed(2)})</option>
+              <option value="3" ${item.opcionPrecio === 3 ? 'selected' : ''}>Opción 3 ($${dbProductos.find(p=>String(p.id)===String(item.id))?.precioFamilia.toFixed(2)})</option>
+            </select>
+          </td>
           <td>${item.cantidad}</td>
           <td>$${(item.precio * item.cantidad).toFixed(2)}</td>
           <td><button class="btn btn-danger btn-sm" onclick="eliminarItemCarrito(${idx})">X</button></td>
@@ -907,7 +888,7 @@
       mostrarFactura(ventaSupabase);
 
       carritos = carritos.filter(c => c.id !== cart.id);
-      if (carritos.length === 0) carritos.push({ id: Date.now(), nombre: 'Principal 1', items: [], tipoPrecio: 'publico' });
+      if (carritos.length === 0) carritos.push({ id: Date.now(), nombre: 'Principal 1', items: [] });
       carritoActivoId = carritos[0].id;
       renderizarCarritosTabs();
     }
@@ -919,7 +900,7 @@
       document.getElementById('fac-cliente').innerText = v.clienteNombre;
       document.getElementById('fac-cedula').innerText = v.clienteCedula;
       document.getElementById('fac-metodo').innerText = v.metodoPago;
-      document.getElementById('fac-items').innerHTML = v.items.map(i => `<tr><td>${i.cantidad}</td><td>${i.nombre} <br><small style="color:#64748b;">[${i.tarifaNombre}]</small></td><td>$${(i.cantidad*i.precio).toFixed(2)}</td></tr>`).join('');
+      document.getElementById('fac-items').innerHTML = v.items.map(i => `<tr><td>${i.cantidad}</td><td>${i.nombre} <br><small style="color:#64748b;">[Opción ${i.opcionPrecio}]</small></td><td>$${(i.cantidad*i.precio).toFixed(2)}</td></tr>`).join('');
       document.getElementById('fac-subtotal').innerText = (v.subtotal || 0).toFixed(2);
       document.getElementById('fac-descuento').innerText = (v.descuento || 0).toFixed(2);
       document.getElementById('fac-iva').innerText = (v.iva || 0).toFixed(2);
