@@ -38,13 +38,13 @@
     .app-container { display: flex; flex: 1; flex-direction: column; }
     
     /* HEADER */
-    header { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 12px 20px; display: flex; justify-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+    header { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
     .brand-title { font-size: 1.2rem; font-weight: 700; color: var(--primary); }
     .user-badge { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; }
     .badge { background: #dbeafe; color: var(--primary); padding: 4px 10px; border-radius: 20px; font-weight: 600; }
 
     /* NAV NATIVA */
-    .nav-bar { background: var(--card-bg); border-top: 1px solid var(--border); position: fixed; bottom: 0; left: 0; right: 0; display: flex; justify-around; padding: 8px 0; z-index: 1000; overflow-x: auto; }
+    .nav-bar { background: var(--card-bg); border-top: 1px solid var(--border); position: fixed; bottom: 0; left: 0; right: 0; display: flex; justify-content: space-around; padding: 8px 0; z-index: 1000; overflow-x: auto; }
     .nav-btn { border: none; background: none; color: var(--text-muted); font-size: 0.75rem; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; flex: 1; min-width: 60px; }
     .nav-btn.active { color: var(--primary); font-weight: 700; }
     .nav-btn svg { width: 22px; height: 22px; fill: currentColor; }
@@ -498,6 +498,31 @@
     let carritoActivoId = 1;
     let html5QrCode = null;
 
+    // FUNCIÓN AUDITORÍA MERMAS EN SUPABASE
+    async function registrarAuditoriaMerma(idFactura, productoNombre, cantidad, montoTotal, motivo) {
+      try {
+        const { error } = await supabaseClient
+          .from('mermas_auditoria')
+          .insert([
+            {
+              id_factura: String(idFactura),
+              producto_nombre: productoNombre,
+              cantidad: cantidad,
+              monto_total: montoTotal,
+              motivo: motivo || 'Eliminado manualmente',
+              fecha_hora: new Date().toISOString(),
+              usuario: usuarioActual ? usuarioActual.user : 'Sistema'
+            }
+          ]);
+
+        if (error) {
+          console.error('Error al registrar auditoría en Supabase:', error.message);
+        }
+      } catch (err) {
+        console.error('Error imprevisto al auditoriar merma:', err);
+      }
+    }
+
     function esLocalMatriz(localId, localNombre = '') {
       const idStr = String(localId || '').toUpperCase();
       const nomStr = String(localNombre || '').toLowerCase();
@@ -608,7 +633,6 @@
         </button>
       `;
 
-      // Si es Dueño o Administrador General, se le habilitan módulos avanzados
       if (esUsuarioMatriz() || esDuenoLocal()) {
         html += `
           <button class="nav-btn" id="btn-nav-kardex" onclick="cambiarVista('kardex')">
@@ -630,7 +654,6 @@
         `;
       }
 
-      // Opción exclusiva para que el Dueño administre sus cajeros
       if (esDuenoLocal()) {
         html += `
           <button class="nav-btn" id="btn-nav-personal" onclick="cambiarVista('personal')">
@@ -640,7 +663,6 @@
         `;
       }
 
-      // Opciones exclusivas para la Matriz Principal
       if (esUsuarioMatriz()) {
         html += `
           <button class="nav-btn" id="btn-nav-locales" onclick="cambiarVista('locales')">
@@ -664,13 +686,11 @@
     }
 
     async function cambiarVista(vista) {
-      // Bloqueo de vistas no permitidas para Cajeros
       const esCajero = usuarioActual && (usuarioActual.rol === 'Cajero' || usuarioActual.rol === 'Encargado');
       if (esCajero && (vista === 'kardex' || vista === 'inventario' || vista === 'historial' || vista === 'reportes' || vista === 'personal' || vista === 'locales' || vista === 'usuarios')) {
         return alert('Acceso denegado. Tu cuenta de Cajero solo permite procesar ventas, abrir/cerrar caja y registrar clientes.');
       }
 
-      // Bloqueo de vista de Matriz para Dueños
       if ((vista === 'locales' || vista === 'usuarios') && !esUsuarioMatriz()) {
         return alert('Acceso denegado. Esta sección solo está disponible para la administración de la Matriz Principal.');
       }
@@ -840,8 +860,27 @@
       document.getElementById('pos-total').innerText = total.toFixed(2);
     }
 
-    function eliminarItemCarrito(index) {
+    // ELIMINACIÓN DE ÍTEM DEL CARRITO CON AUDITORÍA EN SUPABASE
+    async function eliminarItemCarrito(index) {
       const cart = obtenerCarritoActual();
+      const item = cart.items[index];
+      if (!item) return;
+
+      const motivo = prompt(`Ingrese el motivo por el cual elimina "${item.nombre}" del carrito:`, "Error de digitación / Arrepentimiento del cliente");
+      if (motivo === null) return; // Se cancela la eliminación si no ingresa/cancela prompt
+
+      const totalItem = item.precio * item.cantidad;
+
+      // Envío a auditoría en Supabase
+      await registrarAuditoriaMerma(
+        cart.nombre || 'Carrito Activo',
+        item.nombre,
+        item.cantidad,
+        totalItem,
+        motivo
+      );
+
+      // Eliminación del estado local del carrito
       cart.items.splice(index, 1);
       renderizarCarritosTabs();
     }
@@ -1240,8 +1279,26 @@
       renderInventario();
     }
 
+    // ELIMINACIÓN DE PRODUCTO EN INVENTARIO CON REGISTRO DE AUDITORÍA EN SUPABASE
     async function eliminarProducto(id) {
-      if(!confirm("¿Eliminar este producto?")) return;
+      const prod = dbProductos.find(x => String(x.id) === String(id));
+      if (!prod) return;
+
+      if (!confirm(`¿Eliminar el producto "${prod.nombre}" del inventario?`)) return;
+
+      const motivo = prompt(`Motivo de la eliminación de catálogo/merma para "${prod.nombre}":`, "Producto dañado / Muestra gratis / Eliminación de catálogo");
+      if (motivo === null) return;
+
+      // Auditoría en Supabase
+      await registrarAuditoriaMerma(
+        'INVENTARIO-GENERAL',
+        prod.nombre,
+        prod.stock,
+        prod.precio * prod.stock,
+        motivo
+      );
+
+      // Eliminación en Supabase y estado local
       await supabaseClient.from('productos').delete().eq('id', id);
       dbProductos = dbProductos.filter(x => String(x.id) !== String(id));
       renderInventario();
