@@ -1126,7 +1126,6 @@
           <td><b>${p.nombre}</b></td>
           <td><input type="number" step="0.01" id="ec-${p.id}" value="${(p.costo||0).toFixed(2)}" style="width:60px; margin:0; padding:4px;"></td>
           <td>
-            <!-- ÁREA LIMPIA: Por defecto muestra Opción 1, y se despliega si se quiere otra -->
             <select id="sel-tarifa-${p.id}" onchange="cambiarVistaTarifaInventario('${p.id}')" style="padding:6px; font-size:0.85rem; margin:0 0 4px 0; width:130px; background:#f8fafc; font-weight:600; cursor:pointer;">
               <option value="1" selected>Opción 1 ($${(p.p1||0).toFixed(2)})</option>
               <option value="2">Opción 2 ($${(p.p2||0).toFixed(2)})</option>
@@ -1294,3 +1293,4 @@
   </script>
 </body>
 </html>
+
