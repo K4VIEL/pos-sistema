@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>POS Multi-Local Centralizado Pro</title>
+  <title>POS Multi-Local con Precios Múltiples</title>
   <!-- LIBRERÍAS EXTERNAS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
@@ -64,6 +64,7 @@
     input:focus, select:focus { border-color: var(--primary); }
     
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
 
     .btn { font-weight: 600; border: none; cursor: pointer; transition: background 0.2s; display: inline-flex; justify-content: center; align-items: center; gap: 8px; margin-top: 8px; }
     .btn-primary { background: var(--primary); color: white; }
@@ -76,7 +77,7 @@
     .kpi-card { background: var(--bg); border: 1px solid var(--border); padding: 16px; border-radius: 10px; text-align: center; }
     .kpi-card .kpi-val { font-size: 1.4rem; font-weight: 800; margin-top: 4px; }
 
-    .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; max-height: 400px; overflow-y: auto; }
+    .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; max-height: 400px; overflow-y: auto; }
     .product-card { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px; text-align: center; cursor: pointer; }
     .product-card:active { border-color: var(--primary); background: #eff6ff; }
     .product-title { font-weight: 600; font-size: 0.85rem; margin-bottom: 4px; }
@@ -90,7 +91,6 @@
     th { color: var(--text-muted); font-weight: 600; background: var(--bg); }
     .text-success { color: var(--success); font-weight: bold; }
 
-    /* ESTILOS DE PESTAÑAS DE CARRITO */
     .cart-tabs { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 10px; padding-bottom: 4px; }
     .cart-tab-btn { padding: 6px 12px; font-size: 0.8rem; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; white-space: nowrap; }
     .cart-tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); font-weight: bold; }
@@ -126,7 +126,7 @@
     </div>
   </div>
 
-  <!-- MODAL DE CÁMARA PARA CÓDIGO DE BARRAS -->
+  <!-- MODAL DE CÁMARA -->
   <div id="modal-camara" class="modal-overlay">
     <div class="modal-box" style="text-align: center;">
       <h3>Escanear Código de Barras</h3>
@@ -169,7 +169,7 @@
 
   <!-- HEADER -->
   <header class="no-print">
-    <div class="brand-title">POS Pro System</div>
+    <div class="brand-title">POS Pro Max System</div>
     <div class="user-badge">
       <span class="badge" id="session-local">-</span>
       <span id="session-user" style="font-weight:600;">-</span>
@@ -186,7 +186,7 @@
       </button>
       <button class="nav-btn" id="btn-nav-arqueo" onclick="cambiarVista('arqueo')">
         <svg viewBox="0 0 24 24"><path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
-        <span>Arqueo Caja</span>
+        <span>Arqueo & Caja</span>
       </button>
       <button class="nav-btn" id="btn-nav-kardex" onclick="cambiarVista('kardex')">
         <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
@@ -208,7 +208,6 @@
         <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
         <span>Reportes</span>
       </button>
-      
       <button class="nav-btn admin-only" id="btn-nav-locales" onclick="cambiarVista('locales')">
         <svg viewBox="0 0 24 24"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg>
         <span>Locales</span>
@@ -220,7 +219,7 @@
     </nav>
 
     <main>
-      <!-- VISTA POS CON MÚLTIPLES CARRITOS Y CÁMARA -->
+      <!-- VISTA POS -->
       <section id="vista-pos" class="page-section active">
         <div class="grid-pos">
           <div>
@@ -229,6 +228,17 @@
                 <input type="text" id="pos-buscar" placeholder="🔍 Buscar por nombre o código..." oninput="renderProductosPOS()" style="margin:0;">
                 <button class="btn btn-primary btn-sm" onclick="abrirCamaraPOS()" style="margin:0; white-space:nowrap;">📷 Escanear</button>
               </div>
+              
+              <!-- SELECTOR DE TARIFA GENERAL PARA EL CARRITO -->
+              <div style="background:var(--bg); padding:10px; border-radius:8px; margin-bottom:10px; display:flex; align-items:center; justify-content:space-between;">
+                <span style="font-size:0.85rem; font-weight:600; color:var(--text-muted);">Tarifa Predeterminada de Venta:</span>
+                <select id="pos-tipo-precio-global" onchange="cambiarTarifaGlobal()" style="width:160px; margin:0; padding:6px;">
+                  <option value="publico">Precio Final / Público</option>
+                  <option value="revendedor">Precio Revendedor</option>
+                  <option value="familia">Precio Familia</option>
+                </select>
+              </div>
+
               <div class="product-grid" id="pos-grid-productos"></div>
             </div>
           </div>
@@ -239,35 +249,51 @@
                 <button class="btn btn-warning btn-sm" onclick="ponerCarritoEnEspera()">⏸ En espera</button>
               </div>
 
-              <!-- Pestañas de Carritos en Espera -->
               <div class="cart-tabs" id="pos-cart-tabs"></div>
 
               <label>Cliente (Opcional)</label>
               <select id="pos-cliente-select"></select>
+
+              <div class="form-row" style="margin-top: 8px;">
+                <div>
+                  <label>Descuento (%)</label>
+                  <input type="number" id="pos-descuento" value="0" min="0" max="100" oninput="renderCarrito()">
+                </div>
+                <div>
+                  <label>Impuesto IVA (%)</label>
+                  <input type="number" id="pos-iva" value="12" min="0" max="100" oninput="renderCarrito()">
+                </div>
+              </div>
               
               <div class="table-responsive" style="margin-top:10px;">
                 <table>
-                  <thead><tr><th>Prod</th><th>Cant</th><th>Total</th><th></th></tr></thead>
+                  <thead><tr><th>Prod</th><th>Tarifa</th><th>Cant</th><th>Subt</th><th></th></tr></thead>
                   <tbody id="pos-tabla-carrito"></tbody>
                 </table>
               </div>
-              <h2 style="margin-top:15px; text-align:right;">Total: $<span id="pos-total">0.00</span></h2>
+
+              <div style="margin-top:10px; font-size:0.9rem; text-align:right; color:var(--text-muted);">
+                Subtotal: $<span id="pos-subtotal">0.00</span><br>
+                Descuento: -$<span id="pos-desc-monto">0.00</span><br>
+                IVA: $<span id="pos-iva-monto">0.00</span>
+              </div>
+              <h2 style="margin-top:5px; text-align:right;">Total: $<span id="pos-total">0.00</span></h2>
               <button class="btn btn-primary" onclick="abrirModalCobro()">Cobrar e Imprimir</button>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- VISTA ARQUEO DE CAJA -->
+      <!-- VISTA ARQUEO & CAJA CHICA -->
       <section id="vista-arqueo" class="page-section">
         <div class="card">
-          <h3>Arqueo y Cierre de Caja (Turnos)</h3>
-          <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:12px;">Control de efectivo y conciliación del turno actual.</p>
+          <h3>Arqueo, Turnos y Caja Chica</h3>
+          <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:12px;">Control de efectivo, ingresos/gastos menores y cierre de turno.</p>
           
           <div id="arqueo-estado-abierto" style="display:none;">
             <div class="form-row">
               <div>
-                <label>Fondo Inicial en Caja ($)</label>
+                <label>Fondo Inicial ($)</label>
                 <input type="number" step="0.01" id="arq-fondo" placeholder="0.00">
               </div>
               <div>
@@ -278,14 +304,34 @@
 
             <div class="kpi-grid" style="margin-top: 15px;">
               <div class="kpi-card"><label>Fondo Inicial</label><div class="kpi-val" id="arq-lbl-fondo">$0.00</div></div>
-              <div class="kpi-card"><label>Ventas en Efectivo</label><div class="kpi-val text-success" id="arq-lbl-efectivo">$0.00</div></div>
-              <div class="kpi-card"><label>Ventas Tarjeta</label><div class="kpi-val" id="arq-lbl-tarjeta">$0.00</div></div>
-              <div class="kpi-card"><label>Ventas Transferencia</label><div class="kpi-val" id="arq-lbl-transferencia">$0.00</div></div>
+              <div class="kpi-card"><label>Ventas Efectivo</label><div class="kpi-val text-success" id="arq-lbl-efectivo">$0.00</div></div>
+              <div class="kpi-card"><label>Gastos / Retiros</label><div class="kpi-val text-danger" id="arq-lbl-gastos">$0.00</div></div>
+              <div class="kpi-card"><label>Ventas Tarjeta/Transf.</label><div class="kpi-val" id="arq-lbl-electronico">$0.00</div></div>
             </div>
 
             <div style="margin-top: 20px; background:var(--bg); padding:15px; border-radius:8px;">
+              <h4>Movimientos de Caja Chica (Gastos o Ingresos extras)</h4>
+              <div class="form-row">
+                <div>
+                  <label>Tipo</label>
+                  <select id="mov-tipo">
+                    <option value="Gasto">Gasto / Salida (-)</option>
+                    <option value="Ingreso">Ingreso extra (+)</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Monto ($)</label>
+                  <input type="number" step="0.01" id="mov-monto" placeholder="0.00">
+                </div>
+              </div>
+              <label>Motivo / Descripción</label>
+              <input type="text" id="mov-motivo" placeholder="Ej: Compra de rollos de papel térmico, pasajes, etc.">
+              <button class="btn btn-warning btn-sm" onclick="registrarMovimientoCaja()">Registrar Movimiento</button>
+            </div>
+
+            <div style="margin-top: 20px; background:#fff; border:1px solid var(--border); padding:15px; border-radius:8px;">
               <h4>Cierre de Turno</h4>
-              <label>Conteo Físico de Efectivo en Caja ($)</label>
+              <label>Conteo Físico Total en Efectivo ($)</label>
               <input type="number" step="0.01" id="arq-conteo-fisico" placeholder="0.00" oninput="calcularDiferenciaArqueo()">
               <div style="margin-top:10px;">
                 <span>Diferencia / Descuadré:</span>
@@ -302,10 +348,10 @@
         </div>
 
         <div class="card">
-          <h3>Historial de Arqueos de Caja</h3>
+          <h3>Historial de Arqueos</h3>
           <div class="table-responsive">
             <table>
-              <thead><tr><th>Fecha Apertura</th><th>Fondo</th><th>Efectivo Venta</th><th>Físico Contado</th><th>Diferencia</th></tr></thead>
+              <thead><tr><th>Apertura</th><th>Fondo</th><th>Efectivo Físico</th><th>Estado</th></tr></thead>
               <tbody id="arqueo-historial-tabla"></tbody>
             </table>
           </div>
@@ -319,7 +365,7 @@
           <input type="text" id="kardex-buscar" placeholder="🔍 Buscar por N° ticket, cliente o producto..." oninput="renderKardex()">
           <div class="table-responsive" style="margin-top:10px;">
             <table>
-              <thead><tr><th>Ticket</th><th>Fecha y Hora</th><th>Sucursal</th><th>Cliente</th><th>Pago</th><th>Total</th><th>Acción</th></tr></thead>
+              <thead><tr><th>Ticket</th><th>Fecha</th><th>Cliente</th><th>Pago</th><th>Total</th><th>Acción</th></tr></thead>
               <tbody id="kardex-tabla"></tbody>
             </table>
           </div>
@@ -336,7 +382,7 @@
             <div><label>Nombre *</label><input type="text" id="cli-nombre" placeholder="Ej: Juan"></div>
             <div><label>Apellido *</label><input type="text" id="cli-apellido" placeholder="Ej: Pérez"></div>
           </div>
-          <label>Correo Electrónico (Opcional)</label>
+          <label>Correo Electrónico</label>
           <input type="email" id="cli-correo" placeholder="ejemplo@correo.com">
           <button class="btn btn-primary" onclick="guardarCliente()">Guardar Cliente</button>
         </div>
@@ -355,30 +401,37 @@
       <!-- VISTA INVENTARIO -->
       <section id="vista-inventario" class="page-section">
         <div class="card">
-          <h3>Gestión de Producto</h3>
+          <h3>Gestión de Producto con Múltiples Precios</h3>
           <div class="form-row">
             <div>
               <label>Código de Barras</label>
               <div style="display:flex; gap:6px;">
                 <input type="text" id="inv-codigo" placeholder="Ej: 77001" style="margin:0;">
-                <button class="btn btn-primary btn-sm" onclick="abrirCamaraInventario()" style="margin:0; white-space:nowrap;">📷 Escanear</button>
+                <button class="btn btn-primary btn-sm" onclick="abrirCamaraInventario()" style="margin:0; white-space:nowrap;">📷</button>
               </div>
             </div>
             <div><label>Stock Inicial</label><input type="number" id="inv-stock" placeholder="Ej: 20"></div>
           </div>
           <label>Nombre del Producto</label>
           <input type="text" id="inv-nombre" placeholder="Nombre de Producto">
-          <div class="form-row">
-            <div><label>Costo de Compra ($)</label><input type="number" id="inv-costo" step="0.01" placeholder="Costo"></div>
-            <div><label>Precio de Venta ($)</label><input type="number" id="inv-precio" step="0.01" placeholder="P. Venta"></div>
+          
+          <div class="form-row-3">
+            <div><label>Costo Compra ($)</label><input type="number" id="inv-costo" step="0.01" placeholder="0.00"></div>
+            <div><label>Precio Público ($)</label><input type="number" id="inv-precio" step="0.01" placeholder="0.00"></div>
+            <div><label>Precio Revendedor ($)</label><input type="number" id="inv-precio-revendedor" step="0.01" placeholder="0.00"></div>
           </div>
+          <div class="form-row">
+            <div><label>Precio Familia ($)</label><input type="number" id="inv-precio-familia" step="0.01" placeholder="0.00"></div>
+            <div></div>
+          </div>
+
           <button class="btn btn-primary" onclick="guardarProducto()">Guardar Producto</button>
         </div>
         <div class="card">
-          <h3>Inventario de tu Tienda</h3>
+          <h3>Inventario & Tarifas</h3>
           <div class="table-responsive">
             <table>
-              <thead><tr><th>Código</th><th>Producto</th><th>Costo ($)</th><th>P. Venta ($)</th><th>Stock</th><th>Acciones</th></tr></thead>
+              <thead><tr><th>Código</th><th>Producto</th><th>Costo</th><th>Público</th><th>Revend.</th><th>Familia</th><th>Stock</th><th>Acciones</th></tr></thead>
               <tbody id="inv-tabla-catalogo"></tbody>
             </table>
           </div>
@@ -391,7 +444,7 @@
           <h3>Historial de Ventas</h3>
           <div class="table-responsive">
             <table>
-              <thead><tr><th>Ticket</th><th>Sucursal</th><th>Cliente</th><th>Método</th><th>Fecha</th><th>Total</th><th></th></tr></thead>
+              <thead><tr><th>Ticket</th><th>Cliente</th><th>Método</th><th>Fecha</th><th>Total</th><th></th></tr></thead>
               <tbody id="historial-tabla"></tbody>
             </table>
           </div>
@@ -407,7 +460,7 @@
             <div>
               <label>Mes</label>
               <select id="rep-mes" onchange="generarReporte()">
-                <option value="TODOS">Todos (Anual)</option>
+                <option value="TODOS">Todos</option>
                 <option value="0">Enero</option><option value="1">Febrero</option><option value="2">Marzo</option><option value="3">Abril</option><option value="4">Mayo</option><option value="5">Junio</option><option value="6">Julio</option><option value="7">Agosto</option><option value="8">Septiembre</option><option value="9">Octubre</option><option value="10">Noviembre</option><option value="11">Diciembre</option>
               </select>
             </div>
@@ -443,11 +496,11 @@
       <section id="vista-usuarios" class="page-section">
         <div class="card">
           <h3>Crear Credencial para Sucursal</h3>
-          <input type="text" id="usr-user" placeholder="Nombre de Usuario">
+          <input type="text" id="usr-user" placeholder="Usuario">
           <input type="password" id="usr-pass" placeholder="Contraseña">
           <select id="usr-rol">
-            <option value="Cajero">Cajero / Encargado</option>
-            <option value="Administrador">Administrador General</option>
+            <option value="Cajero">Cajero</option>
+            <option value="Administrador">Administrador</option>
           </select>
           <label>Sucursal Asignada</label>
           <select id="usr-local-select"></select>
@@ -478,11 +531,16 @@
     </div>
     <hr style="margin: 8px 0;">
     <table>
-      <thead><tr><th>Cant.</th><th>Item</th><th>Total</th></tr></thead>
+      <thead><tr><th>Cant.</th><th>Item (Tarifa)</th><th>Total</th></tr></thead>
       <tbody id="fac-items"></tbody>
     </table>
     <hr style="margin: 8px 0;">
-    <h3 style="text-align: right;">Total: $<span id="fac-total">0.00</span></h3>
+    <div style="font-size: 0.85rem; text-align: right;">
+      Subtotal: $<span id="fac-subtotal">0.00</span><br>
+      Descuento: -$<span id="fac-descuento">0.00</span><br>
+      IVA: $<span id="fac-iva">0.00</span>
+    </div>
+    <h3 style="text-align: right; margin-top: 5px;">Total: $<span id="fac-total">0.00</span></h3>
     <div class="no-print" style="margin-top: 15px; text-align: center;">
       <button class="btn btn-primary" onclick="window.print()">Imprimir Ticket</button>
       <button class="btn btn-danger" onclick="document.getElementById('factura-impresion').style.display='none'">Cerrar</button>
@@ -500,55 +558,46 @@
     let dbClientes = [];
     let dbVentas = [];
     let dbArqueos = [];
+    let dbMovimientosCaja = [];
     
     let usuarioActual = JSON.parse(localStorage.getItem('usuarioActual')) || null;
-    
-    let carritos = [{ id: 1, nombre: 'Principal 1', items: [] }];
+    let carritos = [{ id: 1, nombre: 'Principal 1', items: [], tipoPrecio: 'publico' }];
     let carritoActivoId = 1;
     let html5QrCode = null;
 
     async function cargarDatosSupabase() {
       try {
-        const [resLoc, resUsr, resProd, resCli, resVen, resArq] = await Promise.all([
+        const [resLoc, resUsr, resProd, resCli, resVen, resArq, resMov] = await Promise.all([
           supabaseClient.from('locales').select('*'),
           supabaseClient.from('usuarios').select('*'),
           supabaseClient.from('productos').select('*'),
           supabaseClient.from('clientes').select('*'),
           supabaseClient.from('ventas').select('*'),
-          supabaseClient.from('arqueos').select('*')
+          supabaseClient.from('arqueos').select('*'),
+          supabaseClient.from('movimientos_caja').select('*').catch(() => ({ data: [] }))
         ]);
 
-        if (resLoc.data) dbLocales = resLoc.data.map(l => ({ id: l.id, nombre: l.nombre, direccion: l.direccion }));
+        if (resLoc.data) dbLocales = resLoc.data;
         if (resUsr.data) dbUsuarios = resUsr.data.map(u => ({ id: u.id, user: u.user || u.usuario, pass: u.pass || u.password, rol: u.rol, localId: u.local_id || u.localId }));
-        if (resProd.data) dbProductos = resProd.data.map(p => ({ id: p.id, localId: p.local_id || p.localId, codigo: p.codigo, nombre: p.nombre, costo: p.costo, precio: p.precio, stock: p.stock }));
-        if (resCli.data) dbClientes = resCli.data.map(c => ({ id: c.id, localId: c.local_id || c.localId, cedula: c.cedula || c.cliente_cedula, nombre: c.nombre, apellido: c.apellido, correo: c.correo }));
         
-        if (resVen.data) {
-          dbVentas = resVen.data.map(v => ({
-            id: v.id,
-            localId: v.local_id || v.localId,
-            localNombre: v.local_nombre || v.localNombre,
-            clienteNombre: v.cliente_nombre || v.clienteNombre,
-            clienteCedula: v.cliente_cedula || v.clienteCedula,
-            metodoPago: v.metodo_pago || v.metodoPago,
-            fecha: v.fecha,
-            items: v.items || [],
-            total: v.total
+        if (resProd.data) {
+          dbProductos = resProd.data.map(p => ({
+            id: p.id,
+            localId: p.local_id || p.localId,
+            codigo: p.codigo,
+            nombre: p.nombre,
+            costo: p.costo || 0,
+            precio: p.precio || 0, // Precio Público
+            precioRevendedor: p.precio_revendedor || p.precioRevendedor || p.precio || 0,
+            precioFamilia: p.precio_familia || p.precioFamilia || p.precio || 0,
+            stock: p.stock
           }));
         }
 
-        if (resArq.data) {
-          dbArqueos = resArq.data.map(a => ({
-            id: a.id,
-            localId: a.local_id || a.localId,
-            usuario: a.usuario,
-            fechaApertura: a.fecha_apertura || a.fechaApertura,
-            fondoInicial: a.fondo_inicial || a.fondoInicial,
-            estado: a.estado,
-            fechaCierre: a.fecha_cierre || a.fechaCierre,
-            efectivoFisico: a.efectivo_fisico || a.efectivoFisico
-          }));
-        }
+        if (resCli.data) dbClientes = resCli.data.map(c => ({ id: c.id, localId: c.local_id || c.localId, cedula: c.cedula || c.cliente_cedula, nombre: c.nombre, apellido: c.apellido, correo: c.correo }));
+        if (resVen.data) dbVentas = resVen.data.map(v => ({ id: v.id, localId: v.local_id, localNombre: v.local_nombre, clienteNombre: v.cliente_nombre, clienteCedula: v.cliente_cedula, metodoPago: v.metodo_pago, fecha: v.fecha, items: v.items || [], subtotal: v.subtotal || 0, descuento: v.descuento || 0, iva: v.iva || 0, total: v.total }));
+        if (resArq.data) dbArqueos = resArq.data.map(a => ({ id: a.id, localId: a.local_id, usuario: a.usuario, fechaApertura: a.fecha_apertura, fondoInicial: a.fondo_inicial, estado: a.estado, fechaCierre: a.fecha_cierre, efectivoFisico: a.efectivo_fisico }));
+        if (resMov.data) dbMovimientosCaja = resMov.data.map(m => ({ id: m.id, localId: m.local_id, arqueoId: m.arqueo_id, tipo: m.tipo, monto: m.monto, motivo: m.motivo, fecha: m.fecha }));
       } catch (err) {
         console.error("Aviso al cargar Supabase:", err);
       }
@@ -556,7 +605,6 @@
 
     async function iniciarSesion() {
       try { await cargarDatosSupabase(); } catch (e) {}
-
       const u = document.getElementById('login-user').value.trim();
       const p = document.getElementById('login-pass').value.trim();
       let user = dbUsuarios.find(x => x.user === u && x.pass === p);
@@ -574,8 +622,7 @@
       document.getElementById('login-error').style.display = 'none';
       document.getElementById('login-screen').style.setProperty('display', 'none', 'important');
       document.getElementById('session-user').innerText = usuarioActual.user;
-      
-      const loc = dbLocales.find(l => String(l.id) === String(usuarioActual.localId))?.nombre || 'Panel Principal';
+      const loc = dbLocales.find(l => String(l.id) === String(usuarioActual.localId))?.nombre || 'Panel';
       document.getElementById('session-local').innerText = loc;
 
       const esAdmin = usuarioActual.rol === 'Administrador';
@@ -595,17 +642,11 @@
     }
 
     function cambiarVista(vista) {
-      if ((vista === 'locales' || vista === 'usuarios') && usuarioActual?.rol !== 'Administrador') {
-        return alert('Acceso denegado.');
-      }
-
+      if ((vista === 'locales' || vista === 'usuarios') && usuarioActual?.rol !== 'Administrador') return alert('Acceso denegado.');
       document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
-
-      const sec = document.getElementById(`vista-${vista}`);
-      if(sec) sec.classList.add('active');
-      const btnNav = document.getElementById(`btn-nav-${vista}`);
-      if(btnNav) btnNav.classList.add('active');
+      document.getElementById(`vista-${vista}`)?.classList.add('active');
+      document.getElementById(`btn-nav-${vista}`)?.classList.add('active');
 
       if (vista === 'pos') renderizarCarritosTabs();
       if (vista === 'arqueo') prepararVistaArqueo();
@@ -620,16 +661,14 @@
 
     function poblardropdowns() {
       const opts = dbLocales.map(l => `<option value="${l.id}">${l.nombre}</option>`).join('');
-      const selectUsr = document.getElementById('usr-local-select');
-      if (selectUsr) selectUsr.innerHTML = opts;
+      if (document.getElementById('usr-local-select')) document.getElementById('usr-local-select').innerHTML = opts;
       poblarClientesDropdown();
     }
 
     function poblarClientesDropdown() {
-      const clientesAislamiento = dbClientes.filter(c => String(c.localId) === String(usuarioActual.localId));
-      const optsClientes = clientesAislamiento.map(c => `<option value="${c.id}">${c.cedula} - ${c.nombre} ${c.apellido}</option>`).join('');
-      const selectCli = document.getElementById('pos-cliente-select');
-      if (selectCli) selectCli.innerHTML = `<option value="">Consumidor Final</option>` + optsClientes;
+      const clientesLocal = dbClientes.filter(c => String(c.localId) === String(usuarioActual.localId));
+      const opts = clientesLocal.map(c => `<option value="${c.id}">${c.cedula} - ${c.nombre} ${c.apellido}</option>`).join('');
+      if (document.getElementById('pos-cliente-select')) document.getElementById('pos-cliente-select').innerHTML = `<option value="">Consumidor Final</option>` + opts;
     }
 
     function obtenerCarritoActual() {
@@ -639,210 +678,211 @@
     function renderizarCarritosTabs() {
       const container = document.getElementById('pos-cart-tabs');
       container.innerHTML = carritos.map(c => `
-        <button class="cart-tab-btn ${c.id === carritoActivoId ? 'active' : ''}" onclick="cambiarCarritoActivo(${c.id})">
-          ${c.nombre} (${c.items.length})
-        </button>
+        <button class="cart-tab-btn ${c.id === carritoActivoId ? 'active' : ''}" onclick="cambiarCarritoActivo(${c.id})">${c.nombre} (${c.items.length})</button>
       `).join('') + `<button class="cart-tab-btn" onclick="crearNuevoCarrito()" style="background:#e2e8f0; color:#334155;">+ Carrito</button>`;
+      
+      const cart = obtenerCarritoActual();
+      document.getElementById('pos-tipo-precio-global').value = cart.tipoPrecio || 'publico';
 
       renderProductosPOS();
       renderCarrito();
     }
 
-    function cambiarCarritoActivo(id) {
-      carritoActivoId = id;
-      renderizarCarritosTabs();
-    }
-
+    function cambiarCarritoActivo(id) { carritoActivoId = id; renderizarCarritosTabs(); }
     function crearNuevoCarrito() {
       const nuevoId = Date.now();
-      carritos.push({ id: nuevoId, nombre: `Ticket ${carritos.length + 1}`, items: [] });
+      carritos.push({ id: nuevoId, nombre: `Ticket ${carritos.length + 1}`, items: [], tipoPrecio: 'publico' });
       cambiarCarritoActivo(nuevoId);
     }
-
     function ponerCarritoEnEspera() {
-      const cart = obtenerCarritoActual();
-      if (cart.items.length === 0) return alert('El carrito actual está vacío');
+      if (obtenerCarritoActual().items.length === 0) return alert('El carrito está vacío');
       crearNuevoCarrito();
     }
 
-    function abrirCamaraPOS() {
-      abrirCamara(function(decodedText) {
-        agregarPorCodigoBarras(decodedText);
+    function cambiarTarifaGlobal() {
+      const tipo = document.getElementById('pos-tipo-precio-global').value;
+      const cart = obtenerCarritoActual();
+      cart.tipoPrecio = tipo;
+      
+      // Actualizar el precio de los items actuales en el carrito según la nueva tarifa seleccionada
+      cart.items.forEach(item => {
+        const p = dbProductos.find(x => String(x.id) === String(item.id));
+        if (p) {
+          if (tipo === 'revendedor') item.precio = p.precioRevendedor;
+          else if (tipo === 'familia') item.precio = p.precioFamilia;
+          else item.precio = p.precio;
+          item.tarifaNombre = tipo;
+        }
       });
+      renderCarrito();
+      renderProductosPOS();
     }
 
+    function abrirCamaraPOS() { abrirCamara(decodedText => agregarPorCodigoBarras(decodedText)); }
     function abrirCamaraInventario() {
-      abrirCamara(function(decodedText) {
+      abrirCamara(decodedText => {
         document.getElementById('inv-codigo').value = decodedText;
-        const prodExistente = dbProductos.find(p => String(p.localId) === String(usuarioActual.localId) && p.codigo.trim() === decodedText.trim());
-        if(prodExistente) {
-          alert("Este código ya pertenece a: " + prodExistente.nombre + ". Puedes actualizar sus datos abajo.");
-          document.getElementById('inv-nombre').value = prodExistente.nombre;
-          document.getElementById('inv-costo').value = prodExistente.costo || 0;
-          document.getElementById('inv-precio').value = prodExistente.precio;
-          document.getElementById('inv-stock').value = prodExistente.stock;
+        const prod = dbProductos.find(p => String(p.localId) === String(usuarioActual.localId) && p.codigo.trim() === decodedText.trim());
+        if(prod) {
+          document.getElementById('inv-nombre').value = prod.nombre;
+          document.getElementById('inv-costo').value = prod.costo || 0;
+          document.getElementById('inv-precio').value = prod.precio;
+          document.getElementById('inv-precio-revendedor').value = prod.precioRevendedor;
+          document.getElementById('inv-precio-familia').value = prod.precioFamilia;
+          document.getElementById('inv-stock').value = prod.stock;
         }
       });
     }
 
-    function abrirCamara(onScanSuccessCallback) {
+    function abrirCamara(cb) {
       document.getElementById('modal-camara').style.display = 'flex';
       html5QrCode = new Html5Qrcode("reader");
-      html5QrCode.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: { width: 250, height: 150 } },
-        (decodedText) => {
-          cerrarCamara();
-          onScanSuccessCallback(decodedText);
-        },
-        (errorMessage) => {}
-      ).catch(err => {
-        alert("No se pudo iniciar la cámara: " + err);
-        cerrarCamara();
-      });
+      html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 150 } }, text => { cerrarCamara(); cb(text); }, () => {}).catch(e => { alert("Error de cámara: " + e); cerrarCamara(); });
     }
 
     function cerrarCamara() {
-      if (html5QrCode) {
-        html5QrCode.stop().then(() => {
-          document.getElementById('modal-camara').style.display = 'none';
-        }).catch(() => {
-          document.getElementById('modal-camara').style.display = 'none';
-        });
-      } else {
-        document.getElementById('modal-camara').style.display = 'none';
-      }
+      if (html5QrCode) { html5QrCode.stop().then(() => document.getElementById('modal-camara').style.display = 'none').catch(() => document.getElementById('modal-camara').style.display = 'none'); }
+      else { document.getElementById('modal-camara').style.display = 'none'; }
     }
 
     function agregarPorCodigoBarras(codigo) {
       const prod = dbProductos.find(p => String(p.localId) === String(usuarioActual.localId) && p.codigo.trim() === codigo.trim());
-      if (!prod) return alert('Producto no encontrado con código: ' + codigo);
+      if (!prod) return alert('No encontrado: ' + codigo);
       agregarAlCarrito(prod.id);
     }
 
     function renderProductosPOS() {
       const q = (document.getElementById('pos-buscar')?.value || '').toLowerCase();
-      const productos = dbProductos.filter(p => String(p.localId) === String(usuarioActual.localId) && (p.nombre.toLowerCase().includes(q) || p.codigo.includes(q)));
+      const cart = obtenerCarritoActual();
+      const tarifaActual = cart.tipoPrecio || 'publico';
 
-      document.getElementById('pos-grid-productos').innerHTML = productos.map(p => `
-        <div class="product-card" onclick="agregarAlCarrito('${p.id}')">
-          <div class="product-title">${p.nombre}</div>
-          <div class="product-price">$${p.precio.toFixed(2)}</div>
-          <div class="product-stock ${p.stock <= 0 ? 'stock-negative' : ''}">Stock: ${p.stock}</div>
-        </div>
-      `).join('');
+      const prods = dbProductos.filter(p => String(p.localId) === String(usuarioActual.localId) && (p.nombre.toLowerCase().includes(q) || p.codigo.includes(q)));
+      
+      document.getElementById('pos-grid-productos').innerHTML = prods.map(p => {
+        let precioMostrar = p.precio;
+        let etiquetaTarifa = 'Público';
+        if (tarifaActual === 'revendedor') { precioMostrar = p.precioRevendedor; etiquetaTarifa = 'Revend.'; }
+        else if (tarifaActual === 'familia') { precioMostrar = p.precioFamilia; etiquetaTarifa = 'Familia'; }
+
+        return `
+          <div class="product-card" onclick="agregarAlCarrito('${p.id}')">
+            <div class="product-title">${p.nombre}</div>
+            <div class="product-price">$${precioMostrar.toFixed(2)}</div>
+            <div style="font-size:0.7rem; color:var(--primary); font-weight:600;">[${etiquetaTarifa}]</div>
+            <div class="product-stock ${p.stock <= 0 ? 'stock-negative' : ''}">Stock: ${p.stock}</div>
+          </div>
+        `;
+      }).join('');
     }
 
     function agregarAlCarrito(id) {
       const prod = dbProductos.find(p => String(p.id) === String(id));
-      if (!prod) return alert('Producto no encontrado');
-
+      if (!prod) return;
       const cart = obtenerCarritoActual();
-      const item = cart.items.find(c => String(c.id) === String(id));
+      const tarifa = cart.tipoPrecio || 'publico';
+
+      let precioElegido = prod.precio;
+      if (tarifa === 'revendedor') precioElegido = prod.precioRevendedor;
+      else if (tarifa === 'familia') precioElegido = prod.precioFamilia;
+
+      const item = cart.items.find(c => String(c.id) === String(id) && c.tarifaNombre === tarifa);
       if (item) {
         item.cantidad++;
       } else {
-        cart.items.push({ id: prod.id, nombre: prod.nombre, precio: prod.precio, costo: prod.costo || 0, cantidad: 1 });
+        cart.items.push({
+          id: prod.id,
+          nombre: prod.nombre,
+          precio: precioElegido,
+          costo: prod.costo || 0,
+          tarifaNombre: tarifa,
+          cantidad: 1
+        });
       }
       renderizarCarritosTabs();
     }
 
+    function calcularTotalesCarrito() {
+      const cart = obtenerCarritoActual();
+      let subtotal = cart.items.reduce((s, x) => s + (x.precio * x.cantidad), 0);
+      let descPorc = parseFloat(document.getElementById('pos-descuento')?.value) || 0;
+      let ivaPorc = parseFloat(document.getElementById('pos-iva')?.value) || 0;
+
+      let descuentoMonto = subtotal * (descPorc / 100);
+      let baseImponible = subtotal - descuentoMonto;
+      let ivaMonto = baseImponible * (ivaPorc / 100);
+      let total = baseImponible + ivaMonto;
+
+      return { subtotal, descuentoMonto, ivaMonto, total };
+    }
+
     function renderCarrito() {
       const cart = obtenerCarritoActual();
-      let total = 0;
-      document.getElementById('pos-tabla-carrito').innerHTML = cart.items.map((item, idx) => {
-        const sub = item.precio * item.cantidad;
-        total += sub;
-        return `<tr>
+      document.getElementById('pos-tabla-carrito').innerHTML = cart.items.map((item, idx) => `
+        <tr>
           <td>${item.nombre}</td>
+          <td><span class="badge" style="font-size:0.7rem; padding:2px 6px;">${item.tarifaNombre}</span></td>
           <td>${item.cantidad}</td>
-          <td>$${sub.toFixed(2)}</td>
+          <td>$${(item.precio * item.cantidad).toFixed(2)}</td>
           <td><button class="btn btn-danger btn-sm" onclick="eliminarItemCarrito(${idx})">X</button></td>
-        </tr>`;
-      }).join('');
-      document.getElementById('pos-total').innerText = total.toFixed(2);
+        </tr>
+      `).join('');
+
+      const t = calcularTotalesCarrito();
+      document.getElementById('pos-subtotal').innerText = t.subtotal.toFixed(2);
+      document.getElementById('pos-desc-monto').innerText = t.descuentoMonto.toFixed(2);
+      document.getElementById('pos-iva-monto').innerText = t.ivaMonto.toFixed(2);
+      document.getElementById('pos-total').innerText = t.total.toFixed(2);
     }
 
     function eliminarItemCarrito(index) {
-      const cart = obtenerCarritoActual();
-      cart.items.splice(index, 1);
+      obtenerCarritoActual().items.splice(index, 1);
       renderizarCarritosTabs();
     }
 
     function abrirModalCobro() {
       const cart = obtenerCarritoActual();
-      if (cart.items.length === 0) return alert('El carrito está vacío');
-      
-      let total = cart.items.reduce((s, x) => s + (x.precio * x.cantidad), 0);
-      document.getElementById('modal-total-txt').innerText = `$${total.toFixed(2)}`;
+      if (cart.items.length === 0) return alert('Carrito vacío');
+      const t = calcularTotalesCarrito();
+      document.getElementById('modal-total-txt').innerText = `$${t.total.toFixed(2)}`;
       document.getElementById('modal-metodo-pago').value = 'Efectivo';
-      document.getElementById('modal-pago').value = total.toFixed(2);
+      document.getElementById('modal-pago').value = t.total.toFixed(2);
       document.getElementById('modal-vuelto-txt').innerText = '$0.00';
       document.getElementById('seccion-efectivo').style.display = 'block';
-      
       document.getElementById('modal-cobro').style.display = 'flex';
-      document.getElementById('modal-pago').focus();
-      document.getElementById('modal-pago').select();
     }
 
-    function cerrarModalCobro() {
-      document.getElementById('modal-cobro').style.display = 'none';
-    }
-
+    function cerrarModalCobro() { document.getElementById('modal-cobro').style.display = 'none'; }
     function cambiarMetodoPago() {
-      const metodo = document.getElementById('modal-metodo-pago').value;
-      const seccionEfectivo = document.getElementById('seccion-efectivo');
-      if (metodo === 'Efectivo') {
-        seccionEfectivo.style.display = 'block';
-        document.getElementById('modal-pago').focus();
-        document.getElementById('modal-pago').select();
-      } else {
-        seccionEfectivo.style.display = 'none';
-      }
+      document.getElementById('seccion-efectivo').style.display = document.getElementById('modal-metodo-pago').value === 'Efectivo' ? 'block' : 'none';
     }
 
     function calcularVuelto() {
-      const cart = obtenerCarritoActual();
-      let total = cart.items.reduce((s, x) => s + (x.precio * x.cantidad), 0);
+      const t = calcularTotalesCarrito();
       let pago = parseFloat(document.getElementById('modal-pago').value) || 0;
-      let vuelto = pago - total;
-      
-      const vueltoTxt = document.getElementById('modal-vuelto-txt');
-      if (vuelto >= 0) {
-        vueltoTxt.style.color = 'var(--success)';
-        vueltoTxt.innerText = `$${vuelto.toFixed(2)}`;
-      } else {
-        vueltoTxt.style.color = 'var(--danger)';
-        vueltoTxt.innerText = `Faltan $${Math.abs(vuelto).toFixed(2)}`;
-      }
+      let vuelto = pago - t.total;
+      const vTxt = document.getElementById('modal-vuelto-txt');
+      vTxt.style.color = vuelto >= 0 ? 'var(--success)' : 'var(--danger)';
+      vTxt.innerText = vuelto >= 0 ? `$${vuelto.toFixed(2)}` : `Faltan $${Math.abs(vuelto).toFixed(2)}`;
     }
 
     async function confirmarYProcesarVenta() {
       const metodo = document.getElementById('modal-metodo-pago').value;
-      const cart = obtenerCarritoActual();
-      let total = cart.items.reduce((s, x) => s + (x.precio * x.cantidad), 0);
-
-      if (metodo === 'Efectivo') {
-        let pago = parseFloat(document.getElementById('modal-pago').value) || 0;
-        if (pago < total) return alert('El monto pagado es menor que el total de la venta.');
-      }
-
+      const t = calcularTotalesCarrito();
+      if (metodo === 'Efectivo' && (parseFloat(document.getElementById('modal-pago').value) || 0) < t.total) return alert('Monto insuficiente.');
       cerrarModalCobro();
       await procesarVenta(metodo);
     }
 
     async function procesarVenta(metodoPago) {
       const cart = obtenerCarritoActual();
-      const clienteId = document.getElementById('pos-cliente-select').value;
-      const clienteObj = dbClientes.find(c => c.id === clienteId);
-
-      const clienteNombre = clienteObj ? `${clienteObj.nombre} ${clienteObj.apellido}` : 'Consumidor Final';
-      const clienteCedula = clienteObj ? clienteObj.cedula : '9999999999';
+      const cliId = document.getElementById('pos-cliente-select').value;
+      const cli = dbClientes.find(c => c.id === cliId);
+      const t = calcularTotalesCarrito();
 
       for (const i of cart.items) {
         const p = dbProductos.find(x => String(x.id) === String(i.id));
         if (p) {
-          p.stock -= i.cantidad; 
+          p.stock -= i.cantidad;
           await supabaseClient.from('productos').update({ stock: p.stock }).eq('id', p.id);
         }
       }
@@ -850,172 +890,148 @@
       const ventaSupabase = {
         id: 'FAC-' + Date.now().toString().slice(-5),
         local_id: String(usuarioActual.localId),
-        local_nombre: dbLocales.find(l => String(l.id) === String(usuarioActual.localId))?.nombre || 'Mi Tienda',
-        cliente_nombre: clienteNombre,
-        cliente_cedula: clienteCedula,
-        metodo_pago: metodoPago || 'Efectivo',
+        local_nombre: dbLocales.find(l => String(l.id) === String(usuarioActual.localId))?.nombre || 'Local',
+        cliente_nombre: cli ? `${cli.nombre} ${cli.apellido}` : 'Consumidor Final',
+        cliente_cedula: cli ? cli.cedula : '9999999999',
+        metodo_pago: metodoPago,
         fecha: new Date().toISOString(),
         items: [...cart.items],
-        total: cart.items.reduce((s, x) => s + (x.precio * x.cantidad), 0)
+        subtotal: t.subtotal,
+        descuento: t.descuentoMonto,
+        iva: t.ivaMonto,
+        total: t.total
       };
 
-      const { error } = await supabaseClient.from('ventas').insert([ventaSupabase]);
-      if (error) return alert("Error al registrar venta: " + error.message);
-
-      const ventaLocal = {
-        id: ventaSupabase.id,
-        localId: ventaSupabase.local_id,
-        localNombre: ventaSupabase.local_nombre,
-        clienteNombre: ventaSupabase.cliente_nombre,
-        clienteCedula: ventaSupabase.cliente_cedula,
-        metodoPago: ventaSupabase.metodo_pago,
-        fecha: ventaSupabase.fecha,
-        items: ventaSupabase.items,
-        total: ventaSupabase.total
-      };
-
-      dbVentas.push(ventaLocal);
-      mostrarFactura(ventaLocal);
+      await supabaseClient.from('ventas').insert([ventaSupabase]);
+      dbVentas.push(ventaSupabase);
+      mostrarFactura(ventaSupabase);
 
       carritos = carritos.filter(c => c.id !== cart.id);
-      if (carritos.length === 0) carritos.push({ id: Date.now(), nombre: 'Principal 1', items: [] });
+      if (carritos.length === 0) carritos.push({ id: Date.now(), nombre: 'Principal 1', items: [], tipoPrecio: 'publico' });
       carritoActivoId = carritos[0].id;
       renderizarCarritosTabs();
     }
 
     function mostrarFactura(v) {
-      document.getElementById('fac-local-nombre').innerText = v.localNombre;
+      document.getElementById('fac-local-nombre').innerText = v.localNombre || 'Factura';
       document.getElementById('fac-id').innerText = v.id;
       document.getElementById('fac-fecha').innerText = new Date(v.fecha).toLocaleString();
       document.getElementById('fac-cliente').innerText = v.clienteNombre;
       document.getElementById('fac-cedula').innerText = v.clienteCedula;
-      document.getElementById('fac-metodo').innerText = v.metodoPago || 'Efectivo';
-      document.getElementById('fac-items').innerHTML = v.items.map(i => `
-        <tr><td>${i.cantidad}</td><td>${i.nombre}</td><td>$${(i.cantidad*i.precio).toFixed(2)}</td></tr>
-      `).join('');
+      document.getElementById('fac-metodo').innerText = v.metodoPago;
+      document.getElementById('fac-items').innerHTML = v.items.map(i => `<tr><td>${i.cantidad}</td><td>${i.nombre} <br><small style="color:#64748b;">[${i.tarifaNombre}]</small></td><td>$${(i.cantidad*i.precio).toFixed(2)}</td></tr>`).join('');
+      document.getElementById('fac-subtotal').innerText = (v.subtotal || 0).toFixed(2);
+      document.getElementById('fac-descuento').innerText = (v.descuento || 0).toFixed(2);
+      document.getElementById('fac-iva').innerText = (v.iva || 0).toFixed(2);
       document.getElementById('fac-total').innerText = v.total.toFixed(2);
       document.getElementById('factura-impresion').style.display = 'block';
     }
 
     function prepararVistaArqueo() {
       const arqueoAbierto = dbArqueos.find(a => String(a.localId) === String(usuarioActual.localId) && a.estado === 'Abierto');
-      
       if (arqueoAbierto) {
         document.getElementById('arqueo-estado-abierto').style.display = 'block';
         document.getElementById('arqueo-estado-cerrado').style.display = 'none';
         document.getElementById('arq-fondo').value = arqueoAbierto.fondoInicial;
-        
+
         const ventasTurno = dbVentas.filter(v => String(v.localId) === String(usuarioActual.localId) && new Date(v.fecha) >= new Date(arqueoAbierto.fechaApertura));
-        
-        let tEfectivo = 0, tTarjeta = 0, tTransferencia = 0;
+        const movsTurno = dbMovimientosCaja.filter(m => String(m.localId) === String(usuarioActual.localId) && String(m.arqueoId) === String(arqueoAbierto.id));
+
+        let tEfectivo = 0, tElect = 0;
         ventasTurno.forEach(v => {
-          if (v.metodoPago === 'Tarjeta') tTarjeta += v.total;
-          else if (v.metodoPago === 'Transferencia') tTransferencia += v.total;
-          else tEfectivo += v.total;
+          if (v.metodoPago === 'Efectivo') tEfectivo += v.total;
+          else tElect += v.total;
+        });
+
+        let totalGastos = 0, totalIngresosExtra = 0;
+        movsTurno.forEach(m => {
+          if (m.tipo === 'Gasto') totalGastos += m.monto;
+          else totalIngresosExtra += m.monto;
         });
 
         document.getElementById('arq-lbl-fondo').innerText = `$${arqueoAbierto.fondoInicial.toFixed(2)}`;
         document.getElementById('arq-lbl-efectivo').innerText = `$${tEfectivo.toFixed(2)}`;
-        document.getElementById('arq-lbl-tarjeta').innerText = `$${tTarjeta.toFixed(2)}`;
-        document.getElementById('arq-lbl-transferencia').innerText = `$${tTransferencia.toFixed(2)}`;
-        document.getElementById('arq-conteo-fisico').value = (arqueoAbierto.fondoInicial + tEfectivo).toFixed(2);
+        document.getElementById('arq-lbl-gastos').innerText = `$${totalGastos.toFixed(2)}`;
+        document.getElementById('arq-lbl-electronico').innerText = `$${tElect.toFixed(2)}`;
+
+        document.getElementById('arq-conteo-fisico').value = (arqueoAbierto.fondoInicial + tEfectivo + totalIngresosExtra - totalGastos).toFixed(2);
         calcularDiferenciaArqueo();
       } else {
         document.getElementById('arqueo-estado-abierto').style.display = 'none';
         document.getElementById('arqueo-estado-cerrado').style.display = 'block';
       }
-
       renderHistorialArqueos();
     }
 
     async function iniciarNuevoTurno() {
-      const fondo = prompt("Ingrese el fondo inicial en caja ($):", "0.00");
-      if (fondo === null) return;
-      const fondoInicial = parseFloat(fondo) || 0;
-
-      const nuevoArqueoSupabase = {
-        id: 'ARQ-' + Date.now(),
-        local_id: String(usuarioActual.localId),
-        usuario: usuarioActual.user,
-        fecha_apertura: new Date().toISOString(),
-        fondo_inicial: fondoInicial,
-        estado: 'Abierto'
-      };
-
-      const { error } = await supabaseClient.from('arqueos').insert([nuevoArqueoSupabase]);
-      if (error) return alert("Error al abrir caja: " + error.message);
-
-      dbArqueos.push({
-        id: nuevoArqueoSupabase.id,
-        localId: nuevoArqueoSupabase.local_id,
-        usuario: nuevoArqueoSupabase.usuario,
-        fechaApertura: nuevoArqueoSupabase.fecha_apertura,
-        fondoInicial: nuevoArqueoSupabase.fondo_inicial,
-        estado: nuevoArqueoSupabase.estado
-      });
+      const fondo = parseFloat(prompt("Fondo inicial en caja ($):", "0.00")) || 0;
+      const nuevo = { id: 'ARQ-' + Date.now(), local_id: String(usuarioActual.localId), usuario: usuarioActual.user, fecha_apertura: new Date().toISOString(), fondo_inicial: fondo, estado: 'Abierto' };
+      await supabaseClient.from('arqueos').insert([nuevo]);
+      dbArqueos.push({ id: nuevo.id, localId: nuevo.local_id, usuario: nuevo.usuario, fechaApertura: nuevo.fecha_apertura, fondoInicial: nuevo.fondo_inicial, estado: nuevo.estado });
       prepararVistaArqueo();
     }
 
     async function guardarFondoCaja() {
-      const arqueoAbierto = dbArqueos.find(a => String(a.localId) === String(usuarioActual.localId) && a.estado === 'Abierto');
-      if (!arqueoAbierto) return;
-
-      const nuevoFondo = parseFloat(document.getElementById('arq-fondo').value) || 0;
-      arqueoAbierto.fondoInicial = nuevoFondo;
-
-      await supabaseClient.from('arqueos').update({ fondo_inicial: nuevoFondo }).eq('id', arqueoAbierto.id);
+      const arq = dbArqueos.find(a => String(a.localId) === String(usuarioActual.localId) && a.estado === 'Abierto');
+      if (!arq) return;
+      arq.fondoInicial = parseFloat(document.getElementById('arq-fondo').value) || 0;
+      await supabaseClient.from('arqueos').update({ fondo_inicial: arq.fondoInicial }).eq('id', arq.id);
       alert('Fondo actualizado');
       prepararVistaArqueo();
     }
 
+    async function registrarMovimientoCaja() {
+      const arq = dbArqueos.find(a => String(a.localId) === String(usuarioActual.localId) && a.estado === 'Abierto');
+      if (!arq) return alert('No hay caja abierta');
+      const tipo = document.getElementById('mov-tipo').value;
+      const monto = parseFloat(document.getElementById('mov-monto').value) || 0;
+      const motivo = document.getElementById('mov-motivo').value.trim();
+      if (monto <= 0 || !motivo) return alert('Complete los campos del movimiento');
+
+      const mov = { id: 'MOV-' + Date.now(), local_id: String(usuarioActual.localId), arqueo_id: arq.id, tipo, monto, motivo, fecha: new Date().toISOString() };
+      await supabaseClient.from('movimientos_caja').insert([mov]).catch(() => {});
+      dbMovimientosCaja.push({ id: mov.id, localId: mov.local_id, arqueoId: mov.arqueo_id, tipo, monto, motivo, fecha: mov.fecha });
+      document.getElementById('mov-monto').value = '';
+      document.getElementById('mov-motivo').value = '';
+      prepararVistaArqueo();
+      alert('Movimiento registrado con éxito');
+    }
+
     function calcularDiferenciaArqueo() {
-      const arqueoAbierto = dbArqueos.find(a => String(a.localId) === String(usuarioActual.localId) && a.estado === 'Abierto');
-      if (!arqueoAbierto) return;
+      const arq = dbArqueos.find(a => String(a.localId) === String(usuarioActual.localId) && a.estado === 'Abierto');
+      if (!arq) return;
+      const ventas = dbVentas.filter(v => String(v.localId) === String(usuarioActual.localId) && new Date(v.fecha) >= new Date(arq.fechaApertura) && v.metodoPago === 'Efectivo');
+      const movs = dbMovimientosCaja.filter(m => String(m.localId) === String(usuarioActual.localId) && String(m.arqueoId) === String(arq.id));
 
-      const ventasTurno = dbVentas.filter(v => String(v.localId) === String(usuarioActual.localId) && new Date(v.fecha) >= new Date(arqueoAbierto.fechaApertura));
-      let tEfectivo = 0;
-      ventasTurno.forEach(v => { if (!v.metodoPago || v.metodoPago === 'Efectivo') tEfectivo += v.total; });
+      let tEfectivo = ventas.reduce((s,v)=>s+v.total, 0);
+      let tGastos = movs.filter(m=>m.tipo==='Gasto').reduce((s,m)=>s+m.monto, 0);
+      let tIngresos = movs.filter(m=>m.tipo==='Ingreso').reduce((s,m)=>s+m.monto, 0);
 
-      const esperado = arqueoAbierto.fondoInicial + tEfectivo;
-      const fisico = parseFloat(document.getElementById('arq-conteo-fisico').value) || 0;
-      const diferencia = fisico - esperado;
+      let esperado = arq.fondoInicial + tEfectivo + tIngresos - tGastos;
+      let fisico = parseFloat(document.getElementById('arq-conteo-fisico').value) || 0;
+      let dif = fisico - esperado;
 
       const lbl = document.getElementById('arq-lbl-diferencia');
-      lbl.innerText = `$${diferencia.toFixed(2)}`;
-      lbl.style.color = diferencia === 0 ? 'var(--success)' : (diferencia > 0 ? 'var(--primary)' : 'var(--danger)');
+      lbl.innerText = `$${dif.toFixed(2)}`;
+      lbl.style.color = dif === 0 ? 'var(--success)' : (dif > 0 ? 'var(--primary)' : 'var(--danger)');
     }
 
     async function cerrarTurnoCaja() {
-      if (!confirm("¿Está seguro de cerrar la caja de este turno?")) return;
-      const arqueoAbierto = dbArqueos.find(a => String(a.localId) === String(usuarioActual.localId) && a.estado === 'Abierto');
-      if (!arqueoAbierto) return;
-
-      const fisico = parseFloat(document.getElementById('arq-conteo-fisico').value) || 0;
-      arqueoAbierto.estado = 'Cerrado';
-      arqueoAbierto.fechaCierre = new Date().toISOString();
-      arqueoAbierto.efectivoFisico = fisico;
-
-      await supabaseClient.from('arqueos').update({
-        estado: 'Cerrado',
-        fecha_cierre: arqueoAbierto.fechaCierre,
-        efectivo_fisico: fisico
-      }).eq('id', arqueoAbierto.id);
-
-      alert('Turno de caja cerrado con éxito.');
+      if (!confirm("¿Cerrar caja de este turno?")) return;
+      const arq = dbArqueos.find(a => String(a.localId) === String(usuarioActual.localId) && a.estado === 'Abierto');
+      if (!arq) return;
+      arq.estado = 'Cerrado';
+      arq.efectivoFisico = parseFloat(document.getElementById('arq-conteo-fisico').value) || 0;
+      await supabaseClient.from('arqueos').update({ estado: 'Cerrado', efectivo_fisico: arq.efectivoFisico }).eq('id', arq.id);
+      alert('Turno cerrado correctamente');
       prepararVistaArqueo();
     }
 
     function renderHistorialArqueos() {
       const lista = dbArqueos.filter(a => String(a.localId) === String(usuarioActual.localId) && a.estado === 'Cerrado');
       document.getElementById('arqueo-historial-tabla').innerHTML = lista.map(a => `
-        <tr>
-          <td>${new Date(a.fechaApertura).toLocaleString()}</td>
-          <td>$${(a.fondoInicial || 0).toFixed(2)}</td>
-          <td>-</td>
-          <td>$${(a.efectivoFisico || 0).toFixed(2)}</td>
-          <td><span class="text-success">Cerrado</span></td>
-        </tr>
-      `).join('') || `<tr><td colspan="5" style="text-align:center;">No hay arqueos anteriores</td></tr>`;
+        <tr><td>${new Date(a.fechaApertura).toLocaleString()}</td><td>$${a.fondoInicial.toFixed(2)}</td><td>$${(a.efectivoFisico||0).toFixed(2)}</td><td><span class="text-success">Cerrado</span></td></tr>
+      `).join('') || `<tr><td colspan="4" style="text-align:center;">Sin registros</td></tr>`;
     }
 
     async function guardarCliente() {
@@ -1023,49 +1039,28 @@
       const nombre = document.getElementById('cli-nombre').value.trim();
       const apellido = document.getElementById('cli-apellido').value.trim();
       const correo = document.getElementById('cli-correo').value.trim();
-      if (!cedula || !nombre || !apellido) return alert('Cédula, Nombre y Apellido son obligatorios.');
+      if (!cedula || !nombre || !apellido) return alert('Campos obligatorios incompletos');
 
-      const nuevoClienteSupabase = { 
-        id: Date.now().toString(), 
-        localId: String(usuarioActual.localId), 
-        local_id: String(usuarioActual.localId), 
-        cedula, 
-        nombre, 
-        apellido, 
-        correo: correo || 'Sin correo' 
-      };
-      
-      const { error } = await supabaseClient.from('clientes').insert([nuevoClienteSupabase]);
-      if (error) return alert("Error: " + error.message);
-
-      dbClientes.push({
-        id: nuevoClienteSupabase.id,
-        localId: nuevoClienteSupabase.localId,
-        cedula: nuevoClienteSupabase.cedula,
-        nombre: nuevoClienteSupabase.nombre,
-        apellido: nuevoClienteSupabase.apellido,
-        correo: nuevoClienteSupabase.correo
-      });
-
+      const cli = { id: Date.now().toString(), local_id: String(usuarioActual.localId), cedula, nombre, apellido, correo };
+      await supabaseClient.from('clientes').insert([cli]);
+      dbClientes.push({ id: cli.id, localId: cli.local_id, cedula, nombre, apellido, correo });
       document.getElementById('cli-cedula').value = '';
       document.getElementById('cli-nombre').value = '';
       document.getElementById('cli-apellido').value = '';
       document.getElementById('cli-correo').value = '';
       poblarClientesDropdown();
       renderClientes();
-      alert('Cliente registrado');
+      alert('Cliente guardado');
     }
 
     function renderClientes() {
       const q = (document.getElementById('cli-buscar')?.value || '').toLowerCase();
-      const clientes = dbClientes.filter(c => String(c.localId) === String(usuarioActual.localId) && (c.cedula.toLowerCase().includes(q) || c.nombre.toLowerCase().includes(q)));
-      document.getElementById('cli-tabla').innerHTML = clientes.map(c => `
-        <tr><td><b>${c.cedula}</b></td><td>${c.nombre} ${c.apellido}</td><td>${c.correo}</td><td><button class="btn btn-danger btn-sm" onclick="eliminarCliente('${c.id}')">Eliminar</button></td></tr>
-      `).join('');
+      const lista = dbClientes.filter(c => String(c.localId) === String(usuarioActual.localId) && (c.cedula.includes(q) || c.nombre.toLowerCase().includes(q)));
+      document.getElementById('cli-tabla').innerHTML = lista.map(c => `<tr><td><b>${c.cedula}</b></td><td>${c.nombre} ${c.apellido}</td><td>${c.correo}</td><td><button class="btn btn-danger btn-sm" onclick="eliminarCliente('${c.id}')">X</button></td></tr>`).join('');
     }
 
     async function eliminarCliente(id) {
-      if(!confirm("¿Eliminar este cliente?")) return;
+      if (!confirm("¿Eliminar cliente?")) return;
       await supabaseClient.from('clientes').delete().eq('id', id);
       dbClientes = dbClientes.filter(c => c.id !== id);
       poblarClientesDropdown();
@@ -1074,153 +1069,163 @@
 
     function renderKardex() {
       const q = (document.getElementById('kardex-buscar')?.value || '').toLowerCase();
-      const ventas = dbVentas.filter(v => String(v.localId) === String(usuarioActual.localId) && (v.id.toLowerCase().includes(q) || v.clienteNombre.toLowerCase().includes(q))).sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
-
+      const ventas = dbVentas.filter(v => String(v.localId) === String(usuarioActual.localId) && (v.id.toLowerCase().includes(q) || v.clienteNombre.toLowerCase().includes(q))).sort((a,b)=>new Date(b.fecha)-new Date(a.fecha));
       document.getElementById('kardex-tabla').innerHTML = ventas.map(v => `
-        <tr>
-          <td><b>${v.id}</b></td><td>${new Date(v.fecha).toLocaleString()}</td><td>${v.localNombre}</td><td>${v.clienteNombre}</td>
-          <td><span class="badge" style="background:#e0f2fe; color:#0369a1;">${v.metodoPago || 'Efectivo'}</span></td>
-          <td><b>$${v.total.toFixed(2)}</b></td><td><button class="btn btn-primary btn-sm" onclick='mostrarFactura(${JSON.stringify(v)})'>Ver</button></td>
-        </tr>
-      `).join('') || `<tr><td colspan="7" style="text-align:center;">No hay registros</td></tr>`;
+        <tr><td><b>${v.id}</b></td><td>${new Date(v.fecha).toLocaleString()}</td><td>${v.clienteNombre}</td><td><span class="badge">${v.metodoPago}</span></td><td><b>$${v.total.toFixed(2)}</b></td><td><button class="btn btn-primary btn-sm" onclick='mostrarFactura(${JSON.stringify(v)})'>Ver</button></td></tr>
+      `).join('') || `<tr><td colspan="6" style="text-align:center;">Sin registros</td></tr>`;
     }
 
     async function guardarProducto() {
       const codigo = document.getElementById('inv-codigo').value.trim();
       const nombre = document.getElementById('inv-nombre').value.trim();
       const costo = parseFloat(document.getElementById('inv-costo').value) || 0;
-      const precio = parseFloat(document.getElementById('inv-precio').value);
-      const stock = parseInt(document.getElementById('inv-stock').value);
+      const precio = parseFloat(document.getElementById('inv-precio').value) || 0;
+      const precioRevendedor = parseFloat(document.getElementById('inv-precio-revendedor').value) || precio;
+      const precioFamilia = parseFloat(document.getElementById('inv-precio-familia').value) || precio;
+      const stock = parseInt(document.getElementById('inv-stock').value) || 0;
 
-      if (!codigo || !nombre || isNaN(precio)) return alert('Completa los campos requeridos');
-      
-      const nuevoProdSupabase = { 
-        id: Date.now().toString(), 
-        local_id: String(usuarioActual.localId), 
-        codigo, 
-        nombre, 
-        costo, 
-        precio, 
-        stock 
+      if (!codigo || !nombre || isNaN(precio)) return alert('Datos incompletos');
+
+      const p = {
+        id: Date.now().toString(),
+        local_id: String(usuarioActual.localId),
+        codigo,
+        nombre,
+        costo,
+        precio,
+        precio_revendedor: precioRevendedor,
+        precio_familia: precioFamilia,
+        stock
       };
 
-      const { error } = await supabaseClient.from('productos').insert([nuevoProdSupabase]);
-      if (error) return alert("Error: " + error.message);
-
+      await supabaseClient.from('productos').insert([p]);
       dbProductos.push({
-        id: nuevoProdSupabase.id,
-        localId: nuevoProdSupabase.local_id,
-        codigo: nuevoProdSupabase.codigo,
-        nombre: nuevoProdSupabase.nombre,
-        costo: nuevoProdSupabase.costo,
-        precio: nuevoProdSupabase.precio,
-        stock: nuevoProdSupabase.stock
+        id: p.id,
+        localId: p.local_id,
+        codigo,
+        nombre,
+        costo,
+        precio,
+        precioRevendedor,
+        precioFamilia,
+        stock
       });
 
       document.getElementById('inv-codigo').value = '';
       document.getElementById('inv-nombre').value = '';
       document.getElementById('inv-costo').value = '';
       document.getElementById('inv-precio').value = '';
+      document.getElementById('inv-precio-revendedor').value = '';
+      document.getElementById('inv-precio-familia').value = '';
       document.getElementById('inv-stock').value = '';
       renderInventario();
-      alert('Producto guardado');
+      renderProductosPOS();
+      alert('Producto con múltiples precios guardado');
     }
 
     function renderInventario() {
       const lista = dbProductos.filter(p => String(p.localId) === String(usuarioActual.localId));
       document.getElementById('inv-tabla-catalogo').innerHTML = lista.map(p => `
         <tr>
-          <td>${p.codigo}</td><td><b>${p.nombre}</b></td>
-          <td><input type="number" step="0.01" id="edit-costo-${p.id}" value="${(p.costo||0).toFixed(2)}" style="width:80px; margin:0; padding:6px;"></td>
-          <td><input type="number" step="0.01" id="edit-precio-${p.id}" value="${p.precio.toFixed(2)}" style="width:80px; margin:0; padding:6px;"></td>
-          <td><input type="number" id="edit-stock-${p.id}" value="${p.stock}" style="width:70px; margin:0; padding:6px;"></td>
-          <td>
-            <button class="btn btn-primary btn-sm" onclick="actualizarProducto('${p.id}')">Guardar</button>
-            <button class="btn btn-danger btn-sm" onclick="eliminarProducto('${p.id}')">X</button>
-          </td>
+          <td>${p.codigo}</td>
+          <td><b>${p.nombre}</b></td>
+          <td><input type="number" step="0.01" id="ec-${p.id}" value="${(p.costo||0).toFixed(2)}" style="width:60px; margin:0; padding:4px;"></td>
+          <td><input type="number" step="0.01" id="ep-${p.id}" value="${(p.precio||0).toFixed(2)}" style="width:65px; margin:0; padding:4px;"></td>
+          <td><input type="number" step="0.01" id="epr-${p.id}" value="${(p.precioRevendedor||0).toFixed(2)}" style="width:65px; margin:0; padding:4px;"></td>
+          <td><input type="number" step="0.01" id="epf-${p.id}" value="${(p.precioFamilia||0).toFixed(2)}" style="width:65px; margin:0; padding:4px;"></td>
+          <td><input type="number" id="es-${p.id}" value="${p.stock}" style="width:55px; margin:0; padding:4px;"></td>
+          <td><button class="btn btn-primary btn-sm" onclick="actProd('${p.id}')">💾</button> <button class="btn btn-danger btn-sm" onclick="delProd('${p.id}')">X</button></td>
         </tr>
       `).join('');
     }
 
-    async function actualizarProducto(id) {
-      const nuevoCosto = parseFloat(document.getElementById(`edit-costo-${id}`).value) || 0;
-      const nuevoPrecio = parseFloat(document.getElementById(`edit-precio-${id}`).value) || 0;
-      const nuevoStock = parseInt(document.getElementById(`edit-stock-${id}`).value) || 0;
+    async function actProd(id) {
+      const costo = parseFloat(document.getElementById(`ec-${id}`).value) || 0;
+      const precio = parseFloat(document.getElementById(`ep-${id}`).value) || 0;
+      const precioRevendedor = parseFloat(document.getElementById(`epr-${id}`).value) || 0;
+      const precioFamilia = parseFloat(document.getElementById(`epf-${id}`).value) || 0;
+      const stock = parseInt(document.getElementById(`es-${id}`).value) || 0;
 
-      await supabaseClient.from('productos').update({ costo: nuevoCosto, precio: nuevoPrecio, stock: nuevoStock }).eq('id', id);
-      const prod = dbProductos.find(p => String(p.id) === String(id));
-      if (prod) { prod.costo = nuevoCosto; prod.precio = nuevoPrecio; prod.stock = nuevoStock; }
-      alert("Actualizado correctamente");
-      renderInventario();
+      await supabaseClient.from('productos').update({
+        costo,
+        precio,
+        precio_revendedor: precioRevendedor,
+        precio_familia: precioFamilia,
+        stock
+      }).eq('id', id);
+
+      const p = dbProductos.find(x => String(x.id) === String(id));
+      if (p) {
+        p.costo = costo;
+        p.precio = precio;
+        p.precioRevendedor = precioRevendedor;
+        p.precioFamilia = precioFamilia;
+        p.stock = stock;
+      }
+      renderProductosPOS();
+      alert('Producto actualizado');
     }
 
-    async function eliminarProducto(id) {
-      if(!confirm("¿Eliminar este producto?")) return;
+    async function delProd(id) {
+      if (!confirm("¿Eliminar producto?")) return;
       await supabaseClient.from('productos').delete().eq('id', id);
       dbProductos = dbProductos.filter(x => String(x.id) !== String(id));
       renderInventario();
+      renderProductosPOS();
     }
 
     function renderHistorial() {
       const lista = dbVentas.filter(v => String(v.localId) === String(usuarioActual.localId));
-      document.getElementById('historial-tabla').innerHTML = lista.map(v => `
-        <tr><td>${v.id}</td><td>${v.localNombre}</td><td>${v.clienteNombre}</td><td>${v.metodoPago || 'Efectivo'}</td><td>${new Date(v.fecha).toLocaleString()}</td><td>$${v.total.toFixed(2)}</td><td><button class="btn btn-primary btn-sm" onclick='mostrarFactura(${JSON.stringify(v)})'>Ver</button></td></tr>
-      `).join('');
+      document.getElementById('historial-tabla').innerHTML = lista.map(v => `<tr><td>${v.id}</td><td>${v.clienteNombre}</td><td>${v.metodoPago}</td><td>${new Date(v.fecha).toLocaleString()}</td><td>$${v.total.toFixed(2)}</td><td><button class="btn btn-primary btn-sm" onclick='mostrarFactura(${JSON.stringify(v)})'>Ver</button></td></tr>`).join('');
     }
 
     function prepararVistaReportes() {
-      const selectAnio = document.getElementById('rep-anio');
+      const sel = document.getElementById('rep-anio');
       const anioActual = new Date().getFullYear();
       let anios = new Set([anioActual]);
-      dbVentas.forEach(v => { const d = new Date(v.fecha); if (!isNaN(d.getFullYear())) anios.add(d.getFullYear()); });
-      selectAnio.innerHTML = Array.from(anios).sort((a,b) => b - a).map(a => `<option value="${a}">${a}</option>`).join('');
+      dbVentas.forEach(v => anios.add(new Date(v.fecha).getFullYear()));
+      sel.innerHTML = Array.from(anios).sort((a,b)=>b-a).map(a => `<option value="${a}">${a}</option>`).join('');
       document.getElementById('rep-mes').value = "TODOS";
       generarReporte();
     }
 
     function generarReporte() {
-      const anioSel = parseInt(document.getElementById('rep-anio').value);
-      const mesSel = document.getElementById('rep-mes').value;
-      const ventasFiltradas = dbVentas.filter(v => {
+      const anio = parseInt(document.getElementById('rep-anio').value);
+      const mes = document.getElementById('rep-mes').value;
+      const filtradas = dbVentas.filter(v => {
         const d = new Date(v.fecha);
-        return String(v.localId) === String(usuarioActual.localId) && d.getFullYear() === anioSel && (mesSel === 'TODOS' || d.getMonth() === parseInt(mesSel));
+        return String(v.localId) === String(usuarioActual.localId) && d.getFullYear() === anio && (mes === 'TODOS' || d.getMonth() === parseInt(mes));
       });
-
-      let totalVentas = 0, totalCostoCompras = 0;
-      ventasFiltradas.forEach(v => {
-        totalVentas += v.total;
-        v.items.forEach(i => { totalCostoCompras += ((i.costo || 0) * i.cantidad); });
+      let ventas = 0, compras = 0;
+      filtradas.forEach(v => {
+        ventas += v.total;
+        v.items.forEach(i => compras += ((i.costo || 0) * i.cantidad));
       });
-
-      document.getElementById('rep-val-ventas').innerText = `$${totalVentas.toFixed(2)}`;
-      document.getElementById('rep-val-compras').innerText = `$${totalCostoCompras.toFixed(2)}`;
-      document.getElementById('rep-val-ganancia').innerText = `$${(totalVentas - totalCostoCompras).toFixed(2)}`;
+      document.getElementById('rep-val-ventas').innerText = `$${ventas.toFixed(2)}`;
+      document.getElementById('rep-val-compras').innerText = `$${compras.toFixed(2)}`;
+      document.getElementById('rep-val-ganancia').innerText = `$${(ventas - compras).toFixed(2)}`;
     }
 
     async function crearLocal() {
-      if (usuarioActual?.rol !== 'Administrador') return alert('Acceso denegado');
+      if (usuarioActual?.rol !== 'Administrador') return;
       const nombre = document.getElementById('loc-nombre').value.trim();
       const direccion = document.getElementById('loc-direccion').value.trim();
-      if (!nombre) return alert('Ingresa el nombre');
-
-      const nuevoLocal = { id: 'LOC-' + Date.now().toString().slice(-4), nombre, direccion };
-      await supabaseClient.from('locales').insert([nuevoLocal]);
-      dbLocales.push(nuevoLocal);
+      if (!nombre) return;
+      const l = { id: 'LOC-' + Date.now().toString().slice(-4), nombre, direccion };
+      await supabaseClient.from('locales').insert([l]);
+      dbLocales.push(l);
       poblardropdowns();
       renderLocales();
       document.getElementById('loc-nombre').value = '';
       document.getElementById('loc-direccion').value = '';
-      alert('Local registrado');
     }
 
     function renderLocales() {
-      document.getElementById('loc-tabla').innerHTML = dbLocales.map(l => `
-        <tr><td>${l.id}</td><td><b>${l.nombre}</b></td><td>${l.direccion}</td><td><button class="btn btn-danger btn-sm" onclick="eliminarLocal('${l.id}')">Eliminar</button></td></tr>
-      `).join('');
+      document.getElementById('loc-tabla').innerHTML = dbLocales.map(l => `<tr><td>${l.id}</td><td><b>${l.nombre}</b></td><td>${l.direccion}</td><td><button class="btn btn-danger btn-sm" onclick="delLocal('${l.id}')">X</button></td></tr>`).join('');
     }
 
-    async function eliminarLocal(id) {
-      if (!confirm("¿Eliminar este local?")) return;
+    async function delLocal(id) {
+      if (!confirm("¿Eliminar local?")) return;
       await supabaseClient.from('locales').delete().eq('id', id);
       dbLocales = dbLocales.filter(l => l.id !== id);
       poblardropdowns();
@@ -1228,38 +1233,26 @@
     }
 
     async function crearUsuario() {
-      if (usuarioActual?.rol !== 'Administrador') return alert('Acceso denegado');
+      if (usuarioActual?.rol !== 'Administrador') return;
       const user = document.getElementById('usr-user').value.trim();
       const pass = document.getElementById('usr-pass').value.trim();
       const rol = document.getElementById('usr-rol').value;
       const localId = document.getElementById('usr-local-select').value;
-      if (!user || !pass) return alert('Completa los campos');
+      if (!user || !pass) return;
 
-      const nuevoUsuarioSupabase = { id: Date.now().toString(), user, pass, rol, local_id: String(localId) };
-      await supabaseClient.from('usuarios').insert([nuevoUsuarioSupabase]);
-      
-      dbUsuarios.push({
-        id: nuevoUsuarioSupabase.id,
-        user: nuevoUsuarioSupabase.user,
-        pass: nuevoUsuarioSupabase.pass,
-        rol: nuevoUsuarioSupabase.rol,
-        localId: nuevoUsuarioSupabase.local_id
-      });
-
+      const u = { id: Date.now().toString(), user, pass, rol, local_id: String(localId) };
+      await supabaseClient.from('usuarios').insert([u]);
+      dbUsuarios.push({ id: u.id, user, pass, rol, localId: u.local_id });
       document.getElementById('usr-user').value = '';
       document.getElementById('usr-pass').value = '';
       renderUsuarios();
-      alert('Usuario creado');
     }
 
     function renderUsuarios() {
-      document.getElementById('usr-tabla').innerHTML = dbUsuarios.map(u => `
-        <tr><td><b>${u.user}</b></td><td>${u.rol}</td><td>${dbLocales.find(l=>String(l.id)===String(u.localId))?.nombre || 'N/A'}</td>
-        <td>${u.user !== 'Blackdiamond' ? `<button class="btn btn-danger btn-sm" onclick="eliminarUsuario('${u.id}')">Eliminar</button>` : '<em>Protegido</em>'}</td></tr>
-      `).join('');
+      document.getElementById('usr-tabla').innerHTML = dbUsuarios.map(u => `<tr><td><b>${u.user}</b></td><td>${u.rol}</td><td>${dbLocales.find(l=>String(l.id)===String(u.localId))?.nombre || '-'}</td><td>${u.user !== 'Blackdiamond' ? `<button class="btn btn-danger btn-sm" onclick="delUsr('${u.id}')">X</button>` : 'Protegido'}</td></tr>`).join('');
     }
 
-    async function eliminarUsuario(id) {
+    async function delUsr(id) {
       if (!confirm("¿Eliminar usuario?")) return;
       await supabaseClient.from('usuarios').delete().eq('id', id);
       dbUsuarios = dbUsuarios.filter(u => u.id !== id);
@@ -1268,7 +1261,7 @@
 
     window.addEventListener('DOMContentLoaded', async () => {
       if (usuarioActual) {
-        try { await cargarDatosSupabase(); } catch (e) {}
+        try { await cargarDatosSupabase(); } catch(e){}
         aplicarSesionActiva();
       }
     });
