@@ -257,7 +257,7 @@
               
               <div class="table-responsive" style="margin-top:10px;">
                 <table>
-                  <thead><tr><th>Prod</th><th>Tarifa / Opción</th><th>Cant</th><th>Subt</th><th></th></tr></thead>
+                  <thead><tr><th>Prod</th><th>Opción</th><th>Cant</th><th>Subt</th><th></th></tr></thead>
                   <tbody id="pos-tabla-carrito"></tbody>
                 </table>
               </div>
@@ -391,7 +391,7 @@
       <!-- VISTA INVENTARIO -->
       <section id="vista-inventario" class="page-section">
         <div class="card">
-          <h3>Gestión de Producto con Múltiples Precios</h3>
+          <h3>Gestión de Producto con 5 Opciones de Precios</h3>
           <div class="form-row">
             <div>
               <label>Código de Barras</label>
@@ -407,21 +407,22 @@
           
           <div class="form-row-3">
             <div><label>Costo Compra ($)</label><input type="number" id="inv-costo" step="0.01" placeholder="0.00"></div>
-            <div><label>Opción 1 (Público) ($)</label><input type="number" id="inv-precio" step="0.01" placeholder="0.00"></div>
-            <div><label>Opción 2 (Revendedor) ($)</label><input type="number" id="inv-precio-revendedor" step="0.01" placeholder="0.00"></div>
+            <div><label>Precio 1 ($)</label><input type="number" id="inv-p1" step="0.01" placeholder="0.00"></div>
+            <div><label>Precio 2 ($)</label><input type="number" id="inv-p2" step="0.01" placeholder="0.00"></div>
           </div>
-          <div class="form-row">
-            <div><label>Opción 3 (Familia) ($)</label><input type="number" id="inv-precio-familia" step="0.01" placeholder="0.00"></div>
-            <div></div>
+          <div class="form-row-3" style="margin-top:4px;">
+            <div><label>Precio 3 ($)</label><input type="number" id="inv-p3" step="0.01" placeholder="0.00"></div>
+            <div><label>Precio 4 ($)</label><input type="number" id="inv-p4" step="0.01" placeholder="0.00"></div>
+            <div><label>Precio 5 ($)</label><input type="number" id="inv-p5" step="0.01" placeholder="0.00"></div>
           </div>
 
-          <button class="btn btn-primary" onclick="guardarProducto()">Guardar Producto</button>
+          <button class="btn btn-primary" style="margin-top:12px;" onclick="guardarProducto()">Guardar Producto</button>
         </div>
         <div class="card">
-          <h3>Inventario & Tarifas</h3>
+          <h3>Inventario & Precios</h3>
           <div class="table-responsive">
             <table>
-              <thead><tr><th>Código</th><th>Producto</th><th>Costo</th><th>Tarifa / Precios</th><th>Stock</th><th>Acciones</th></tr></thead>
+              <thead><tr><th>Código</th><th>Producto</th><th>Costo</th><th>Opciones (1 al 5)</th><th>Stock</th><th>Acciones</th></tr></thead>
               <tbody id="inv-tabla-catalogo"></tbody>
             </table>
           </div>
@@ -521,7 +522,7 @@
     </div>
     <hr style="margin: 8px 0;">
     <table>
-      <thead><tr><th>Cant.</th><th>Item (Tarifa)</th><th>Total</th></tr></thead>
+      <thead><tr><th>Cant.</th><th>Item (Opción)</th><th>Total</th></tr></thead>
       <tbody id="fac-items"></tbody>
     </table>
     <hr style="margin: 8px 0;">
@@ -577,9 +578,11 @@
             codigo: p.codigo,
             nombre: p.nombre,
             costo: p.costo || 0,
-            precio: p.precio || 0, // Opción 1 (Público)
-            precioRevendedor: p.precio_revendedor || p.precioRevendedor || p.precio || 0, // Opción 2
-            precioFamilia: p.precio_familia || p.precioFamilia || p.precio || 0, // Opción 3
+            p1: p.p1 !== undefined ? p.p1 : (p.precio || 0),
+            p2: p.p2 !== undefined ? p.p2 : (p.precio_revendedor || p.precio || 0),
+            p3: p.p3 !== undefined ? p.p3 : (p.precio_familia || p.precio || 0),
+            p4: p.p4 !== undefined ? p.p4 : (p.precio || 0),
+            p5: p.p5 !== undefined ? p.p5 : (p.precio || 0),
             stock: p.stock
           }));
         }
@@ -639,7 +642,6 @@
       document.getElementById(`btn-nav-${vista}`)?.classList.add('active');
 
       if (vista === 'pos') {
-        // Asegurar IVA en 0 por defecto al abrir o cambiar a la vista POS
         if (document.getElementById('pos-iva')) document.getElementById('pos-iva').value = 0;
         renderizarCarritosTabs();
       }
@@ -698,9 +700,11 @@
         if(prod) {
           document.getElementById('inv-nombre').value = prod.nombre;
           document.getElementById('inv-costo').value = prod.costo || 0;
-          document.getElementById('inv-precio').value = prod.precio;
-          document.getElementById('inv-precio-revendedor').value = prod.precioRevendedor;
-          document.getElementById('inv-precio-familia').value = prod.precioFamilia;
+          document.getElementById('inv-p1').value = prod.p1;
+          document.getElementById('inv-p2').value = prod.p2;
+          document.getElementById('inv-p3').value = prod.p3;
+          document.getElementById('inv-p4').value = prod.p4;
+          document.getElementById('inv-p5').value = prod.p5;
           document.getElementById('inv-stock').value = prod.stock;
         }
       });
@@ -731,8 +735,8 @@
         return `
           <div class="product-card" onclick="agregarAlCarrito('${p.id}')">
             <div class="product-title">${p.nombre}</div>
-            <div class="product-price">$${p.precio.toFixed(2)}</div>
-            <div style="font-size:0.7rem; color:var(--primary); font-weight:600;">[Opción 1]</div>
+            <div class="product-price">$${p.p1.toFixed(2)}</div>
+            <div style="font-size:0.7rem; color:var(--primary); font-weight:600;">[1]</div>
             <div class="product-stock ${p.stock <= 0 ? 'stock-negative' : ''}">Stock: ${p.stock}</div>
           </div>
         `;
@@ -745,7 +749,7 @@
       const cart = obtenerCarritoActual();
 
       const opcionInicial = 1;
-      const precioElegido = prod.precio;
+      const precioElegido = prod.p1;
 
       const item = cart.items.find(c => String(c.id) === String(id) && c.opcionPrecio === opcionInicial);
       if (item) {
@@ -772,9 +776,11 @@
       const nuevaOpcion = parseInt(selectElement.value);
       item.opcionPrecio = nuevaOpcion;
 
-      if (nuevaOpcion === 1) item.precio = prod.precio;
-      else if (nuevaOpcion === 2) item.precio = prod.precioRevendedor;
-      else if (nuevaOpcion === 3) item.precio = prod.precioFamilia;
+      if (nuevaOpcion === 1) item.precio = prod.p1;
+      else if (nuevaOpcion === 2) item.precio = prod.p2;
+      else if (nuevaOpcion === 3) item.precio = prod.p3;
+      else if (nuevaOpcion === 4) item.precio = prod.p4;
+      else if (nuevaOpcion === 5) item.precio = prod.p5;
 
       renderCarrito();
     }
@@ -795,21 +801,26 @@
 
     function renderCarrito() {
       const cart = obtenerCarritoActual();
-      document.getElementById('pos-tabla-carrito').innerHTML = cart.items.map((item, idx) => `
-        <tr>
-          <td>${item.nombre}</td>
-          <td>
-            <select onchange="cambiarOpcPrecioItem(${idx}, this)" style="padding:4px; font-size:0.8rem; margin:0; width:110px;">
-              <option value="1" ${item.opcionPrecio === 1 ? 'selected' : ''}>Opción 1 ($${dbProductos.find(p=>String(p.id)===String(item.id))?.precio.toFixed(2)})</option>
-              <option value="2" ${item.opcionPrecio === 2 ? 'selected' : ''}>Opción 2 ($${dbProductos.find(p=>String(p.id)===String(item.id))?.precioRevendedor.toFixed(2)})</option>
-              <option value="3" ${item.opcionPrecio === 3 ? 'selected' : ''}>Opción 3 ($${dbProductos.find(p=>String(p.id)===String(item.id))?.precioFamilia.toFixed(2)})</option>
-            </select>
-          </td>
-          <td>${item.cantidad}</td>
-          <td>$${(item.precio * item.cantidad).toFixed(2)}</td>
-          <td><button class="btn btn-danger btn-sm" onclick="eliminarItemCarrito(${idx})">X</button></td>
-        </tr>
-      `).join('');
+      document.getElementById('pos-tabla-carrito').innerHTML = cart.items.map((item, idx) => {
+        const prod = dbProductos.find(p => String(p.id) === String(item.id));
+        return `
+          <tr>
+            <td>${item.nombre}</td>
+            <td>
+              <select onchange="cambiarOpcPrecioItem(${idx}, this)" style="padding:4px; font-size:0.8rem; margin:0; width:90px;">
+                <option value="1" ${item.opcionPrecio === 1 ? 'selected' : ''}>1 ($${prod?.p1.toFixed(2)})</option>
+                <option value="2" ${item.opcionPrecio === 2 ? 'selected' : ''}>2 ($${prod?.p2.toFixed(2)})</option>
+                <option value="3" ${item.opcionPrecio === 3 ? 'selected' : ''}>3 ($${prod?.p3.toFixed(2)})</option>
+                <option value="4" ${item.opcionPrecio === 4 ? 'selected' : ''}>4 ($${prod?.p4.toFixed(2)})</option>
+                <option value="5" ${item.opcionPrecio === 5 ? 'selected' : ''}>5 ($${prod?.p5.toFixed(2)})</option>
+              </select>
+            </td>
+            <td>${item.cantidad}</td>
+            <td>$${(item.precio * item.cantidad).toFixed(2)}</td>
+            <td><button class="btn btn-danger btn-sm" onclick="eliminarItemCarrito(${idx})">X</button></td>
+          </tr>
+        `;
+      }).join('');
 
       const t = calcularTotalesCarrito();
       document.getElementById('pos-subtotal').innerText = t.subtotal.toFixed(2);
@@ -1063,12 +1074,14 @@
       const codigo = document.getElementById('inv-codigo').value.trim();
       const nombre = document.getElementById('inv-nombre').value.trim();
       const costo = parseFloat(document.getElementById('inv-costo').value) || 0;
-      const precio = parseFloat(document.getElementById('inv-precio').value) || 0;
-      const precioRevendedor = parseFloat(document.getElementById('inv-precio-revendedor').value) || precio;
-      const precioFamilia = parseFloat(document.getElementById('inv-precio-familia').value) || precio;
+      const p1 = parseFloat(document.getElementById('inv-p1').value) || 0;
+      const p2 = parseFloat(document.getElementById('inv-p2').value) || p1;
+      const p3 = parseFloat(document.getElementById('inv-p3').value) || p1;
+      const p4 = parseFloat(document.getElementById('inv-p4').value) || p1;
+      const p5 = parseFloat(document.getElementById('inv-p5').value) || p1;
       const stock = parseInt(document.getElementById('inv-stock').value) || 0;
 
-      if (!codigo || !nombre || isNaN(precio)) return alert('Datos incompletos');
+      if (!codigo || !nombre || isNaN(p1)) return alert('Datos incompletos');
 
       const p = {
         id: Date.now().toString(),
@@ -1076,9 +1089,7 @@
         codigo,
         nombre,
         costo,
-        precio,
-        precio_revendedor: precioRevendedor,
-        precio_familia: precioFamilia,
+        p1, p2, p3, p4, p5,
         stock
       };
 
@@ -1089,22 +1100,22 @@
         codigo,
         nombre,
         costo,
-        precio,
-        precioRevendedor,
-        precioFamilia,
+        p1, p2, p3, p4, p5,
         stock
       });
 
       document.getElementById('inv-codigo').value = '';
       document.getElementById('inv-nombre').value = '';
       document.getElementById('inv-costo').value = '';
-      document.getElementById('inv-precio').value = '';
-      document.getElementById('inv-precio-revendedor').value = '';
-      document.getElementById('inv-precio-familia').value = '';
+      document.getElementById('inv-p1').value = '';
+      document.getElementById('inv-p2').value = '';
+      document.getElementById('inv-p3').value = '';
+      document.getElementById('inv-p4').value = '';
+      document.getElementById('inv-p5').value = '';
       document.getElementById('inv-stock').value = '';
       renderInventario();
       renderProductosPOS();
-      alert('Producto con múltiples precios guardado');
+      alert('Producto con 5 opciones de precios guardado');
     }
 
     function renderInventario() {
@@ -1115,16 +1126,21 @@
           <td><b>${p.nombre}</b></td>
           <td><input type="number" step="0.01" id="ec-${p.id}" value="${(p.costo||0).toFixed(2)}" style="width:60px; margin:0; padding:4px;"></td>
           <td>
-            <select id="sel-tarifa-${p.id}" onchange="cambiarVistaTarifaInventario('${p.id}')" style="padding:4px; font-size:0.8rem; margin:0; width:150px;">
-              <option value="1">Opción 1 ($${(p.precio||0).toFixed(2)})</option>
-              <option value="2">Opción 2 ($${(p.precioRevendedor||0).toFixed(2)})</option>
-              <option value="3">Opción 3 ($${(p.precioFamilia||0).toFixed(2)})</option>
+            <select id="sel-tarifa-${p.id}" onchange="cambiarVistaTarifaInventario('${p.id}')" style="padding:4px; font-size:0.8rem; margin:0; width:70px;">
+              <option value="1">1 ($${(p.p1||0).toFixed(2)})</option>
+              <option value="2">2 ($${(p.p2||0).toFixed(2)})</option>
+              <option value="3">3 ($${(p.p3||0).toFixed(2)})</option>
+              <option value="4">4 ($${(p.p4||0).toFixed(2)})</option>
+              <option value="5">5 ($${(p.p5||0).toFixed(2)})</option>
             </select>
             <div id="edit-box-${p.id}" style="margin-top:4px;">
-              <input type="number" step="0.01" id="ep-${p.id}" value="${(p.precio||0).toFixed(2)}" style="width:110px; margin:0; padding:4px;" placeholder="Precio Op 1">
+              <input type="number" step="0.01" id="ep-${p.id}" value="${(p.p1||0).toFixed(2)}" style="width:90px; margin:0; padding:4px;" placeholder="Precio 1">
             </div>
-            <input type="hidden" id="epr-${p.id}" value="${(p.precioRevendedor||0).toFixed(2)}">
-            <input type="hidden" id="epf-${p.id}" value="${(p.precioFamilia||0).toFixed(2)}">
+            <input type="hidden" id="ep1-${p.id}" value="${(p.p1||0).toFixed(2)}">
+            <input type="hidden" id="ep2-${p.id}" value="${(p.p2||0).toFixed(2)}">
+            <input type="hidden" id="ep3-${p.id}" value="${(p.p3||0).toFixed(2)}">
+            <input type="hidden" id="ep4-${p.id}" value="${(p.p4||0).toFixed(2)}">
+            <input type="hidden" id="ep5-${p.id}" value="${(p.p5||0).toFixed(2)}">
           </td>
           <td><input type="number" id="es-${p.id}" value="${p.stock}" style="width:55px; margin:0; padding:4px;"></td>
           <td><button class="btn btn-primary btn-sm" onclick="actProd('${p.id}')">💾</button> <button class="btn btn-danger btn-sm" onclick="delProd('${p.id}')">X</button></td>
@@ -1138,11 +1154,13 @@
       if(!p) return;
 
       const editBox = document.getElementById(`edit-box-${id}`);
-      let valActual = p.precio;
-      if(selVal === "2") valActual = p.precioRevendedor;
-      if(selVal === "3") valActual = p.precioFamilia;
+      let valActual = p.p1;
+      if(selVal === "2") valActual = p.p2;
+      if(selVal === "3") valActual = p.p3;
+      if(selVal === "4") valActual = p.p4;
+      if(selVal === "5") valActual = p.p5;
 
-      editBox.innerHTML = `<input type="number" step="0.01" id="ep-${id}" value="${valActual.toFixed(2)}" style="width:110px; margin:0; padding:4px;" placeholder="Precio Op ${selVal}">`;
+      editBox.innerHTML = `<input type="number" step="0.01" id="ep-${id}" value="${valActual.toFixed(2)}" style="width:90px; margin:0; padding:4px;" placeholder="Precio ${selVal}">`;
     }
 
     async function actProd(id) {
@@ -1155,26 +1173,22 @@
       const p = dbProductos.find(x => String(x.id) === String(id));
       if (!p) return;
 
-      let precio = p.precio;
-      let precioRevendedor = p.precioRevendedor;
-      let precioFamilia = p.precioFamilia;
+      let p1 = p.p1, p2 = p.p2, p3 = p.p3, p4 = p.p4, p5 = p.p5;
 
-      if (selVal === "1") precio = valorIngresado;
-      else if (selVal === "2") precioRevendedor = valorIngresado;
-      else if (selVal === "3") precioFamilia = valorIngresado;
+      if (selVal === "1") p1 = valorIngresado;
+      else if (selVal === "2") p2 = valorIngresado;
+      else if (selVal === "3") p3 = valorIngresado;
+      else if (selVal === "4") p4 = valorIngresado;
+      else if (selVal === "5") p5 = valorIngresado;
 
       await supabaseClient.from('productos').update({
         costo,
-        precio,
-        precio_revendedor: precioRevendedor,
-        precio_familia: precioFamilia,
+        p1, p2, p3, p4, p5,
         stock
       }).eq('id', id);
 
       p.costo = costo;
-      p.precio = precio;
-      p.precioRevendedor = precioRevendedor;
-      p.precioFamilia = precioFamilia;
+      p.p1 = p1; p.p2 = p2; p.p3 = p3; p.p4 = p4; p.p5 = p5;
       p.stock = stock;
 
       renderInventario();
