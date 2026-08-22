@@ -251,7 +251,7 @@
                 </div>
                 <div>
                   <label>Impuesto IVA (%)</label>
-                  <input type="number" id="pos-iva" value="12" min="0" max="100" oninput="renderCarrito()">
+                  <input type="number" id="pos-iva" value="0" min="0" max="100" oninput="renderCarrito()">
                 </div>
               </div>
               
@@ -638,7 +638,11 @@
       document.getElementById(`vista-${vista}`)?.classList.add('active');
       document.getElementById(`btn-nav-${vista}`)?.classList.add('active');
 
-      if (vista === 'pos') renderizarCarritosTabs();
+      if (vista === 'pos') {
+        // Asegurar IVA en 0 por defecto al abrir o cambiar a la vista POS
+        if (document.getElementById('pos-iva')) document.getElementById('pos-iva').value = 0;
+        renderizarCarritosTabs();
+      }
       if (vista === 'arqueo') prepararVistaArqueo();
       if (vista === 'kardex') renderKardex();
       if (vista === 'clientes') renderClientes();
@@ -740,7 +744,6 @@
       if (!prod) return;
       const cart = obtenerCarritoActual();
 
-      // SIEMPRE PREDETERMINADO A LA OPCIÓN 1 (Precio Público)
       const opcionInicial = 1;
       const precioElegido = prod.precio;
 
@@ -1134,13 +1137,6 @@
       const p = dbProductos.find(x => String(x.id) === String(id));
       if(!p) return;
 
-      // Guardamos temporalmente el valor actual en el hidden correspondiente antes de cambiar
-      const inputActualPrecio = document.getElementById(`ep-${id}`);
-      if(inputActualPrecio) {
-        // Asignamos el valor que tenía el input al campo interno según la opción que estaba seleccionada previamente
-        // O simplemente leemos el valor ingresado y lo actualizamos en memoria local
-      }
-
       const editBox = document.getElementById(`edit-box-${id}`);
       let valActual = p.precio;
       if(selVal === "2") valActual = p.precioRevendedor;
@@ -1153,7 +1149,6 @@
       const costo = parseFloat(document.getElementById(`ec-${id}`).value) || 0;
       const stock = parseInt(document.getElementById(`es-${id}`).value) || 0;
 
-      // Obtenemos qué tarifa estaba seleccionada en el desplegable limpio
       const selVal = document.getElementById(`sel-tarifa-${id}`).value;
       const valorIngresado = parseFloat(document.getElementById(`ep-${id}`).value) || 0;
 
