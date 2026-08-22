@@ -387,7 +387,7 @@
         </div>
       </section>
 
-      <!-- VISTA INVENTARIO (OPTIMIZADA) -->
+      <!-- VISTA INVENTARIO -->
       <section id="vista-inventario" class="page-section">
         <div class="card">
           <h3>Gestión de Productos</h3>
@@ -409,7 +409,6 @@
             <div><label>Precio 1 (Base) ($)</label><input type="number" id="inv-p1" step="0.01" placeholder="0.00"></div>
           </div>
 
-          <!-- SECCIÓN DESPLEGABLE PARA PRECIOS 2 AL 5 -->
           <details style="background: var(--bg); padding: 12px; border-radius: 8px; margin-top: 10px; border:1px solid var(--border);">
             <summary style="cursor: pointer; color: var(--primary); font-weight: 700; user-select: none;">
               ⚙️ Configurar Opciones de Precios Adicionales (Opcional)
@@ -605,7 +604,7 @@
         if (resArq.data) dbArqueos = resArq.data.map(a => ({ id: a.id, localId: a.local_id, usuario: a.usuario, fechaApertura: a.fecha_apertura, fondoInicial: a.fondo_inicial, estado: a.estado, fechaCierre: a.fecha_cierre, efectivoFisico: a.efectivo_fisico }));
         if (resMov.data) dbMovimientosCaja = resMov.data.map(m => ({ id: m.id, localId: m.local_id, arqueoId: m.arqueo_id, tipo: m.tipo, monto: m.monto, motivo: m.motivo, fecha: m.fecha }));
       } catch (err) {
-        console.error("Aviso al cargar Supabase:", err);
+        console.error("Error al sincronizar con Supabase:", err);
       }
     }
 
@@ -647,8 +646,12 @@
       document.getElementById('login-screen').style.display = 'flex';
     }
 
-    function cambiarVista(vista) {
+    async function cambiarVista(vista) {
       if ((vista === 'locales' || vista === 'usuarios') && usuarioActual?.rol !== 'Administrador') return alert('Acceso denegado.');
+      
+      // Recargar datos siempre al cambiar de vista para evitar desincronización
+      try { await cargarDatosSupabase(); } catch(e) {}
+
       document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
       document.getElementById(`vista-${vista}`)?.classList.add('active');
@@ -822,11 +825,11 @@
             <td>${item.nombre}</td>
             <td>
               <select onchange="cambiarOpcPrecioItem(${idx}, this)" style="padding:4px; font-size:0.8rem; margin:0; width:90px;">
-                <option value="1" ${item.opcionPrecio === 1 ? 'selected' : ''}>1 ($${prod?.p1.toFixed(2)})</option>
-                <option value="2" ${item.opcionPrecio === 2 ? 'selected' : ''}>2 ($${prod?.p2.toFixed(2)})</option>
-                <option value="3" ${item.opcionPrecio === 3 ? 'selected' : ''}>3 ($${prod?.p3.toFixed(2)})</option>
-                <option value="4" ${item.opcionPrecio === 4 ? 'selected' : ''}>4 ($${prod?.p4.toFixed(2)})</option>
-                <option value="5" ${item.opcionPrecio === 5 ? 'selected' : ''}>5 ($${prod?.p5.toFixed(2)})</option>
+                <option value="1" ${item.opcionPrecio === 1 ? 'selected' : ''}>1 ($${(prod?.p1 || 0).toFixed(2)})</option>
+                <option value="2" ${item.opcionPrecio === 2 ? 'selected' : ''}>2 ($${(prod?.p2 || 0).toFixed(2)})</option>
+                <option value="3" ${item.opcionPrecio === 3 ? 'selected' : ''}>3 ($${(prod?.p3 || 0).toFixed(2)})</option>
+                <option value="4" ${item.opcionPrecio === 4 ? 'selected' : ''}>4 ($${(prod?.p4 || 0).toFixed(2)})</option>
+                <option value="5" ${item.opcionPrecio === 5 ? 'selected' : ''}>5 ($${(prod?.p5 || 0).toFixed(2)})</option>
               </select>
             </td>
             <td>${item.cantidad}</td>
@@ -886,14 +889,16 @@
     async function procesarVenta(metodoPago) {
       const cart = obtenerCarritoActual();
       const cliId = document.getElementById('pos-cliente-select').value;
-      const cli = dbClientes.find(c => c.id === cliId);
+      const cli = dbClientes.find(c => String(c.id) === String(cliId));
       const t = calcularTotalesCarrito();
 
+      // Actualizar stock de cada producto en Supabase
       for (const i of cart.items) {
         const p = dbProductos.find(x => String(x.id) === String(i.id));
         if (p) {
           p.stock -= i.cantidad;
-          await supabaseClient.from('productos').update({ stock: p.stock }).eq('id', p.id);
+          const { error: errStock } = await supabaseClient.from('productos').update({ stock: p.stock }).eq('id', p.id);
+          if (errStock) console.error("Error al actualizar stock:", errStock);
         }
       }
 
@@ -912,7 +917,12 @@
         total: t.total
       };
 
-      await supabaseClient.from('ventas').insert([ventaSupabase]);
+      const { error: errVenta } = await supabaseClient.from('ventas').insert([ventaSupabase]);
+      if (errVenta) {
+        alert("Error al registrar la venta en la base de datos: " + errVenta.message);
+        return;
+      }
+
       dbVentas.push(ventaSupabase);
       mostrarFactura(ventaSupabase);
 
@@ -976,7 +986,9 @@
     async function iniciarNuevoTurno() {
       const fondo = parseFloat(prompt("Fondo inicial en caja ($):", "0.00")) || 0;
       const nuevo = { id: 'ARQ-' + Date.now(), local_id: String(usuarioActual.localId), usuario: usuarioActual.user, fecha_apertura: new Date().toISOString(), fondo_inicial: fondo, estado: 'Abierto' };
-      await supabaseClient.from('arqueos').insert([nuevo]);
+      const { error } = await supabaseClient.from('arqueos').insert([nuevo]);
+      if (error) return alert("Error al abrir turno: " + error.message);
+      
       dbArqueos.push({ id: nuevo.id, localId: nuevo.local_id, usuario: nuevo.usuario, fechaApertura: nuevo.fecha_apertura, fondoInicial: nuevo.fondo_inicial, estado: nuevo.estado });
       prepararVistaArqueo();
     }
@@ -999,7 +1011,9 @@
       if (monto <= 0 || !motivo) return alert('Complete los campos del movimiento');
 
       const mov = { id: 'MOV-' + Date.now(), local_id: String(usuarioActual.localId), arqueo_id: arq.id, tipo, monto, motivo, fecha: new Date().toISOString() };
-      await supabaseClient.from('movimientos_caja').insert([mov]).catch(() => {});
+      const { error } = await supabaseClient.from('movimientos_caja').insert([mov]);
+      if (error) return alert("Error al registrar movimiento: " + error.message);
+
       dbMovimientosCaja.push({ id: mov.id, localId: mov.local_id, arqueoId: mov.arqueo_id, tipo, monto, motivo, fecha: mov.fecha });
       document.getElementById('mov-monto').value = '';
       document.getElementById('mov-motivo').value = '';
@@ -1052,7 +1066,9 @@
       if (!cedula || !nombre || !apellido) return alert('Campos obligatorios incompletos');
 
       const cli = { id: Date.now().toString(), local_id: String(usuarioActual.localId), cedula, nombre, apellido, correo };
-      await supabaseClient.from('clientes').insert([cli]);
+      const { error } = await supabaseClient.from('clientes').insert([cli]);
+      if (error) return alert("Error al guardar cliente: " + error.message);
+
       dbClientes.push({ id: cli.id, localId: cli.local_id, cedula, nombre, apellido, correo });
       document.getElementById('cli-cedula').value = '';
       document.getElementById('cli-nombre').value = '';
@@ -1072,7 +1088,7 @@
     async function eliminarCliente(id) {
       if (!confirm("¿Eliminar cliente?")) return;
       await supabaseClient.from('clientes').delete().eq('id', id);
-      dbClientes = dbClientes.filter(c => c.id !== id);
+      dbClientes = dbClientes.filter(c => String(c.id) !== String(id));
       poblarClientesDropdown();
       renderClientes();
     }
@@ -1109,7 +1125,9 @@
         stock
       };
 
-      await supabaseClient.from('productos').insert([p]);
+      const { error } = await supabaseClient.from('productos').insert([p]);
+      if (error) return alert("Error al guardar producto: " + error.message);
+
       dbProductos.push({
         id: p.id,
         localId: p.local_id,
@@ -1193,11 +1211,13 @@
       else if (selVal === "4") p4 = valorIngresado;
       else if (selVal === "5") p5 = valorIngresado;
 
-      await supabaseClient.from('productos').update({
+      const { error } = await supabaseClient.from('productos').update({
         costo,
         p1, p2, p3, p4, p5,
         stock
       }).eq('id', id);
+
+      if (error) return alert("Error al actualizar producto: " + error.message);
 
       p.costo = costo;
       p.p1 = p1; p.p2 = p2; p.p3 = p3; p.p4 = p4; p.p5 = p5;
@@ -1254,7 +1274,9 @@
       const direccion = document.getElementById('loc-direccion').value.trim();
       if (!nombre) return;
       const l = { id: 'LOC-' + Date.now().toString().slice(-4), nombre, direccion };
-      await supabaseClient.from('locales').insert([l]);
+      const { error } = await supabaseClient.from('locales').insert([l]);
+      if (error) return alert("Error al crear local: " + error.message);
+
       dbLocales.push(l);
       poblardropdowns();
       renderLocales();
@@ -1269,7 +1291,7 @@
     async function delLocal(id) {
       if (!confirm("¿Eliminar local?")) return;
       await supabaseClient.from('locales').delete().eq('id', id);
-      dbLocales = dbLocales.filter(l => l.id !== id);
+      dbLocales = dbLocales.filter(l => String(l.id) !== String(id));
       poblardropdowns();
       renderLocales();
     }
@@ -1283,7 +1305,9 @@
       if (!user || !pass) return;
 
       const u = { id: Date.now().toString(), user, pass, rol, local_id: String(localId) };
-      await supabaseClient.from('usuarios').insert([u]);
+      const { error } = await supabaseClient.from('usuarios').insert([u]);
+      if (error) return alert("Error al crear usuario: " + error.message);
+
       dbUsuarios.push({ id: u.id, user, pass, rol, localId: u.local_id });
       document.getElementById('usr-user').value = '';
       document.getElementById('usr-pass').value = '';
@@ -1297,7 +1321,7 @@
     async function delUsr(id) {
       if (!confirm("¿Eliminar usuario?")) return;
       await supabaseClient.from('usuarios').delete().eq('id', id);
-      dbUsuarios = dbUsuarios.filter(u => u.id !== id);
+      dbUsuarios = dbUsuarios.filter(u => String(u.id) !== String(id));
       renderUsuarios();
     }
 
