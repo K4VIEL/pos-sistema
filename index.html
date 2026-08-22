@@ -64,7 +64,6 @@
     input:focus, select:focus { border-color: var(--primary); }
     
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
 
     .btn { font-weight: 600; border: none; cursor: pointer; transition: background 0.2s; display: inline-flex; justify-content: center; align-items: center; gap: 8px; margin-top: 8px; }
     .btn-primary { background: var(--primary); color: white; }
@@ -388,10 +387,10 @@
         </div>
       </section>
 
-      <!-- VISTA INVENTARIO -->
+      <!-- VISTA INVENTARIO (OPTIMIZADA) -->
       <section id="vista-inventario" class="page-section">
         <div class="card">
-          <h3>Gestión de Producto con 5 Opciones de Precios</h3>
+          <h3>Gestión de Productos</h3>
           <div class="form-row">
             <div>
               <label>Código de Barras</label>
@@ -400,20 +399,27 @@
                 <button class="btn btn-primary btn-sm" onclick="abrirCamaraInventario()" style="margin:0; white-space:nowrap;">📷</button>
               </div>
             </div>
-            <div><label>Stock Inicial</label><input type="number" id="inv-stock" placeholder="Ej: 20"></div>
+            <div><label>Stock Inicial</label><input type="number" id="inv-stock" placeholder="Ej: 20" value="0"></div>
           </div>
           <label>Nombre del Producto</label>
           <input type="text" id="inv-nombre" placeholder="Nombre de Producto">
-          
-          <div class="form-row-3">
+
+          <div class="form-row">
             <div><label>Costo Compra ($)</label><input type="number" id="inv-costo" step="0.01" placeholder="0.00"></div>
-            <div><label>Precio 1 ($)</label><input type="number" id="inv-p1" step="0.01" placeholder="0.00"></div>
-            <div><label>Precio 2 ($)</label><input type="number" id="inv-p2" step="0.01" placeholder="0.00"></div>
+            <div><label>Precio 1 (Base) ($)</label><input type="number" id="inv-p1" step="0.01" placeholder="0.00"></div>
           </div>
-          <div class="form-row-3" style="margin-top:4px;">
-            <div><label>Precio 3 ($)</label><input type="number" id="inv-p3" step="0.01" placeholder="0.00"></div>
-            <div><label>Precio 4 ($)</label><input type="number" id="inv-p4" step="0.01" placeholder="0.00"></div>
-            <div><label>Precio 5 ($)</label><input type="number" id="inv-p5" step="0.01" placeholder="0.00"></div>
+
+          <!-- SECCIÓN OPCIONAL RETRAÍDA PARA PRECIOS 2 AL 5 -->
+          <div style="background: var(--bg); padding: 12px; border-radius: 8px; margin-top: 10px; border:1px solid var(--border);">
+            <label style="color:var(--primary); font-weight:700;">⚙️ Configurar Opciones de Precios Adicionales (Opcional)</label>
+            <div class="form-row" style="margin-top:8px;">
+              <div><label>Precio 2 ($)</label><input type="number" id="inv-p2" step="0.01" placeholder="0.00"></div>
+              <div><label>Precio 3 ($)</label><input type="number" id="inv-p3" step="0.01" placeholder="0.00"></div>
+            </div>
+            <div class="form-row" style="margin-top:4px;">
+              <div><label>Precio 4 ($)</label><input type="number" id="inv-p4" step="0.01" placeholder="0.00"></div>
+              <div><label>Precio 5 ($)</label><input type="number" id="inv-p5" step="0.01" placeholder="0.00"></div>
+            </div>
           </div>
 
           <button class="btn btn-primary" style="margin-top:12px;" onclick="guardarProducto()">Guardar Producto</button>
@@ -552,9 +558,15 @@
     let dbMovimientosCaja = [];
     
     let usuarioActual = JSON.parse(localStorage.getItem('usuarioActual')) || null;
-    let carritos = [{ id: 1, nombre: 'Principal 1', items: [] }];
-    let carritoActivoId = 1;
+    
+    // Persistencia del carrito en LocalStorage para evitar que se borre al refrescar
+    let carritos = JSON.parse(localStorage.getItem('carritos_pos')) || [{ id: 1, nombre: 'Principal 1', items: [] }];
+    let carritoActivoId = carritos.length > 0 ? carritos[0].id : 1;
     let html5QrCode = null;
+
+    function guardarEstadoCarrito() {
+      localStorage.setItem('carritos_pos', JSON.stringify(carritos));
+    }
 
     async function cargarDatosSupabase() {
       try {
@@ -679,6 +691,7 @@
 
       renderProductosPOS();
       renderCarrito();
+      guardarEstadoCarrito();
     }
 
     function cambiarCarritoActivo(id) { carritoActivoId = id; renderizarCarritosTabs(); }
@@ -827,6 +840,7 @@
       document.getElementById('pos-desc-monto').innerText = t.descuentoMonto.toFixed(2);
       document.getElementById('pos-iva-monto').innerText = t.ivaMonto.toFixed(2);
       document.getElementById('pos-total').innerText = t.total.toFixed(2);
+      guardarEstadoCarrito();
     }
 
     function eliminarItemCarrito(index) {
@@ -1075,13 +1089,15 @@
       const nombre = document.getElementById('inv-nombre').value.trim();
       const costo = parseFloat(document.getElementById('inv-costo').value) || 0;
       const p1 = parseFloat(document.getElementById('inv-p1').value) || 0;
+      
+      // Si las opciones adicionales están vacías, heredan el valor de P1 por defecto
       const p2 = parseFloat(document.getElementById('inv-p2').value) || p1;
       const p3 = parseFloat(document.getElementById('inv-p3').value) || p1;
       const p4 = parseFloat(document.getElementById('inv-p4').value) || p1;
       const p5 = parseFloat(document.getElementById('inv-p5').value) || p1;
       const stock = parseInt(document.getElementById('inv-stock').value) || 0;
 
-      if (!codigo || !nombre || isNaN(p1)) return alert('Datos incompletos');
+      if (!codigo || !nombre || isNaN(p1)) return alert('Datos incompletos (Código, Nombre y Precio 1 son obligatorios)');
 
       const p = {
         id: Date.now().toString(),
@@ -1104,6 +1120,7 @@
         stock
       });
 
+      // Limpiar formulario
       document.getElementById('inv-codigo').value = '';
       document.getElementById('inv-nombre').value = '';
       document.getElementById('inv-costo').value = '';
@@ -1112,10 +1129,11 @@
       document.getElementById('inv-p3').value = '';
       document.getElementById('inv-p4').value = '';
       document.getElementById('inv-p5').value = '';
-      document.getElementById('inv-stock').value = '';
+      document.getElementById('inv-stock').value = '0';
+      
       renderInventario();
       renderProductosPOS();
-      alert('Producto con 5 opciones de precios guardado');
+      alert('Producto guardado con éxito');
     }
 
     function renderInventario() {
@@ -1284,13 +1302,17 @@
       renderUsuarios();
     }
 
+    // Inicialización general con control de promesas síncronas para evitar borrados al refrescar
     window.addEventListener('DOMContentLoaded', async () => {
       if (usuarioActual) {
-        try { await cargarDatosSupabase(); } catch(e){}
+        try { 
+          await cargarDatosSupabase(); 
+        } catch(e) {
+          console.error(e);
+        }
         aplicarSesionActiva();
       }
     });
   </script>
 </body>
 </html>
-
