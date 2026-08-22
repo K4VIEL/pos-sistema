@@ -93,6 +93,9 @@
     .cart-tab-btn { padding: 6px 12px; font-size: 0.8rem; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; white-space: nowrap; }
     .cart-tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); font-weight: bold; }
     
+    /* ESTILOS PARA ITEMS ANULADOS EN FACTURA/CARRITO */
+    .item-anulado { text-decoration: line-through; color: var(--danger); background-color: #fef2f2; }
+    
     @media (min-width: 768px) {
       .app-container { flex-direction: row; }
       .nav-bar { position: static; flex-direction: column; width: 220px; border-top: none; border-right: 1px solid var(--border); padding: 20px 10px; justify-content: flex-start; gap: 8px; height: calc(100vh - 57px); overflow-y: auto; }
@@ -208,7 +211,7 @@
               
               <div class="table-responsive" style="margin-top:10px;">
                 <table>
-                  <thead><tr><th>Prod</th><th>Cant</th><th>Total</th><th></th></tr></thead>
+                  <thead><tr><th>Prod</th><th>Cant</th><th>Total</th><th>Acción</th></tr></thead>
                   <tbody id="pos-tabla-carrito"></tbody>
                 </table>
               </div>
@@ -509,7 +512,7 @@
               producto_nombre: productoNombre,
               cantidad: cantidad,
               monto_total: montoTotal,
-              motivo: motivo || 'Eliminado manualmente',
+              motivo: motivo || 'Anulado en factura',
               fecha_hora: new Date().toISOString(),
               usuario: usuarioActual ? usuarioActual.user : 'Sistema'
             }
@@ -737,7 +740,7 @@
       const container = document.getElementById('pos-cart-tabs');
       container.innerHTML = carritos.map(c => `
         <button class="cart-tab-btn ${c.id === carritoActivoId ? 'active' : ''}" onclick="cambiarCarritoActivo(${c.id})">
-          ${c.nombre} (${c.items.length})
+          ${c.nombre} (${c.items.filter(i => !i.anulado).length})
         </button>
       `).join('') + `<button class="cart-tab-btn" onclick="crearNuevoCarrito()" style="background:#e2e8f0; color:#334155;">+ Carrito</button>`;
 
@@ -758,7 +761,7 @@
 
     function ponerCarritoEnEspera() {
       const cart = obtenerCarritoActual();
-      if (cart.items.length === 0) return alert('El carrito actual está vacío');
+      if (cart.items.filter(i => !i.anulado).length === 0) return alert('El carrito actual está vacío');
       crearNuevoCarrito();
     }
 
@@ -830,48 +833,64 @@
       `).join('');
     }
 
+    // MODIFICADO: Cada escaneo o clic agrega una NUEVA LÍNEA INDEPENDIENTE cronológica (sin sumar cantidades)
     function agregarAlCarrito(id) {
       const prod = dbProductos.find(p => String(p.id) === String(id));
       if (!prod) return alert('Producto no encontrado');
 
       const cart = obtenerCarritoActual();
-      const item = cart.items.find(c => String(c.id) === String(id));
-      if (item) {
-        item.cantidad++;
-      } else {
-        cart.items.push({ id: prod.id, nombre: prod.nombre, precio: prod.precio, costo: prod.costo || 0, cantidad: 1 });
-      }
+      cart.items.push({ 
+        id: prod.id, 
+        nombre: prod.nombre, 
+        precio: prod.precio, 
+        costo: prod.costo || 0, 
+        cantidad: 1,
+        anulado: false 
+      });
       renderizarCarritosTabs();
     }
 
     function renderCarrito() {
       const cart = obtenerCarritoActual();
       let total = 0;
+      
       document.getElementById('pos-tabla-carrito').innerHTML = cart.items.map((item, idx) => {
         const sub = item.precio * item.cantidad;
-        total += sub;
-        return `<tr>
-          <td>${item.nombre}</td>
-          <td>${item.cantidad}</td>
-          <td>$${sub.toFixed(2)}</td>
-          <td><button class="btn btn-danger btn-sm" onclick="eliminarItemCarrito(${idx})">X</button></td>
-        </tr>`;
+        if (!item.anulado) {
+          total += sub;
+        }
+
+        return `
+          <tr class="${item.anulado ? 'item-anulado' : ''}">
+            <td>${item.nombre} ${item.anulado ? '<br><small><b>[ANULADO]</b></small>' : ''}</td>
+            <td>${item.cantidad}</td>
+            <td>$${sub.toFixed(2)}</td>
+            <td>
+              ${!item.anulado 
+                ? `<button class="btn btn-danger btn-sm" onclick="anularItemCarrito(${idx})">Anular</button>` 
+                : '<span style="font-size:0.8rem; color:var(--danger);">Cancelado</span>'}
+            </td>
+          </tr>`;
       }).join('');
+
       document.getElementById('pos-total').innerText = total.toFixed(2);
     }
 
-    // ELIMINACIÓN DE ÍTEM DEL CARRITO CON AUDITORÍA EN SUPABASE
-    async function eliminarItemCarrito(index) {
+    // MODIFICADO: Anulación visual de la línea en lugar de borrarla de la matriz del carrito
+    async function anularItemCarrito(index) {
       const cart = obtenerCarritoActual();
       const item = cart.items[index];
-      if (!item) return;
+      if (!item || item.anulado) return;
 
-      const motivo = prompt(`Ingrese el motivo por el cual elimina "${item.nombre}" del carrito:`, "Error de digitación / Arrepentimiento del cliente");
-      if (motivo === null) return; // Se cancela la eliminación si no ingresa/cancela prompt
+      const motivo = prompt(`Motivo de anulación para la línea "${item.nombre}":`, "Error de escaneo / Arrepentimiento");
+      if (motivo === null) return;
+
+      item.anulado = true;
+      item.motivoAnulacion = motivo;
 
       const totalItem = item.precio * item.cantidad;
 
-      // Envío a auditoría en Supabase
+      // Envío opcional de auditoría a Supabase
       await registrarAuditoriaMerma(
         cart.nombre || 'Carrito Activo',
         item.nombre,
@@ -880,16 +899,15 @@
         motivo
       );
 
-      // Eliminación del estado local del carrito
-      cart.items.splice(index, 1);
       renderizarCarritosTabs();
     }
 
     function abrirModalCobro() {
       const cart = obtenerCarritoActual();
-      if (cart.items.length === 0) return alert('El carrito está vacío');
+      let activos = cart.items.filter(i => !i.anulado);
+      if (activos.length === 0) return alert('El carrito está vacío o todos sus ítems están anulados');
       
-      let total = cart.items.reduce((s, x) => s + (x.precio * x.cantidad), 0);
+      let total = activos.reduce((s, x) => s + (x.precio * x.cantidad), 0);
       document.getElementById('modal-total-txt').innerText = `$${total.toFixed(2)}`;
       document.getElementById('modal-metodo-pago').value = 'Efectivo';
       document.getElementById('modal-pago').value = total.toFixed(2);
@@ -919,7 +937,7 @@
 
     function calcularVuelto() {
       const cart = obtenerCarritoActual();
-      let total = cart.items.reduce((s, x) => s + (x.precio * x.cantidad), 0);
+      let total = cart.items.filter(i => !i.anulado).reduce((s, x) => s + (x.precio * x.cantidad), 0);
       let pago = parseFloat(document.getElementById('modal-pago').value) || 0;
       let vuelto = pago - total;
       
@@ -936,7 +954,8 @@
     async function confirmarYProcesarVenta() {
       const metodo = document.getElementById('modal-metodo-pago').value;
       const cart = obtenerCarritoActual();
-      let total = cart.items.reduce((s, x) => s + (x.precio * x.cantidad), 0);
+      let activos = cart.items.filter(i => !i.anulado);
+      let total = activos.reduce((s, x) => s + (x.precio * x.cantidad), 0);
 
       if (metodo === 'Efectivo') {
         let pago = parseFloat(document.getElementById('modal-pago').value) || 0;
@@ -955,11 +974,14 @@
       const clienteNombre = clienteObj ? `${clienteObj.nombre} ${clienteObj.apellido}` : 'Consumidor Final';
       const clienteCedula = clienteObj ? clienteObj.cedula : '9999999999';
 
+      // Descontar inventario únicamente de los ítems que NO estén anulados
       for (const i of cart.items) {
-        const p = dbProductos.find(x => String(x.id) === String(i.id));
-        if (p) {
-          p.stock -= i.cantidad; 
-          await supabaseClient.from('productos').update({ stock: p.stock }).eq('id', p.id);
+        if (!i.anulado) {
+          const p = dbProductos.find(x => String(x.id) === String(i.id));
+          if (p) {
+            p.stock -= i.cantidad; 
+            await supabaseClient.from('productos').update({ stock: p.stock }).eq('id', p.id);
+          }
         }
       }
 
@@ -971,8 +993,8 @@
         cliente_cedula: clienteCedula,
         metodo_pago: metodoPago || 'Efectivo',
         fecha: new Date().toISOString(),
-        items: [...cart.items],
-        total: cart.items.reduce((s, x) => s + (x.precio * x.cantidad), 0)
+        items: [...cart.items], // Guarda todas las líneas, incluyendo las anuladas para auditoría en el ticket/factura
+        total: cart.items.filter(i => !i.anulado).reduce((s, x) => s + (x.precio * x.cantidad), 0)
       };
 
       const { error } = await supabaseClient.from('ventas').insert([ventaSupabase]);
@@ -1006,9 +1028,15 @@
       document.getElementById('fac-cliente').innerText = v.clienteNombre;
       document.getElementById('fac-cedula').innerText = v.clienteCedula;
       document.getElementById('fac-metodo').innerText = v.metodoPago || 'Efectivo';
+      
       document.getElementById('fac-items').innerHTML = v.items.map(i => `
-        <tr><td>${i.cantidad}</td><td>${i.nombre}</td><td>$${(i.cantidad*i.precio).toFixed(2)}</td></tr>
+        <tr class="${i.anulado ? 'item-anulado' : ''}">
+          <td>${i.cantidad}</td>
+          <td>${i.nombre} ${i.anulado ? '<br><small><b>[ANULADO]</b></small>' : ''}</td>
+          <td>$${(i.cantidad*i.precio).toFixed(2)}</td>
+        </tr>
       `).join('');
+      
       document.getElementById('fac-total').innerText = v.total.toFixed(2);
       document.getElementById('factura-impresion').style.display = 'block';
     }
@@ -1279,7 +1307,6 @@
       renderInventario();
     }
 
-    // ELIMINACIÓN DE PRODUCTO EN INVENTARIO CON REGISTRO DE AUDITORÍA EN SUPABASE
     async function eliminarProducto(id) {
       const prod = dbProductos.find(x => String(x.id) === String(id));
       if (!prod) return;
@@ -1289,7 +1316,6 @@
       const motivo = prompt(`Motivo de la eliminación de catálogo/merma para "${prod.nombre}":`, "Producto dañado / Muestra gratis / Eliminación de catálogo");
       if (motivo === null) return;
 
-      // Auditoría en Supabase
       await registrarAuditoriaMerma(
         'INVENTARIO-GENERAL',
         prod.nombre,
@@ -1298,7 +1324,6 @@
         motivo
       );
 
-      // Eliminación en Supabase y estado local
       await supabaseClient.from('productos').delete().eq('id', id);
       dbProductos = dbProductos.filter(x => String(x.id) !== String(id));
       renderInventario();
@@ -1332,7 +1357,7 @@
       let totalVentas = 0, totalCostoCompras = 0;
       ventasFiltradas.forEach(v => {
         totalVentas += v.total;
-        v.items.forEach(i => { totalCostoCompras += ((i.costo || 0) * i.cantidad); });
+        v.items.forEach(i => { if (!i.anulado) { totalCostoCompras += ((i.costo || 0) * i.cantidad); } });
       });
 
       document.getElementById('rep-val-ventas').innerText = `$${totalVentas.toFixed(2)}`;
@@ -1340,7 +1365,6 @@
       document.getElementById('rep-val-ganancia').innerText = `$${(totalVentas - totalCostoCompras).toFixed(2)}`;
     }
 
-    /* GESTIÓN DE PERSONAL POR EL DUEÑO DEL LOCAL */
     async function crearEmpleadoCajero() {
       if (!esDuenoLocal()) return alert('Solo el dueño del local puede crear cajeros.');
       const user = document.getElementById('emp-user').value.trim();
@@ -1383,7 +1407,6 @@
       `).join('') || `<tr><td colspan="3" style="text-align:center;">No tienes cajeros registrados</td></tr>`;
     }
 
-    /* GESTIÓN GLOBAL DE LOCALES (Solo Matriz) */
     async function crearLocal() {
       if (!esUsuarioMatriz()) return alert('Acceso denegado.');
       const nombre = document.getElementById('loc-nombre').value.trim();
@@ -1429,7 +1452,6 @@
       renderLocales();
     }
 
-    /* GESTIÓN GLOBAL DE USUARIOS (Solo Matriz) */
     async function crearUsuario() {
       if (!esUsuarioMatriz()) return alert('Acceso denegado.');
       const user = document.getElementById('usr-user').value.trim();
@@ -1443,7 +1465,7 @@
       
       dbUsuarios.push({
         id: nuevoUsuarioSupabase.id,
-        user: nuevoUsuarioSupabase.user,
+        user: newUser.user,
         pass: nuevoUsuarioSupabase.pass,
         rol: nuevoUsuarioSupabase.rol,
         localId: nuevoUsuarioSupabase.local_id
