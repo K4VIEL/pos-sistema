@@ -1262,12 +1262,15 @@
         (v.id.toLowerCase().includes(q) || v.clienteNombre.toLowerCase().includes(q) || v.items.some(i => i.nombre.toLowerCase().includes(q)))
       ).sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
 
-    const mermasFiltradas = dbMermas.filter(m => 
+        const mermasFiltradas = dbMermas.filter(m =>
       String(m.localId || m.local_id) === String(usuarioActual.localId) && (
         m.productoNombre.toLowerCase().includes(q) || 
         String(m.idFactura).toLowerCase().includes(q) || 
         String(m.motivo).toLowerCase().includes(q) || 
         String(m.usuario).toLowerCase().includes(q)
+      )
+    );
+
     
       let htmlVentas = ventas.map(v => `
         <tr>
