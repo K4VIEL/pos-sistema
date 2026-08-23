@@ -494,6 +494,7 @@
     let dbClientes = [];
     let dbVentas = [];
     let dbArqueos = [];
+    let dbMermas = []; // <--- Añadido
     
     let usuarioActual = JSON.parse(localStorage.getItem('usuarioActual')) || null;
     
@@ -545,13 +546,14 @@
 
     async function cargarDatosSupabase() {
       try {
-        const [resLoc, resUsr, resProd, resCli, resVen, resArq] = await Promise.all([
+        const [resLoc, resUsr, resProd, resCli, resVen, resArq, resMer] = await Promise.all([
           supabaseClient.from('locales').select('*'),
           supabaseClient.from('usuarios').select('*'),
           supabaseClient.from('productos').select('*'),
           supabaseClient.from('clientes').select('*'),
           supabaseClient.from('ventas').select('*'),
-          supabaseClient.from('arqueos').select('*').order('fecha_apertura', { ascending: false })
+          supabaseClient.from('arqueos').select('*').order('fecha_apertura', { ascending: false }),
+          supabaseClient.from('mermas_auditoria').select('*').order('fecha_hora', { ascending: false }) // <--- Añadido
         ]);
 
         if (resLoc.data) dbLocales = resLoc.data.map(l => ({ id: l.id, nombre: l.nombre, direccion: l.direccion }));
@@ -583,6 +585,20 @@
             estado: a.estado,
             fechaCierre: a.fecha_cierre || a.fechaCierre,
             efectivoFisico: a.efectivo_fisico !== null && a.efectivo_fisico !== undefined ? parseFloat(a.efectivo_fisico) : null
+          }));
+        }
+
+        // <--- Mapeo de mermas añadido
+        if (resMer.data) {
+          dbMermas = resMer.data.map(m => ({
+            id: m.id,
+            idFactura: m.id_factura,
+            productoNombre: m.producto_nombre,
+            cantidad: m.cantidad,
+            montoTotal: m.monto_total,
+            motivo: m.motivo,
+            fechaHora: m.fecha_hora,
+            usuario: m.usuario
           }));
         }
       } catch (err) {
@@ -833,7 +849,6 @@
       `).join('');
     }
 
-    // MODIFICADO: Cada escaneo o clic agrega una NUEVA LÍNEA INDEPENDIENTE cronológica (sin sumar cantidades)
     function agregarAlCarrito(id) {
       const prod = dbProductos.find(p => String(p.id) === String(id));
       if (!prod) return alert('Producto no encontrado');
@@ -876,7 +891,6 @@
       document.getElementById('pos-total').innerText = total.toFixed(2);
     }
 
-    // MODIFICADO: Anulación visual de la línea en lugar de borrarla de la matriz del carrito
     async function anularItemCarrito(index) {
       const cart = obtenerCarritoActual();
       const item = cart.items[index];
@@ -890,7 +904,7 @@
 
       const totalItem = item.precio * item.cantidad;
 
-      // Envío opcional de auditoría a Supabase
+      // Guardar auditoría en Supabase
       await registrarAuditoriaMerma(
         cart.nombre || 'Carrito Activo',
         item.nombre,
@@ -898,6 +912,21 @@
         totalItem,
         motivo
       );
+
+      // Refrescar mermas locales
+      const { data: resMer } = await supabaseClient.from('mermas_auditoria').select('*').order('fecha_hora', { ascending: false });
+      if (resMer) {
+        dbMermas = resMer.map(m => ({
+          id: m.id,
+          idFactura: m.id_factura,
+          productoNombre: m.producto_nombre,
+          cantidad: m.cantidad,
+          montoTotal: m.monto_total,
+          motivo: m.motivo,
+          fechaHora: m.fecha_hora,
+          usuario: m.usuario
+        }));
+      }
 
       renderizarCarritosTabs();
     }
@@ -974,7 +1003,6 @@
       const clienteNombre = clienteObj ? `${clienteObj.nombre} ${clienteObj.apellido}` : 'Consumidor Final';
       const clienteCedula = clienteObj ? clienteObj.cedula : '9999999999';
 
-      // Descontar inventario únicamente de los ítems que NO estén anulados
       for (const i of cart.items) {
         if (!i.anulado) {
           const p = dbProductos.find(x => String(x.id) === String(i.id));
@@ -993,7 +1021,7 @@
         cliente_cedula: clienteCedula,
         metodo_pago: metodoPago || 'Efectivo',
         fecha: new Date().toISOString(),
-        items: [...cart.items], // Guarda todas las líneas, incluyendo las anuladas para auditoría en el ticket/factura
+        items: [...cart.items],
         total: cart.items.filter(i => !i.anulado).reduce((s, x) => s + (x.precio * x.cantidad), 0)
       };
 
@@ -1225,17 +1253,48 @@
       renderClientes();
     }
 
+    // ACTUALIZADO: Render de Kardex integrando ventas y mermas con buscador general
     function renderKardex() {
       const q = (document.getElementById('kardex-buscar')?.value || '').toLowerCase();
-      const ventas = dbVentas.filter(v => String(v.localId) === String(usuarioActual.localId) && (v.id.toLowerCase().includes(q) || v.clienteNombre.toLowerCase().includes(q))).sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
+      
+      const ventas = dbVentas.filter(v => 
+        String(v.localId) === String(usuarioActual.localId) && 
+        (v.id.toLowerCase().includes(q) || v.clienteNombre.toLowerCase().includes(q) || v.items.some(i => i.nombre.toLowerCase().includes(q)))
+      ).sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
 
-      document.getElementById('kardex-tabla').innerHTML = ventas.map(v => `
+      const mermasFiltradas = dbMermas.filter(m =>
+        m.productoNombre.toLowerCase().includes(q) || 
+        String(m.idFactura).toLowerCase().includes(q) ||
+        String(m.motivo).toLowerCase().includes(q) ||
+        String(m.usuario).toLowerCase().includes(q)
+      );
+
+      let htmlVentas = ventas.map(v => `
         <tr>
-          <td><b>${v.id}</b></td><td>${new Date(v.fecha).toLocaleString()}</td><td>${v.localNombre}</td><td>${v.clienteNombre}</td>
+          <td><b>${v.id}</b></td>
+          <td>${new Date(v.fecha).toLocaleString()}</td>
+          <td>${v.localNombre}</td>
+          <td>${v.clienteNombre}</td>
           <td><span class="badge" style="background:#e0f2fe; color:#0369a1;">${v.metodoPago || 'Efectivo'}</span></td>
-          <td><b>$${v.total.toFixed(2)}</b></td><td><button class="btn btn-primary btn-sm" onclick='mostrarFactura(${JSON.stringify(v)})'>Ver</button></td>
+          <td><b>$${v.total.toFixed(2)}</b></td>
+          <td><button class="btn btn-primary btn-sm" onclick='mostrarFactura(${JSON.stringify(v)})'>Ver</button></td>
         </tr>
-      `).join('') || `<tr><td colspan="7" style="text-align:center;">No hay registros</td></tr>`;
+      `).join('');
+
+      let htmlMermas = mermasFiltradas.map(m => `
+        <tr style="background-color: #fef2f2;">
+          <td><span style="color:var(--danger); font-weight:bold;">[ANULADO]</span> ${m.idFactura}</td>
+          <td>${new Date(m.fechaHora).toLocaleString()}</td>
+          <td>Auditoría / Merma</td>
+          <td>Cajero: <b>${m.usuario}</b></td>
+          <td><span class="badge" style="background:#fee2e2; color:#991b1b;">Motivo: ${m.motivo}</span></td>
+          <td><b style="color:var(--danger);">-$${Number(m.montoTotal || 0).toFixed(2)}</b></td>
+          <td><span style="font-size:0.8rem; color:var(--text-muted);">${m.cantidad}x ${m.productoNombre}</span></td>
+        </tr>
+      `).join('');
+
+      const contenidoTotal = htmlVentas + htmlMermas;
+      document.getElementById('kardex-tabla').innerHTML = contenidoTotal || `<tr><td colspan="7" style="text-align:center;">No hay registros encontrados</td></tr>`;
     }
 
     async function guardarProducto() {
@@ -1465,7 +1524,7 @@
       
       dbUsuarios.push({
         id: nuevoUsuarioSupabase.id,
-        user: newUser.user,
+        user: nuevoUsuarioSupabase.user,
         pass: nuevoUsuarioSupabase.pass,
         rol: nuevoUsuarioSupabase.rol,
         localId: nuevoUsuarioSupabase.local_id
