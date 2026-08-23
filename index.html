@@ -553,7 +553,7 @@
           supabaseClient.from('usuarios').select('*'),
           supabaseClient.from('productos').select('*'),
           supabaseClient.from('clientes').select('*'),
-          supabaseClient.from('ventas').select('*'),
+          supabaseClient.from('ventas').select('*'),.eq('local_id', localActualId)
           supabaseClient.from('arqueos').select('*').order('fecha_apertura', { ascending: false }),
           supabaseClient.from('mermas_auditoria').select('*').order('fecha_hora', { ascending: false }) // <--- Añadido
         ]);
