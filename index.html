@@ -1091,25 +1091,42 @@
       renderizarCarritosTabs();
     }
 
-    function mostrarFactura(v) {
-      document.getElementById('fac-local-nombre').innerText = v.localNombre;
-      document.getElementById('fac-id').innerText = v.id;
-      document.getElementById('fac-fecha').innerText = new Date(v.fecha).toLocaleString();
-      document.getElementById('fac-cliente').innerText = v.clienteNombre;
-      document.getElementById('fac-cedula').innerText = v.clienteCedula;
-      document.getElementById('fac-metodo').innerText = v.metodoPago || 'Efectivo';
-      
-      document.getElementById('fac-items').innerHTML = v.items.map(i => `
-        <tr class="${i.anulado ? 'item-anulado' : ''}">
-          <td>${i.cantidad}</td>
-          <td>${i.nombre} ${i.anulado ? '<br><small><b>[ANULADO]</b></small>' : ''}</td>
-          <td>$${(i.cantidad*i.precio).toFixed(2)}</td>
-        </tr>
-      `).join('');
-      
-      document.getElementById('fac-total').innerText = v.total.toFixed(2);
-      document.getElementById('factura-impresion').style.display = 'block';
+    function mostrarFactura(v){
+    document.getElementById('fac-local-nombre').innerText = v.localNombre;
+    
+    // Asignar datos dinámicos según el local (puedes cambiar los textos por los de cada sucursal)
+    if (v.localNombre && v.localNombre.toLowerCase().includes("blackdiamond")) {
+        document.getElementById('fac-ruc').innerText = "RUC_DE_BLACKDIAMOND";
+        document.getElementById('fac-dir').innerText = "Dir: Dirección de Blackdiamond";
+    } else {
+        document.getElementById('fac-ruc').innerText = "1729676294001";
+        document.getElementById('fac-dir').innerText = "Dir: MANABI / MANTA / CALLE 12 AV40";
     }
+
+    // Datos generales de la venta
+    document.getElementById('fac-id').innerText = v.id;
+    document.getElementById('fac-fecha').innerText = new Date(v.fecha).toLocaleString();
+    document.getElementById('fac-cliente').innerText = v.clienteNombre || "CONSUMIDOR FINAL";
+    document.getElementById('fac-cedula').innerText = v.clienteCedula || "9999999999999";
+    document.getElementById('fac-metodo').innerText = v.metodoPago || 'Efectivo';
+    
+    // Si tienes un elemento para el usuario en el HTML de la factura, desomenta la siguiente línea:
+    // document.getElementById('fac-usuario').innerText = v.usuario || usuarioActual.nombre || '';
+
+    document.getElementById('fac-items').innerHTML = v.items.map(i=>`
+        <tr class="${i.anulado ? 'item-anulado':''}">
+            <td>${i.cantidad}</td>
+            <td>${i.nombre} ${i.anulado ? '<br><small><b>[ANULADO]</b></small>':''}</td>
+            <td style="text-align: right;">$${Number(i.precio).toFixed(2)}</td>
+            <td style="text-align: right;">$${(i.cantidad*i.precio).toFixed(2)}</td>
+        </tr>
+    `).join('');
+
+    document.getElementById('fac-total').innerText = v.total.toFixed(2);
+    document.getElementById('fac-subtotal').innerText = v.total.toFixed(2); // O tu cálculo de subtotal
+    document.getElementById('factura-impresion').style.display = 'block';
+}
+
 
     async function prepararVistaArqueo() {
       await cargarDatosSupabase();
