@@ -1247,7 +1247,6 @@
       alert('Turno de caja cerrado con éxito.');
       await prepararVistaArqueo();
     }
-
     function renderHistorialArqueos() {
       const lista = dbArqueos.filter(a => String(a.localId) === String(usuarioActual.localId));
       
