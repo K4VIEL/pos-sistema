@@ -896,7 +896,7 @@
       const item = cart.items[index];
       if (!item || item.anulado) return;
 
-      const motivo = prompt(`Motivo de anulación para la línea "${item.nombre}":`, "Error de escaneo / Arrepentimiento");
+      const motivo = prompt(`Estas seguro de elimiar este articulo? "${item.nombre}":`, "Motivo");
       if (motivo === null) return;
 
       item.anulado = true;
