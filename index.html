@@ -1275,7 +1275,6 @@
       }).join('');
     }
 async function consultarSri() {
-async function consultarSri() {
     const cedula = document.getElementById('cli-cedula').value.trim();
     
     if (!cedula || (cedula.length !== 10 && cedula.length !== 13)) {
@@ -1284,7 +1283,6 @@ async function consultarSri() {
     }
 
     try {
-        // Usamos una API alternativa con soporte CORS para Ecuador
         const response = await fetch(`https://ci.orion.ec/api/v1/cedula/${cedula}`);
         
         if (!response.ok) {
@@ -1292,8 +1290,6 @@ async function consultarSri() {
         }
 
         const data = await response.json();
-        
-        // Extraemos el nombre dependiendo de cómo devuelva la data este endpoint
         const nombreCompleto = data.nombre || data.razon_social || data.full_name || (data.nombres ? `${data.nombres} ${data.apellidos}` : '');
 
         if (nombreCompleto) {
@@ -1308,7 +1304,6 @@ async function consultarSri() {
         console.error(error);
         alert('No se pudo conectar con el servicio o el número no está registrado. Ingrese los datos manualmente.');
     }
-}
     async function guardarCliente() {
       const cedula = document.getElementById('cli-cedula').value.trim();
       const nombre = document.getElementById('cli-nombre').value.trim();
