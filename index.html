@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -417,15 +418,22 @@
       <section id="vista-locales" class="page-section">
         <div class="card">
           <h3>Crear Nueva Sucursal</h3>
-          <input type="text" id="loc-nombre" placeholder="Nombre de Sucursal">
+          <input type="text" id="loc-nombre" placeholder="Nombre de Sucursal / Local">
+          <input type="text" id="loc-propietario" placeholder="Nombre del Propietario / Emisor">
+          <input type="text" id="loc-ruc" placeholder="RUC (13 dígitos)">
           <input type="text" id="loc-direccion" placeholder="Dirección">
+          <label>¿Obligado a llevar contabilidad?</label>
+          <select id="loc-contabilidad">
+            <option value="NO">NO</option>
+            <option value="SI">SÍ</option>
+          </select>
           <button class="btn btn-primary" onclick="crearLocal()">Registrar Local</button>
         </div>
         <div class="card">
           <h3>Locales Activos</h3>
           <div class="table-responsive">
             <table>
-              <thead><tr><th>ID</th><th>Nombre</th><th>Dirección</th><th>Acciones</th></tr></thead>
+              <thead><tr><th>ID</th><th>Nombre</th><th>RUC / Dir</th><th>Acciones</th></tr></thead>
               <tbody id="loc-tabla"></tbody>
             </table>
           </div>
@@ -461,22 +469,21 @@
   </div>
 
   <!-- COMPROBANTE DE IMPRESIÓN -->
-  <!-- COMPROBANTE DE IMPRESIÓN UNIFICADO -->
-<div id="factura-impresion" style="display:none; max-width: 300px; margin: 0 auto; font-family: monospace; font-size: 12px; color: #000; background: #fff; padding: 10px;">
+  <div id="factura-impresion" style="display:none; max-width: 300px; margin: 0 auto; font-family: monospace; font-size: 12px; color: #000; background: #fff; padding: 10px;">
     <div style="text-align: center; line-height: 1.3;">
         <h3 id="fac-local-nombre" style="margin: 0; font-size: 14px; font-weight: bold;"></h3>
         <p style="margin: 2px 0;" id="fac-propietario"></p>
 
         <p style="margin: 2px 0;">RUC: <span id="fac-ruc"></span></p>
         <p style="margin: 2px 0; font-size: 11px;" id="fac-dir"></p>
-        <p style="margin: 2px 0; font-size: 11px;">Obligado contabilidad: NO</p>
+        <p style="margin: 2px 0; font-size: 11px;">Obligado contabilidad: <span id="fac-contabilidad">NO</span></p>
         <p style="margin: 2px 0;">Usuario Venta: <span id="fac-usuario"></span></p>
     </div>
     
     <div style="margin-top: 8px; border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 5px 0; line-height: 1.3;">
         <p style="margin: 2px 0; font-weight: bold;">Factura #: <span id="fac-id"></span></p>
         <p style="margin: 2px 0; font-size: 11px;">Fecha Emisión: <span id="fac-fecha"></span></p>
-        <p style="margin: 2px 0; font-size: 10px;">Nro. de autorización:<br><span id="fac-autorizacion"></span></p>
+        <p style="margin: 2px 0; font-size: 10px;">Nro. de autorización:<br><span id="fac-autorizacion">AUTORIZADO</span></p>
     </div>
 
     <div style="margin-top: 5px; line-height: 1.3; font-size: 11px;">
@@ -512,7 +519,7 @@
 
     <div style="font-size: 11px; line-height: 1.3;">
         <p style="margin: 2px 0; font-weight: bold;">FORMA DE PAGO:</p>
-        <p style="margin: 2px 0;">Pago efectivo <span id="fac-metodo">Efectivo</span></p>
+        <p style="margin: 2px 0;">Pago <span id="fac-metodo">Efectivo</span></p>
     </div>
 
     <div style="text-align: center; margin-top: 10px; font-size: 10px;">
@@ -537,7 +544,7 @@
     let dbClientes = [];
     let dbVentas = [];
     let dbArqueos = [];
-    let dbMermas = []; // <--- Añadido
+    let dbMermas = [];
     
     let usuarioActual = JSON.parse(localStorage.getItem('usuarioActual')) || null;
     
@@ -545,7 +552,6 @@
     let carritoActivoId = 1;
     let html5QrCode = null;
 
-    // FUNCIÓN AUDITORÍA MERMAS EN SUPABASE
     async function registrarAuditoriaMerma(idFactura, productoNombre, cantidad, montoTotal, motivo) {
       try {
         const { error } = await supabaseClient
@@ -596,10 +602,21 @@
           supabaseClient.from('clientes').select('*'),
           supabaseClient.from('ventas').select('*'),
           supabaseClient.from('arqueos').select('*').order('fecha_apertura', { ascending: false }),
-          supabaseClient.from('mermas_auditoria').select('*').order('fecha_hora', { ascending: false }) // <--- Añadido
+          supabaseClient.from('mermas_auditoria').select('*').order('fecha_hora', { ascending: false })
         ]);
 
-        if (resLoc.data) dbLocales = resLoc.data.map(l => ({ id: l.id, nombre: l.nombre, direccion: l.direccion }));
+        // Mapeo actualizado incluyendo las nuevas columnas del local
+        if (resLoc.data) {
+          dbLocales = resLoc.data.map(l => ({ 
+            id: l.id, 
+            nombre: l.nombre, 
+            direccion: l.direccion,
+            ruc: l.ruc || '',
+            propietario: l.propietario || '',
+            obligadoContabilidad: l.obligado_contabilidad || 'NO'
+          }));
+        }
+
         if (resUsr.data) dbUsuarios = resUsr.data.map(u => ({ id: u.id, user: u.user || u.usuario, pass: u.pass || u.password, rol: u.rol, localId: u.local_id || u.localId }));
         if (resProd.data) dbProductos = resProd.data.map(p => ({ id: p.id, localId: p.local_id || p.localId, codigo: p.codigo, nombre: p.nombre, costo: p.costo, precio: p.precio, stock: p.stock }));
         if (resCli.data) dbClientes = resCli.data.map(c => ({ id: c.id, localId: c.local_id || c.localId, cedula: c.cedula || c.cliente_cedula, nombre: c.nombre, apellido: c.apellido, correo: c.correo }));
@@ -614,7 +631,8 @@
             metodoPago: v.metodo_pago || v.metodoPago,
             fecha: v.fecha,
             items: v.items || [],
-            total: v.total
+            total: v.total,
+            usuario: v.usuario || ''
           }));
         }
 
@@ -631,7 +649,6 @@
           }));
         }
 
-        // <--- Mapeo de mermas añadido
         if (resMer.data) {
           dbMermas = resMer.data.map(m => ({
             id: m.id,
@@ -939,7 +956,7 @@
       const item = cart.items[index];
       if (!item || item.anulado) return;
 
-      const motivo = prompt(`Estas seguro de elimiar este articulo? "${item.nombre}":`, "Motivo");
+      const motivo = prompt(`¿Estás seguro de eliminar este artículo? "${item.nombre}":`, "Motivo");
       if (motivo === null) return;
 
       item.anulado = true;
@@ -947,7 +964,6 @@
 
       const totalItem = item.precio * item.cantidad;
 
-      // Guardar auditoría en Supabase
       await registrarAuditoriaMerma(
         cart.nombre || 'Carrito Activo',
         item.nombre,
@@ -956,7 +972,6 @@
         motivo
       );
 
-      // Refrescar mermas locales
       const { data: resMer } = await supabaseClient.from('mermas_auditoria').select('*').order('fecha_hora', { ascending: false });
       if (resMer) {
         dbMermas = resMer.map(m => ({
@@ -1065,7 +1080,8 @@
         metodo_pago: metodoPago || 'Efectivo',
         fecha: new Date().toISOString(),
         items: [...cart.items],
-        total: cart.items.filter(i => !i.anulado).reduce((s, x) => s + (x.precio * x.cantidad), 0)
+        total: cart.items.filter(i => !i.anulado).reduce((s, x) => s + (x.precio * x.cantidad), 0),
+        usuario: usuarioActual.user
       };
 
       const { error } = await supabaseClient.from('ventas').insert([ventaSupabase]);
@@ -1080,7 +1096,8 @@
         metodoPago: ventaSupabase.metodo_pago,
         fecha: ventaSupabase.fecha,
         items: ventaSupabase.items,
-        total: ventaSupabase.total
+        total: ventaSupabase.total,
+        usuario: ventaSupabase.usuario
       };
 
       dbVentas.push(ventaLocal);
@@ -1092,42 +1109,37 @@
       renderizarCarritosTabs();
     }
 
-    function mostrarFactura(v){
-    document.getElementById('fac-local-nombre').innerText = v.localNombre;
-    
-    // Asignar datos dinámicos según el local (puedes cambiar los textos por los de cada sucursal)
-    if (v.localNombre && v.localNombre.toLowerCase().includes("blackdiamond")) {
-        document.getElementById('fac-ruc').innerText = "RUC_DE_BLACKDIAMOND";
-        document.getElementById('fac-dir').innerText = "Dir: Dirección de Blackdiamond";
-    } else {
-        document.getElementById('fac-ruc').innerText = "1729676294001";
-        document.getElementById('fac-dir').innerText = "Dir: MANABI / MANTA / CALLE 12 AV40";
-    }
+    // FUNCIÓN DE FACTURA ACTUALIZADA PARA LEER DATOS DIRECTOS DEL LOCAL ASIGNADO
+    function mostrarFactura(v) {
+      // Buscamos la información detallada del local en nuestra lista descargada desde Supabase
+      const localInfo = dbLocales.find(l => String(l.id) === String(v.localId)) || {};
 
-    // Datos generales de la venta
-    document.getElementById('fac-id').innerText = v.id;
-    document.getElementById('fac-fecha').innerText = new Date(v.fecha).toLocaleString();
-    document.getElementById('fac-cliente').innerText = v.clienteNombre || "CONSUMIDOR FINAL";
-    document.getElementById('fac-cedula').innerText = v.clienteCedula || "9999999999999";
-    document.getElementById('fac-metodo').innerText = v.metodoPago || 'Efectivo';
-    
-    // Si tienes un elemento para el usuario en el HTML de la factura, desomenta la siguiente línea:
-    // document.getElementById('fac-usuario').innerText = v.usuario || usuarioActual.nombre || '';
+      document.getElementById('fac-local-nombre').innerText = localInfo.nombre || v.localNombre || 'SUCURSAL';
+      document.getElementById('fac-propietario').innerText = localInfo.propietario || '';
+      document.getElementById('fac-ruc').innerText = localInfo.ruc || 'S/N';
+      document.getElementById('fac-dir').innerText = 'Dir: ' + (localInfo.direccion || 'S/N');
+      document.getElementById('fac-contabilidad').innerText = localInfo.obligadoContabilidad || 'NO';
+      document.getElementById('fac-usuario').innerText = v.usuario || usuarioActual?.user || '';
 
-    document.getElementById('fac-items').innerHTML = v.items.map(i=>`
-        <tr class="${i.anulado ? 'item-anulado':''}">
+      document.getElementById('fac-id').innerText = v.id;
+      document.getElementById('fac-fecha').innerText = new Date(v.fecha).toLocaleString();
+      document.getElementById('fac-cliente').innerText = v.clienteNombre || "CONSUMIDOR FINAL";
+      document.getElementById('fac-cedula').innerText = v.clienteCedula || "9999999999999";
+      document.getElementById('fac-metodo').innerText = v.metodoPago || 'Efectivo';
+      
+      document.getElementById('fac-items').innerHTML = v.items.map(i => `
+        <tr class="${i.anulado ? 'item-anulado' : ''}">
             <td>${i.cantidad}</td>
-            <td>${i.nombre} ${i.anulado ? '<br><small><b>[ANULADO]</b></small>':''}</td>
+            <td>${i.nombre} ${i.anulado ? '<br><small><b>[ANULADO]</b></small>' : ''}</td>
             <td style="text-align: right;">$${Number(i.precio).toFixed(2)}</td>
-            <td style="text-align: right;">$${(i.cantidad*i.precio).toFixed(2)}</td>
+            <td style="text-align: right;">$${(i.cantidad * i.precio).toFixed(2)}</td>
         </tr>
-    `).join('');
+      `).join('');
 
-    document.getElementById('fac-total').innerText = v.total.toFixed(2);
-    document.getElementById('fac-subtotal').innerText = v.total.toFixed(2); // O tu cálculo de subtotal
-    document.getElementById('factura-impresion').style.display = 'block';
-}
-
+      document.getElementById('fac-total').innerText = v.total.toFixed(2);
+      document.getElementById('fac-subtotal').innerText = v.total.toFixed(2);
+      document.getElementById('factura-impresion').style.display = 'block';
+    }
 
     async function prepararVistaArqueo() {
       await cargarDatosSupabase();
@@ -1313,7 +1325,6 @@
       renderClientes();
     }
 
-    // ACTUALIZADO: Render de Kardex integrando ventas y mermas con buscador general
     function renderKardex() {
       const q = (document.getElementById('kardex-buscar')?.value || '').toLowerCase();
       
@@ -1322,16 +1333,15 @@
         (v.id.toLowerCase().includes(q) || v.clienteNombre.toLowerCase().includes(q) || v.items.some(i => i.nombre.toLowerCase().includes(q)))
       ).sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
 
-        const mermasFiltradas = dbMermas.filter(m =>
-      String(m.localId || m.local_id) === String(usuarioActual.localId) && (
-        m.productoNombre.toLowerCase().includes(q) || 
-        String(m.idFactura).toLowerCase().includes(q) || 
-        String(m.motivo).toLowerCase().includes(q) || 
-        String(m.usuario).toLowerCase().includes(q)
-      )
-    );
+      const mermasFiltradas = dbMermas.filter(m =>
+        String(m.localId || m.local_id) === String(usuarioActual.localId) && (
+          m.productoNombre.toLowerCase().includes(q) || 
+          String(m.idFactura).toLowerCase().includes(q) || 
+          String(m.motivo).toLowerCase().includes(q) || 
+          String(m.usuario).toLowerCase().includes(q)
+        )
+      );
 
-    
       let htmlVentas = ventas.map(v => `
         <tr>
           <td><b>${v.id}</b></td>
@@ -1529,20 +1539,49 @@
       `).join('') || `<tr><td colspan="3" style="text-align:center;">No tienes cajeros registrados</td></tr>`;
     }
 
+    // FUNCIÓN CREAR LOCAL ACTUALIZADA CON LOS NUEVOS CAMPOS
     async function crearLocal() {
       if (!esUsuarioMatriz()) return alert('Acceso denegado.');
+      
       const nombre = document.getElementById('loc-nombre').value.trim();
+      const propietario = document.getElementById('loc-propietario').value.trim();
+      const ruc = document.getElementById('loc-ruc').value.trim();
       const direccion = document.getElementById('loc-direccion').value.trim();
-      if (!nombre) return alert('Ingresa el nombre');
+      const obligadoContabilidad = document.getElementById('loc-contabilidad').value;
 
-      const nuevoLocal = { id: 'LOC-' + Date.now().toString().slice(-4), nombre, direccion };
-      await supabaseClient.from('locales').insert([nuevoLocal]);
-      dbLocales.push(nuevoLocal);
+      if (!nombre) return alert('Ingresa al menos el nombre del local');
+
+      const nuevoLocal = { 
+        id: 'LOC-' + Date.now().toString().slice(-4), 
+        nombre, 
+        propietario,
+        ruc,
+        direccion,
+        obligado_contabilidad: obligadoContabilidad
+      };
+
+      const { error } = await supabaseClient.from('locales').insert([nuevoLocal]);
+      if (error) return alert("Error al registrar local: " + error.message);
+
+      dbLocales.push({
+        id: nuevoLocal.id,
+        nombre: nuevoLocal.nombre,
+        propietario: nuevoLocal.propietario,
+        ruc: nuevoLocal.ruc,
+        direccion: nuevoLocal.direccion,
+        obligadoContabilidad: nuevoLocal.obligado_contabilidad
+      });
+
       poblardropdowns();
       renderLocales();
+
+      // Limpiar inputs
       document.getElementById('loc-nombre').value = '';
+      document.getElementById('loc-propietario').value = '';
+      document.getElementById('loc-ruc').value = '';
       document.getElementById('loc-direccion').value = '';
-      alert('Local registrado');
+      
+      alert('Local registrado con éxito');
     }
 
     function renderLocales() {
@@ -1554,8 +1593,8 @@
 
         return `<tr>
           <td>${l.id}</td>
-          <td><b>${l.nombre}</b></td>
-          <td>${l.direccion}</td>
+          <td><b>${l.nombre}</b><br><small>${l.propietario || ''}</small></td>
+          <td>RUC: ${l.ruc || 'N/A'}<br><small>${l.direccion || 'N/A'}</small></td>
           <td>${accionBtn}</td>
         </tr>`;
       }).join('');
