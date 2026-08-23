@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -305,11 +304,14 @@
         <div class="card">
           <h3>Registrar Cliente</h3>
           <label>Cédula / RUC *</label>
-          <input type="text" id="cli-cedula" placeholder="Ej: 1312345678">
-          <div class="form-row">
-            <div><label>Nombre *</label><input type="text" id="cli-nombre" placeholder="Ej: Juan"></div>
-            <div><label>Apellido *</label><input type="text" id="cli-apellido" placeholder="Ej: Pérez"></div>
-          </div>
+<div style="display: flex; gap: 8px; margin-bottom: 10px;">
+    <input type="text" id="cli-cedula" placeholder="Ej: 1312345678" maxlength="13" style="flex: 1;">
+    <button type="button" class="btn btn-secondary" onclick="consultarSri()" style="padding: 0 12px; white-space: nowrap;">🔍 Buscar SRI</button>
+</div>
+<div class="form-row">
+    <div><label>Nombre *</label><input type="text" id="cli-nombre" placeholder="Ej: Juan"></div>
+    <div><label>Apellido / Razón Social *</label><input type="text" id="cli-apellido" placeholder="Ej: Pérez"></div>
+</div>
           <label>Correo Electrónico (Opcional)</label>
           <input type="email" id="cli-correo" placeholder="ejemplo@correo.com">
           <button class="btn btn-primary" onclick="guardarCliente()">Guardar Cliente</button>
@@ -1271,7 +1273,39 @@
         `;
       }).join('');
     }
+async function consultarSri() {
+    const cedula = document.getElementById('cli-cedula').value.trim();
+    
+    if (!cedula || (cedula.length !== 10 && cedula.length !== 13)) {
+        alert('Por favor ingrese una cédula (10 dígitos) o RUC (13 dígitos) válido.');
+        return;
+    }
 
+    try {
+        const response = await fetch(`https://api.ecuadorapi.com/api/v1/rucs/${cedula}`);
+        
+        if (!response.ok) {
+            throw new Error('No se encontró el registro.');
+        }
+
+        const data = await response.json();
+        
+        if (data.razon_social) {
+            document.getElementById('cli-nombre').value = data.razon_social;
+            document.getElementById('cli-apellido').value = '';
+        } else if (data.full_name) {
+            const partes = data.full_name.split(' ');
+            document.getElementById('cli-nombre').value = partes.slice(0, 2).join(' ');
+            document.getElementById('cli-apellido').value = partes.slice(2).join(' ');
+        }
+
+        alert('¡Datos encontrados y cargados con éxito!');
+
+    } catch (error) {
+        console.error(error);
+        alert('No se pudo conectar con el SRI o el número no está registrado. Ingrese los datos manualmente.');
+    }
+}
     async function guardarCliente() {
       const cedula = document.getElementById('cli-cedula').value.trim();
       const nombre = document.getElementById('cli-nombre').value.trim();
@@ -1661,4 +1695,4 @@
     });
   </script>
 </body>
-</html>
+                  </html>
