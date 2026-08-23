@@ -516,6 +516,8 @@
               motivo: motivo || 'Anulado en factura',
               fecha_hora: new Date().toISOString(),
               usuario: usuarioActual ? usuarioActual.user : 'Sistema'
+              local_id: localActualId
+
             }
           ]);
 
@@ -913,9 +915,12 @@
         motivo
       );
 
-      // Refrescar mermas locales
-      const { data: resMer } = await supabaseClient.from('mermas_auditoria').select('*').order('fecha_hora', { ascending: false });
-      if (resMer) {
+      const { data: resMer } = await supabaseClient
+    .from('mermas_auditoria')
+    .select('*')
+    .eq('local_id', localActualId) // ⬅️ ¡Filtra estrictamente por la tienda actual!
+    .order('fecha_hora', { ascending: false });
+
         dbMermas = resMer.map(m => ({
           id: m.id,
           idFactura: m.id_factura,
