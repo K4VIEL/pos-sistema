@@ -553,7 +553,7 @@
           supabaseClient.from('usuarios').select('*'),
           supabaseClient.from('productos').select('*'),
           supabaseClient.from('clientes').select('*'),
-          supabaseClient.from('ventas').select('*'),.eq('local_id', localActualId)
+          supabaseClient.from('ventas').select('*'),
           supabaseClient.from('arqueos').select('*').order('fecha_apertura', { ascending: false }),
           supabaseClient.from('mermas_auditoria').select('*').order('fecha_hora', { ascending: false }) // <--- Añadido
         ]);
@@ -563,19 +563,22 @@
         if (resProd.data) dbProductos = resProd.data.map(p => ({ id: p.id, localId: p.local_id || p.localId, codigo: p.codigo, nombre: p.nombre, costo: p.costo, precio: p.precio, stock: p.stock }));
         if (resCli.data) dbClientes = resCli.data.map(c => ({ id: c.id, localId: c.local_id || c.localId, cedula: c.cedula || c.cliente_cedula, nombre: c.nombre, apellido: c.apellido, correo: c.correo }));
         
-        if (resVen.data) {
-          dbVentas = resVen.data.map(v => ({
-            id: v.id,
-            localId: v.local_id || v.localId,
-            localNombre: v.local_nombre || v.localNombre,
-            clienteNombre: v.cliente_nombre || v.clienteNombre,
-            clienteCedula: v.cliente_cedula || v.clienteCedula,
-            metodoPago: v.metodo_pago || v.metodoPago,
-            fecha: v.fecha,
-            items: v.items || [],
-            total: v.total
-          }));
-        }
+              if (resVen.data) {
+        dbVentas = resVen.data
+            .filter(v => String(v.local_id || v.localId) === String(localActualId))
+            .map(v => ({
+                id: v.id,
+                localId: v.local_id || v.localId,
+                localNombre: v.local_nombre || v.localNombre,
+                clienteNombre: v.cliente_nombre || v.clienteNombre,
+                clienteCedula: v.cliente_cedula || v.clienteCedula,
+                metodoPago: v.metodo_pago || v.metodoPago,
+                fecha: v.fecha,
+                items: v.items || [],
+                total: v.total
+            }));
+    }
+
 
         if (resArq.data) {
           dbArqueos = resArq.data.map(a => ({
