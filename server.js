@@ -4,7 +4,7 @@ const axios = require('axios');
 
 const app = express();
 
-// Configuración de CORS para permitir peticiones desde cualquier origen (GitHub Pages, celular, etc.)
+// Habilitar CORS para cualquier origen (GitHub Pages, móvil, etc.)
 app.use(cors({ origin: '*' }));
 app.use(express.json());
 
@@ -16,10 +16,21 @@ app.get('/api/sri/:identificacion', async (req, res) => {
     }
 
     try {
-        // Aseguramos formato de 13 dígitos para la consulta de RUC
-        let ruc = identificacion.length === 10 ? identificacion + '001' : identificacion;
+        // Ajustar a formato RUC de 13 dígitos
+        let ruc = identificacion.trim();
+        if (ruc.length === 10) {
+            ruc = ruc + '001';
+        }
 
-        const response = await axios.get(`https://aggregator.cipherbyte.ec/company/${ruc}`, { timeout: 6000 });
+        // Consulta oficial al catastro público del SRI
+        const urlSRI = `https://srierlinea.sri.gob.ec/sri-catastro-sujeto-servicio-internet/rest/ConsolidadoContribuyente/existePorNumeroRuc?numeroRuc=${ruc}`;
+        
+        const response = await axios.get(urlSRI, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+            },
+            timeout: 8000
+        });
 
         if (response.data && response.data.razonSocial) {
             return res.json({
@@ -28,9 +39,11 @@ app.get('/api/sri/:identificacion', async (req, res) => {
             });
         }
 
-        return res.status(404).json({ error: 'RUC no encontrado.' });
+        return res.status(404).json({ error: 'No se encontraron datos en el SRI.' });
+
     } catch (error) {
-        return res.status(404).json({ error: 'Cédula o RUC no encontrado.' });
+        console.error('Error al consultar SRI:', error.message);
+        return res.status(500).json({ error: 'Cédula o RUC no encontrado en el SRI.' });
     }
 });
 
