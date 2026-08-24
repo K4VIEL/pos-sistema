@@ -208,8 +208,13 @@
               <div class="cart-tabs" id="pos-cart-tabs"></div>
 
               <label>Cliente (Opcional)</label>
-              <select id="pos-cliente-select"></select>
-              
+<div style="margin-bottom: 8px;">
+    <input type="text" id="pos-cliente-buscar" class="form-control" list="lista-clientes-opciones" placeholder="Escribe cédula o nombre..." oninput="seleccionarClienteAutocomplete(this.value)">
+    <datalist id="lista-clientes-opciones">
+        <!-- Se llena automáticamente con tus clientes -->
+    </datalist>
+    <input type="hidden" id="pos-cliente-select" value="Consumidor Final">
+</div>
               <div class="table-responsive" style="margin-top:10px;">
                 <table>
                   <thead><tr><th>Prod</th><th>Cant</th><th>Total</th><th>Acción</th></tr></thead>
@@ -804,12 +809,45 @@
       poblarClientesDropdown();
     }
 
-    function poblarClientesDropdown() {
-      const clientesAislamiento = dbClientes.filter(c => String(c.localId) === String(usuarioActual.localId));
-      const optsClientes = clientesAislamiento.map(c => `<option value="${c.id}">${c.cedula} - ${c.nombre} ${c.apellido}</option>`).join('');
-      const selectCli = document.getElementById('pos-cliente-select');
-      if (selectCli) selectCli.innerHTML = `<option value="">Consumidor Final</option>` + optsClientes;
+    let clienteVentaSeleccionado = { cedula: 'Consumidor Final', nombre: 'Consumidor Final' };
+
+function poblarClientesDropdown() {
+    const datalist = document.getElementById('lista-clientes-opciones');
+    if (!datalist) return;
+
+    const clientesAislamiento = dbClientes.filter(c => String(c.localId) === String(usuarioActual.localId));
+    
+    let html = `<option value="Consumidor Final">Consumidor Final</option>`;
+
+        clientesAislamiento.forEach(cli => {
+        const nombreMostrar = `${cli.nombre} ${cli.apellido}`.trim();
+        html += `<option value="${cli.cedula} - ${nombreMostrar}">${cli.cedula} | ${nombreMostrar}</option>`;
+    });
+    datalist.innerHTML = html;
+}
+
+function seleccionarClienteAutocomplete(valorInput) {
+    const hiddenInput = document.getElementById('pos-cliente-select');
+
+    if (!valorInput || valorInput.trim() === '' || valorInput.includes('Consumidor Final')) {
+        clienteVentaSeleccionado = { cedula: 'Consumidor Final', nombre: 'Consumidor Final' };
+        if (hiddenInput) hiddenInput.value = 'Consumidor Final';
+        return;
     }
+
+    const partes = valorInput.split(' - ');
+    const cedulaBuscada = partes[0].trim();
+
+    const clienteEncontrado = dbClientes.find(c => c.cedula === cedulaBuscada);
+
+    if (clienteEncontrado) {
+        clienteVentaSeleccionado = clienteEncontrado;
+        if (hiddenInput) hiddenInput.value = clienteEncontrado.cedula;
+    } else {
+        clienteVentaSeleccionado = { cedula: cedulaBuscada, nombre: valorInput };
+        if (hiddenInput) hiddenInput.value = cedulaBuscada;
+    }
+}
 
     function obtenerCarritoActual() {
       return carritos.find(c => c.id === carritoActivoId) || carritos[0];
@@ -1283,37 +1321,51 @@ async function consultarSRI() {
     }
 
     try {
-        const response = await fetch(`https://pos-sistema-y075.onrender.com/api/sri/${cedulaInput}`);
-        const data = await response.json();
+        // 1. BUSCAR PRIMERO EN NSTRA BASE CENTRALIZADA (Supabase)
+        const { data: clienteExiste, error } = await supabaseClient
+            .from('clientes')
+            .select('*')
+            .eq('cedula', cedulaInput)
+            .maybeSingle();
 
-        if (!response.ok) {
-            alert(data.error || 'No se encontró la información.');
+        if (clienteExiste) {
+            document.getElementById('cli-nombre').value = clienteExiste.nombre;
+            document.getElementById('cli-apellido').value = clienteExiste.apellido;
+            if (document.getElementById('cli-correo')) {
+                document.getElementById('cli-correo').value = clienteExiste.correo || '';
+            }
+            alert(`¡Cliente encontrado en nuestro sistema! (Registrado previamente en Local: ${clienteExiste.local_id || 'General'})`);
             return;
         }
 
-        if (data.razonSocial) {
+        // 2. SI NO EXISTE EN SUPABASE, CONSULTAR AL BACKEND EN RENDER (SRI)
+        const response = await fetch(`https://pos-sistema-y075.onrender.com/api/sri/${cedulaInput}`);
+        const data = await response.json();
+
+        if (response.ok && data.razonSocial) {
             const nombreCompleto = data.razonSocial.trim();
             const partes = nombreCompleto.split(' ');
 
             if (partes.length >= 3) {
-                // Separa los 2 primeros apellidos y el resto de nombres
-                const apellidos = partes.slice(0, 2).join(' ');
-                const nombres = partes.slice(2).join(' ');
-
-                document.getElementById('cli-nombre').value = nombres;
-                document.getElementById('cli-apellido').value = apellidos;
+                document.getElementById('cli-nombre').value = partes.slice(2).join(' ');
+                document.getElementById('cli-apellido').value = partes.slice(0, 2).join(' ');
             } else {
-                // Caso para empresas o razones sociales cortas
                 document.getElementById('cli-nombre').value = '-';
                 document.getElementById('cli-apellido').value = nombreCompleto;
             }
 
-            alert('¡Cliente encontrado con éxito!');
+            alert('Cliente encontrado en SRI (RUC Activo). Recuerda hacer clic en "Guardar Cliente".');
+        } else {
+            // 3. SI NO TIENE RUC (Persona Natural), PERMITIR REGISTRO MANUAL
+            alert('El número no se encuentra registrado en el SRI (Persona Natural). Por favor ingresa Nombres y Apellidos manualmente.');
+            document.getElementById('cli-nombre').value = '';
+            document.getElementById('cli-apellido').value = '';
+            document.getElementById('cli-nombre').focus();
         }
 
     } catch (error) {
-        console.error(error);
-        alert('Error al conectar con el servidor local.');
+        console.error('Error al buscar cliente:', error);
+        alert('Error al conectar con el servidor.');
     }
 }
     async function guardarCliente() {
