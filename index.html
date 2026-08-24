@@ -815,18 +815,20 @@ function poblarClientesDropdown() {
     const datalist = document.getElementById('lista-clientes-opciones');
     if (!datalist) return;
 
-    const clientesAislamiento = dbClientes.filter(c => String(c.localId) === String(usuarioActual.localId));
+    // FILTRO ESTRICTO: Solo clientes creados originalmente en este local
+    const clientesDelLocal = dbClientes.filter(c => String(c.localId || c.local_id) === String(usuarioActual.localId));
     
     let html = `<option value="Consumidor Final">Consumidor Final</option>`;
 
-        clientesAislamiento.forEach(cli => {
+    clientesDelLocal.forEach(cli => {
         const nombreMostrar = `${cli.nombre} ${cli.apellido}`.trim();
         html += `<option value="${cli.cedula} - ${nombreMostrar}">${cli.cedula} | ${nombreMostrar}</option>`;
     });
+
     datalist.innerHTML = html;
 }
 
-function seleccionarClienteAutocomplete(valorInput) {
+async function seleccionarClienteAutocomplete(valorInput) {
     const hiddenInput = document.getElementById('pos-cliente-select');
 
     if (!valorInput || valorInput.trim() === '' || valorInput.includes('Consumidor Final')) {
@@ -838,7 +840,25 @@ function seleccionarClienteAutocomplete(valorInput) {
     const partes = valorInput.split(' - ');
     const cedulaBuscada = partes[0].trim();
 
-    const clienteEncontrado = dbClientes.find(c => c.cedula === cedulaBuscada);
+    // 1. Busca en los clientes locales
+    let clienteEncontrado = dbClientes.find(c => c.cedula === cedulaBuscada);
+
+    // 2. Si no es del local, consulta Supabase para la venta actual (SIN agregarlo al desplegable de este local)
+    if (!clienteEncontrado && cedulaBuscada.length >= 8) {
+        try {
+            const { data } = await supabaseClient
+                .from('clientes')
+                .select('*')
+                .eq('cedula', cedulaBuscada)
+                .maybeSingle();
+
+            if (data) {
+                clienteEncontrado = data;
+            }
+        } catch (e) {
+            console.log('Error buscando cliente en red:', e);
+        }
+    }
 
     if (clienteEncontrado) {
         clienteVentaSeleccionado = clienteEncontrado;
