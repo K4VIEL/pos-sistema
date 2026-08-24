@@ -1283,7 +1283,7 @@ async function consultarSRI() {
     }
 
     try {
-        const response = await fetch(`http://localhost:3000/api/sri/${cedulaInput}`);
+        const response = await fetch(`https://pos-sistema-yi075.onrender.com/api/sri/${cedulaInput}`);
         const data = await response.json();
 
         if (!response.ok) {
