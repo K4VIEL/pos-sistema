@@ -1248,16 +1248,37 @@ async function seleccionarClienteAutocomplete(valorInput) {
       await procesarVenta(metodo);
     }
 
-    async function procesarVenta(metodoPago) {
+    function generarClaveAcceso(fecha, tipoComprobante, ruc, ambiente, serie, secuencial) {
+    const secuencialPadded = String(secuencial).padStart(9, '0');
+    const codigoNumerico = "12345678";
+    const tipoEmision = "1";
+
+    const base = fecha + tipoComprobante + ruc + ambiente + serie + secuencialPadded + codigoNumerico + tipoEmision;
+
+    let suma = 0;
+    let factor = 7;
+    for (let i = 0; i < base.length; i++) {
+        suma += parseInt(base.charAt(i)) * factor;
+        factor = (factor === 2) ? 7 : factor - 1;
+    }
+    
+    let digitoVerificador = 11 - (suma % 11);
+    if (digitoVerificador === 11) digitoVerificador = 0;
+    else if (digitoVerificador === 10) digitoVerificador = 1;
+
+    return base + digitoVerificador;
+}
+
+async function procesarVenta(metodoPago) {
     const cart = obtenerCarritoActual();
     const clienteId = document.getElementById('pos-cliente-select').value;
     const clienteObj = dbClientes.find(c => c.id === clienteId);
+    
+    const clienteNombre = clienteObj ? `${clienteObj.nomb || clienteObj.nombre || ''} ${clienteObj.apellido || ''}`.trim() : 'Consumidor Final';
+    const clienteCedula = clienteObj?.cedula || '9999999999999';
 
-    const clienteNombre = clienteObj ? `${clienteObj.nomb} ${clienteObj.apellido}` : "Consumidor Final";
-    const clienteCedula = clienteObj?.cedula || "9999999999";
-
-    // 1. LEER EL ESTADO DEL INTERRUPTOR DEL SRI
     const esFacturaSri = document.getElementById('checkModoSri').checked;
+    console.log("¿Está activo el Modo SRI?:", esFacturaSri);
 
     for (const i of cart.items) {
         if (i.anulado) continue;
@@ -1281,43 +1302,67 @@ async function seleccionarClienteAutocomplete(valorInput) {
         usuario: usuarioActual.user,
         tipo_comprobante: esFacturaSri ? "FACTURA_SRI" : "NOTA_VENTA_LOCAL",
         punto_emision: (() => {
-        const textoModo = document.getElementById('textoModoSri')?.textContent || '';
-        if (textoModo.includes('LOCAL')) {
-            return "001-100"; // Si está en modo Local, fuerza la caja principal
-        } else {
-            return document.getElementById('punto-emision')?.value || "001-002"; // Si está en Online, toma la secundaria
-        }
-    })(),
+            const textoModo = document.getElementById('textoModoSri')?.textContent || '';
+            if (textoModo.includes('LOCAL')) {
+                return '001-100';
+            } else {
+                return document.getElementById('punto-emision')?.value || '001-002';
+            }
+        })()
     };
+
+    if (esFacturaSri) {
+        const localActual = dbLocales.find(l => String(l.id) === String(usuarioActual.localId));
         
-  const { error } = await supabaseClient.from('ventas').insert([ventaSupabase]);
-    if (error) return alert("Error al registrar venta: " + error.message);
+        if (localActual) {
+            const fechaActual = new Date();
+            const fechaStr = String(fechaActual.getDate()).padStart(2, '0') + 
+                             String(fechaActual.getMonth() + 1).padStart(2, '0') + 
+                             fechaActual.getFullYear();
+                             
+            const claveAcceso = generarClaveAcceso(
+                fechaStr, 
+                "01", 
+                localActual.ruc || "1792123456001", 
+                localActual.ambiente || "1", 
+                (localActual.codigo_establecimiento || "001") + (localActual.punto_emision || "100"),
+                ventaSupabase.id.replace('FAC-', '')
+            );
 
-    const localIdActual = usuarioActual ? (usuarioActual.localId || usuarioActual.local_id) : null;
-
-const ventalocal = {
-    local_id: localIdActual, // <--- AQUÍ FORZAMOS EL ID DEL LOCAL ACTUAL
-    localId: localIdActual,  // <--- Añadimos ambos por si acaso alguna vista usa uno u otro
-    local_nombre: ventaSupabase.local_nombre,
-    cliente_nombre: ventaSupabase.cliente_nombre,
-    cliente_cedula: ventaSupabase.cliente_cedula,
-    metodo_pago: ventaSupabase.metodo_pago,
-    fecha: ventaSupabase.fecha,
-    items: ventaSupabase.items,
-    total: ventaSupabase.total,
-    usuario: ventaSupabase.usuario,
-    tipo_comprobante: ventaSupabase.tipo_comprobante,
-    punto_emision: ventaSupabase.punto_emision
-};
-      dbVentas.push(ventaLocal);
-      mostrarFactura(ventaLocal);
-
-      carritos = carritos.filter(c => c.id !== cart.id);
-      if (carritos.length === 0) carritos.push({ id: Date.now(), nombre: 'Principal 1', items: [] });
-      carritoActivoId = carritos[0].id;
-      renderizarCarritosTabs();
+            ventaSupabase.claveAcceso = claveAcceso;
+            console.log("Clave de Acceso SRI generada para este local:", claveAcceso);
+        }
     }
 
+    const { error } = await supabaseClient.from('ventas').insert(ventaSupabase);
+    if (error) return alert('Error al registrar venta: ' + error.message);
+
+    const localIdActual = usuarioActual ? (usuarioActual.localId || usuarioActual.local_id) : null;
+    
+    const ventralocal = {
+        local_id: localIdActual,
+        local_id_alias: localIdActual,
+        local_nombre: ventaSupabase.local_nombre,
+        cliente_nombre: ventaSupabase.cliente_nombre,
+        cliente_cedula: ventaSupabase.cliente_cedula,
+        metodo_pago: ventaSupabase.metodo_pago,
+        fecha: ventaSupabase.fecha,
+        items: ventaSupabase.items,
+        total: ventaSupabase.total,
+        usuario: ventaSupabase.usuario,
+        tipo_comprobante: ventaSupabase.tipo_comprobante,
+        punto_emision: ventaSupabase.punto_emision,
+        clave_acceso: ventaSupabase.claveAcceso || null
+    };
+
+    dbVentas.push(ventralocal);
+    mostrarFactura(ventralocal);
+
+    carritos = carritos.filter(c => c.id !== cart.id);
+    if (carritos.length === 0) carritos.push({ id: Date.now(), nombre: "Principal 1", items: [] });
+    carritoActivoId = carritos[0].id;
+    renderizarCarritosTabs();
+}
     // FUNCIÓN DE FACTURA ACTUALIZADA PARA LEER DATOS DIRECTOS DEL LOCAL ASIGNADO
     function mostrarFactura(v) {
       // Buscamos la información detallada del local en nuestra lista descargada desde Supabase
@@ -2200,6 +2245,7 @@ async function guardarFirmaDigital() {
 
 </script>
   </script>
+  
   <!-- MODAL CONFIGURACIÓN FIRMA DIGITAL -->
 <div id="modal-firma-config" class="modal-overlay" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 10000; align-items: center; justify-content: center; padding: 20px;">
     <div class="modal-box" style="background: #fff; padding: 24px; border-radius: 16px; width: 100%; max-width: 420px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);">
