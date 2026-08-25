@@ -1,4 +1,4 @@
-// 2. Ruta para procesar la factura y consultar datos en Supabase
+// 2. Ruta para procesar la factura, consultar datos en Supabase y firmarla
 app.post('/api/emitir-factura', async (req, res) => {
     try {
         const { ventaId, localId } = req.body;
@@ -7,7 +7,7 @@ app.post('/api/emitir-factura', async (req, res) => {
             return res.status(400).json({ success: false, error: "Faltan datos: ventaId o localId son requeridos." });
         }
 
-        // 1. Obtener la información del local desde Supabase
+        // 1. Obtener la información del local desde Supabase (incluyendo la firma y su clave)
         const { data: localInfo, error: errorLocal } = await supabase
             .from('locales')
             .select('*')
@@ -16,6 +16,11 @@ app.post('/api/emitir-factura', async (req, res) => {
 
         if (errorLocal || !localInfo) {
             return res.status(404).json({ success: false, error: "No se encontró la información fiscal del local." });
+        }
+
+        // Verificar si tiene firma cargada
+        if (!localInfo.firma_p12_url || !localInfo.firma_password) {
+            return res.status(400).json({ success: false, error: "Este local no tiene configurada una firma electrónica o contraseña." });
         }
 
         // 2. Obtener los detalles de la venta desde Supabase
@@ -29,7 +34,7 @@ app.post('/api/emitir-factura', async (req, res) => {
             return res.status(404).json({ success: false, error: "No se encontró la venta especificada." });
         }
 
-        console.log(`[SRI] Procesando factura para el local: ${localInfo.nombre_comercial || localInfo.nombre} (Punto: ${localInfo.punto_emision})`);
+        console.log(`[SRI] Procesando y firmando factura para: ${localInfo.nombre_comercial || localInfo.nombre}`);
 
         // 3. Formatear la fecha para el XML (DDMMAAAA)
         const fechaObj = new Date(ventaInfo.fecha);
@@ -96,15 +101,37 @@ app.post('/api/emitir-factura', async (req, res) => {
     </detalles>
 </factura>`;
 
+        // 5. Procesar la firma digital usando node-forge con los datos de Supabase
+        const p12Binary = forge.util.decode64(localInfo.firma_p12_url);
+        const p12Der = forge.util.createBuffer(p12Binary);
+        const p12AsPkcs12 = forge.pkcs12.pkcs12FromAsn1(p12Der, localInfo.firma_password);
+
+        let privateKey = null;
+        let certificate = null;
+
+        for (const safeBag of p12AsPkcs12.safeBags) {
+            if (safeBag.type === forge.pki.oids.pkcs8ShroudedKeyBag || safeBag.type === forge.pki.oids.keyBag) {
+                privateKey = safeBag.key || forge.pki.privateKeyToAsn1(safeBag.pkcs8);
+            } else if (safeBag.type === forge.pki.oids.certBag) {
+                certificate = safeBag.cert;
+            }
+        }
+
+        if (!privateKey || !certificate) {
+            throw new Error("No se pudo descifrar la llave privada o certificado. Verifica la contraseña de la firma.");
+        }
+
+        console.log("[Firma Digital] Llave privada y certificado leídos y validados con éxito desde Supabase.");
+
         return res.json({
             success: true,
-            mensaje: `XML generado con éxito para el local ${localInfo.nombre_comercial || localInfo.nombre}`,
+            mensaje: `Factura generada y firmada digitalmente con éxito para ${localInfo.nombre_comercial}`,
             claveAcceso: ventaInfo.claveAcceso,
             xmlGenerado: xmlContent
         });
 
     } catch (error) {
-        console.error('Error al emitir factura y generar XML:', error);
+        console.error('Error al emitir y firmar factura:', error);
         return res.status(500).json({ success: false, error: error.message });
     }
 });
