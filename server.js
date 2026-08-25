@@ -1,71 +1,3 @@
-const forge = require('node-forge');
-const express = require('express');
-const cors = require('cors');
-const https = require('https');
-const { createClient } = require('@supabase/supabase-js');
-require('dotenv').config();
-
-const app = express();
-
-app.use(cors({ origin: '*' }));
-app.use(express.json());
-
-// Conexión a Supabase usando las variables de entorno
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-// 1. Ruta para buscar contribuyentes en el SRI (RUC / Cédula)
-app.get('/api/sri/:identificacion', (req, res) => {
-    const { identificacion } = req.params;
-
-    if (!identificacion) {
-        return res.status(400).json({ error: 'Ingresa una cédula o RUC.' });
-    }
-
-    const id = identificacion.trim();
-    const ruc = id.length === 10 ? id + '001' : id;
-
-    const options = {
-        hostname: 'srienlinea.sri.gob.ec',
-        path: `/sri-catastro-sujeto-servicio-internet/rest/ConsolidadoContribuyente/obtenerPorNumerosRuc?ruc=${ruc}`,
-        method: 'GET',
-        headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-            'Accept': 'application/json, text/plain, */*'
-        },
-        rejectUnauthorized: false
-    };
-
-    const request = https.request(options, (response) => {
-        let data = '';
-
-        response.on('data', (chunk) => { data += chunk; });
-
-        response.on('end', () => {
-            try {
-                const parsed = JSON.parse(data);
-                if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].razonSocial) {
-                    return res.json({
-                        exito: true,
-                        razonSocial: parsed[0].razonSocial
-                    });
-                } else {
-                    return res.status(404).json({ error: 'No se encontraron datos en el SRI para esta identificación.' });
-                }
-            } catch (err) {
-                return res.status(404).json({ error: 'Número no encontrado en los registros del SRI.' });
-            }
-        });
-    });
-
-    request.on('error', () => {
-        return res.status(500).json({ error: 'Error al conectar con el SRI.' });
-    });
-
-    request.end();
-});
-
 // 2. Ruta para procesar la factura y consultar datos en Supabase
 app.post('/api/emitir-factura', async (req, res) => {
     try {
@@ -78,7 +10,7 @@ app.post('/api/emitir-factura', async (req, res) => {
         // 1. Obtener la información del local desde Supabase
         const { data: localInfo, error: errorLocal } = await supabase
             .from('locales')
-            .select('nombre_comercial, codigo_establecimiento, punto_emision, firma_p12_url, firma_password')
+            .select('*')
             .eq('id', localId)
             .single();
 
@@ -97,23 +29,82 @@ app.post('/api/emitir-factura', async (req, res) => {
             return res.status(404).json({ success: false, error: "No se encontró la venta especificada." });
         }
 
-        console.log(`[SRI] Procesando factura para el local: ${localInfo.nombre_comercial} (Punto: ${localInfo.punto_emision})`);
+        console.log(`[SRI] Procesando factura para el local: ${localInfo.nombre_comercial || localInfo.nombre} (Punto: ${localInfo.punto_emision})`);
+
+        // 3. Formatear la fecha para el XML (DDMMAAAA)
+        const fechaObj = new Date(ventaInfo.fecha);
+        const fechaEmision = String(fechaObj.getDate()).padStart(2, '0') + '/' +
+                             String(fechaObj.getMonth() + 1).padStart(2, '0') + '/' +
+                             fechaObj.getFullYear();
+
+        // 4. Construir la estructura oficial del XML del SRI
+        const xmlContent = `<?xml version="1.0" encoding="UTF-8"?>
+<factura id="comprobante" version="1.1.0">
+    <infoTributaria>
+        <ambiente>${localInfo.ambiente || "1"}</ambiente>
+        <tipoEmision>1</tipoEmision>
+        <razonSocial>${localInfo.razon_social || localInfo.nombre || "Mi Empresa"}</razonSocial>
+        <nombreComercial>${localInfo.nombre_comercial || localInfo.nombre || "Mi Tienda"}</nombreComercial>
+        <ruc>${localInfo.ruc || "1792123456001"}</ruc>
+        <claveAcceso>${ventaInfo.claveAcceso}</claveAcceso>
+        <codDoc>01</codDoc>
+        <estab>${localInfo.codigo_establecimiento || "001"}</estab>
+        <ptoEmi>${localInfo.punto_emision || "002"}</ptoEmi>
+        <secuencial>${String(ventaInfo.id).replace('FAC-', '').padStart(9, '0')}</secuencial>
+        <dirMatriz>${localInfo.direccion || "Matriz Principal"}</dirMatriz>
+    </infoTributaria>
+    <infoFactura>
+        <fechaEmision>${fechaEmision}</fechaEmision>
+        <dirEstablecimiento>${localInfo.direccion || "Sucursal"}</dirEstablecimiento>
+        <obligadoContabilidad>SI</obligadoContabilidad>
+        <tipoIdentificacionComprador>${ventaInfo.cliente_cedula.length === 13 ? "04" : (ventaInfo.cliente_cedula === "9999999999999" ? "07" : "05")}</tipoIdentificacionComprador>
+        <razonSocialComprador>${ventaInfo.cliente_nombre}</razonSocialComprador>
+        <identificacionComprador>${ventaInfo.cliente_cedula}</identificacionComprador>
+        <totalSinImpuestos>${ventaInfo.total.toFixed(2)}</totalSinImpuestos>
+        <totalDescuento>0.00</totalDescuento>
+        <totalConImpuestos>
+            <totalImpuesto>
+                <codigo>2</codigo>
+                <codigoPorcentaje>2</codigoPorcentaje>
+                <baseImponible>${ventaInfo.total.toFixed(2)}</baseImponible>
+                <valor>0.00</valor>
+            </totalImpuesto>
+        </totalConImpuestos>
+        <propina>0.00</propina>
+        <importeTotal>${ventaInfo.total.toFixed(2)}</importeTotal>
+        <moneda>DOLAR</moneda>
+    </infoFactura>
+    <detalles>
+        ${(ventaInfo.items || []).map(item => `
+        <detalle>
+            <codigoPrincipal>${item.id}</codigoPrincipal>
+            <descripcion>${item.nombre || item.descripcion || "Producto"}</descripcion>
+            <cantidad>${item.cantidad}</cantidad>
+            <precioUnitario>${item.precio.toFixed(2)}</precioUnitario>
+            <descuento>0.00</descuento>
+            <precioTotalSinImpuesto>${(item.cantidad * item.precio).toFixed(2)}</precioTotalSinImpuesto>
+            <impuestos>
+                <impuesto>
+                    <codigo>2</codigo>
+                    <codigoPorcentaje>2</codigoPorcentaje>
+                    <tarifa>12</tarifa>
+                    <baseImponible>${(item.cantidad * item.precio).toFixed(2)}</baseImponible>
+                    <valor>0.00</valor>
+                </impuesto>
+            </impuestos>
+        </detalle>`).join('')}
+    </detalles>
+</factura>`;
 
         return res.json({
             success: true,
-            mensaje: `Factura procesada con éxito para el local ${localInfo.nombre_comercial}`,
-            establecimiento: localInfo.codigo_establecimiento || '001',
-            puntoEmision: localInfo.punto_emision || '100',
-            estadoSri: "AUTORIZADO_PRUEBA"
+            mensaje: `XML generado con éxito para el local ${localInfo.nombre_comercial || localInfo.nombre}`,
+            claveAcceso: ventaInfo.claveAcceso,
+            xmlGenerado: xmlContent
         });
 
     } catch (error) {
-        console.error('Error al emitir factura:', error);
+        console.error('Error al emitir factura y generar XML:', error);
         return res.status(500).json({ success: false, error: error.message });
     }
-});
-
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => {
-    console.log(`Servidor activo en puerto ${PORT}`);
 });
