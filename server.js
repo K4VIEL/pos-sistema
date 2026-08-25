@@ -1,3 +1,4 @@
+const forge = require('node-forge');
 const express = require('express');
 const cors = require('cors');
 const https = require('https');
@@ -71,21 +72,21 @@ app.post('/api/emitir-factura', async (req, res) => {
         const { ventaId, localId } = req.body;
 
         if (!ventaId || !localId) {
-            return res.status(400).json({ success: false, error: 'Faltan datos obligatorios (ventaId o localId)' });
+            return res.status(400).json({ success: false, error: "Faltan datos: ventaId o localId son requeridos." });
         }
 
-        // Obtener configuración fiscal del local desde Supabase
+        // 1. Obtener la información del local desde Supabase
         const { data: localInfo, error: errorLocal } = await supabase
             .from('locales')
-            .select('*')
+            .select('nombre_comercial, codigo_establecimiento, punto_emision, firma_p12_url, firma_password')
             .eq('id', localId)
             .single();
 
         if (errorLocal || !localInfo) {
-            return res.status(404).json({ success: false, error: 'No se encontró la información fiscal del local.' });
+            return res.status(404).json({ success: false, error: "No se encontró la información fiscal del local." });
         }
 
-        // Obtener los detalles de la venta desde Supabase
+        // 2. Obtener los detalles de la venta desde Supabase
         const { data: ventaInfo, error: errorVenta } = await supabase
             .from('ventas')
             .select('*')
@@ -93,17 +94,17 @@ app.post('/api/emitir-factura', async (req, res) => {
             .single();
 
         if (errorVenta || !ventaInfo) {
-            return res.status(404).json({ success: false, error: 'No se encontró la venta especificada.' });
+            return res.status(404).json({ success: false, error: "No se encontró la venta especificada." });
         }
 
-        console.log(`[SRI] Procesando factura para el local: ${localInfo.nombre} (Punto: ${localInfo.punto_emision})`);
+        console.log(`[SRI] Procesando factura para el local: ${localInfo.nombre_comercial} (Punto: ${localInfo.punto_emision})`);
 
         return res.json({
             success: true,
-            mensaje: `Factura procesada con éxito para el local ${localInfo.nombre}`,
+            mensaje: `Factura procesada con éxito para el local ${localInfo.nombre_comercial}`,
             establecimiento: localInfo.codigo_establecimiento || '001',
             puntoEmision: localInfo.punto_emision || '100',
-            estadoSri: 'AUTORIZADO_PRUEBA'
+            estadoSri: "AUTORIZADO_PRUEBA"
         });
 
     } catch (error) {
