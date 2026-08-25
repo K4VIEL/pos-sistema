@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -661,15 +660,23 @@
 
     async function cargarDatosSupabase() {
       try {
-        const [resLoc, resUsr, resProd, resCli, resVen, resArq, resMer] = await Promise.all([
-          supabaseClient.from('locales').select('*'),
-          supabaseClient.from('usuarios').select('*'),
-          supabaseClient.from('productos').select('*'),
-          supabaseClient.from('clientes').select('*'),
-          supabaseClient.from('ventas').select('*'),
-          supabaseClient.from('arqueos').select('*').order('fecha_apertura', { ascending: false }),
-          supabaseClient.from('mermas_auditoria').select('*').order('fecha_hora', { ascending: false })
-        ]);
+            const [resLoc, resUsr, resProd, resCli, resArq, resMer] = await Promise.all([
+        supabaseClient.from('locales').select('*'),
+        supabaseClient.from('usuarios').select('*'),
+        supabaseClient.from('productos').select('*'),
+        supabaseClient.from('clientes').select('*'),
+        supabaseClient.from('arqueos').select('*').order('fecha_apertura', { ascending: false }),
+        supabaseClient.from('mermas_auditoria').select('*').order('fecha_hora', { ascending: false })
+    ]);
+
+    const localIdActual = usuarioActual ? usuarioActual.localId : null;
+    const { data: resVen, error: errVen } = await supabaseClient
+        .from('ventas')
+        .select('*')
+        .eq('local_id', localIdActual);
+
+    dbVentas = resVen || [];
+
 
         // Mapeo actualizado incluyendo las nuevas columnas del local
         if (resLoc.data) {
