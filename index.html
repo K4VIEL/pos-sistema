@@ -1700,22 +1700,6 @@ async function consultarSRI() {
       alert('Local registrado con éxito');
     }
 
-    function renderLocales() {
-      document.getElementById('loc-tabla').innerHTML = dbLocales.map(l => {
-        const esMatriz = esLocalMatriz(l.id, l.nombre);
-        const accionBtn = esMatriz 
-          ? '<span style="color:var(--text-muted); font-size:0.85rem; font-weight:bold;">Protegido</span>' 
-          : `<button class="btn btn-danger btn-sm" onclick="eliminarLocal('${l.id}')">Eliminar</button>`;
-
-        return `<tr>
-          <td>${l.id}</td>
-          <td><b>${l.nombre}</b><br><small>${l.propietario || ''}</small></td>
-          <td>RUC: ${l.ruc || 'N/A'}<br><small>${l.direccion || 'N/A'}</small></td>
-          <td>${accionBtn}</td>
-        </tr>`;
-      }).join('');
-    }
-
     async function eliminarLocal(id) {
       const localTarget = dbLocales.find(l => String(l.id) === String(id));
       if (localTarget && esLocalMatriz(localTarget.id, localTarget.nombre)) {
@@ -1754,20 +1738,90 @@ async function consultarSRI() {
       alert('Usuario creado');
     }
 
+    function renderLocales() {
+    const contenedor = document.getElementById('loc-tabla');
+    if (!contenedor) return;
+
+    contenedor.innerHTML = dbLocales.map(l => {
+        const esMatriz = (String(l.id) === 'LOC-001');
+        const accionLocal = esMatriz ? 
+            `<span style="color: gray; font-size: 0.85rem; font-weight: bold;">Protegido</span>` : 
+            `<button class="btn btn-danger btn-sm" onclick="eliminarLocal('${l.id}')">Eliminar</button>`;
+
+        return `
+            <tr>
+                <td>${l.id}</td>
+                <td><strong>${l.nombre}</strong></td>
+                <td>${l.ruc || 'N/A'} / ${l.direccion || 'N/A'}</td>
+                <td>${accionLocal}</td>
+            </tr>
+        `;
+    }).join('');
+}
+
     function renderUsuarios() {
-      document.getElementById('usr-tabla').innerHTML = dbUsuarios.map(u => `
-        <tr><td><b>${u.user}</b></td><td>${u.rol}</td><td>${dbLocales.find(l=>String(l.id)===String(u.localId))?.nombre || 'N/A'}</td>
-        <td>${u.user !== 'Blackdiamond' ? `<button class="btn btn-danger btn-sm" onclick="eliminarUsuario('${u.id}')">Eliminar</button>` : '<em>Protegido</em>'}</td></tr>
-      `).join('');
+    document.getElementById('usr-tabla').innerHTML = dbUsuarios.map(u => {
+        const esDuenoLocal = (u.user !== 'BlackDiamond');
+        const accionUsuario = esDuenoLocal ? 
+            `<button class="btn btn-danger btn-sm" onclick="eliminarUsuario('${u.id}')">Eliminar</button>` : 
+            `<em>Protegido</em>`;
+
+        return `
+            <tr>
+                <td><strong>${u.user}</strong></td>
+                <td>${u.rol || 'N/A'}</td>
+                <td>${dbLocales.find(l => String(l.id) === String(u.local_id))?.nombre || 'N/A'}</td>
+                <td>
+                    <div style="display: flex; gap: 5px; align-items: center;">
+                        <input type="password" id="pass-${u.id}" placeholder="Nueva clave" style="width: 110px; padding: 3px; font-size: 0.85rem;">
+                        <button onclick="forzarCambioClave('${u.id}', document.getElementById('pass-${u.id}').value)" class="btn btn-warning btn-sm" style="font-size: 0.85rem; white-space: nowrap;">
+                            Cambiar Clave
+                        </button>
+                    </div>
+                </td>
+                <td>${accionUsuario}</td>
+            </tr>
+        `;
+    }).join('');
+}
+
+    async function forzarCambioClave(userIdLoca, nuevaClave) {
+    if (!nuevaClave || nuevaClave.trim().length < 6) {
+        alert("La contraseña temporal debe tener al menos 6 caracteres.");
+        return;
     }
 
-    async function eliminarUsuario(id) {
-      if (!confirm("¿Eliminar usuario?")) return;
-      await supabaseClient.from('usuarios').delete().eq('id', id);
-      dbUsuarios = dbUsuarios.filter(u => u.id !== id);
-      if (esDuenoLocal()) renderEmpleadosCajeros();
-      else renderUsuarios();
+    const usuarioObj = dbUsuarios.find(u => String(u.id) === String(userIdLoca));
+    if (!usuarioObj) {
+        alert("No se encontró el usuario localmente.");
+        return;
     }
+
+    if (!confirm(`¿Estás seguro de cambiar la contraseña de ${usuarioObj.user}?`)) return;
+
+    try {
+        // Actualizamos la contraseña directamente en la tabla 'usuarios' de Supabase
+        const { error } = await supabaseClient
+            .from('usuarios')
+            .update({ pass: nuevaClave.trim() })
+            .eq('id', userIdLoca);
+
+        if (error) {
+            throw error;
+        }
+
+        alert("¡Contraseña actualizada exitosamente en la base de datos!");
+        document.getElementById(`pass-${userIdLoca}`).value = "";
+        
+        // Recargamos los datos y la vista
+        await cargarDatosSupabase();
+        renderUsuarios();
+
+    } catch (error) {
+        alert("Error al actualizar la clave: " + error.message);
+        console.error("Detalle del error:", error);
+    }
+}
 
     window.addEventListener('DOMContentLoaded', async () => {
       if (usuarioActual) {
@@ -1775,6 +1829,7 @@ async function consultarSRI() {
         aplicarSesionActiva();
       }
     });
+
   </script>
 </body>
   </html>
