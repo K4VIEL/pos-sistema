@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -32,16 +31,16 @@
 
     /* MODAL GENERAL */
     .modal-overlay { 
-    position: fixed !important; 
-    inset: 0 !important; 
-    background: rgba(15, 23, 42, 0.6) !important; 
-    z-index: 10000 !important; 
-    display: none; 
-    align-items: flex-start !important; /* Forzamos que comience desde arriba */
-    justify-content: center !important; 
-    padding-top: 40px !important; 
-    overflow-y: auto !important; 
-}
+      position: fixed !important; 
+      inset: 0 !important; 
+      background: rgba(15, 23, 42, 0.6) !important; 
+      z-index: 10000 !important; 
+      display: none; 
+      align-items: flex-start !important;
+      justify-content: center !important; 
+      padding-top: 40px !important; 
+      overflow-y: auto !important; 
+    }
 
     /* LAYOUT ADAPTATIVO */
     .app-container { display: flex; flex: 1; flex-direction: column; }
@@ -138,7 +137,7 @@
 
   <!-- MODAL DE CÁMARA -->
   <div id="modal-camara" class="modal-overlay">
-    <div class="modal-box" style="text-align: center;">
+    <div class="modal-box" style="text-align: center; background: white; padding: 20px; border-radius: 12px; max-width: 400px; width: 100%;">
       <h3>Escanear Código de Barras</h3>
       <div id="reader" style="width: 100%; border-radius: 8px; overflow: hidden;"></div>
       <button class="btn btn-danger" style="margin-top: 15px;" onclick="cerrarCamara()">Cerrar Cámara</button>
@@ -147,7 +146,7 @@
 
   <!-- MODAL DE COBRO -->
   <div id="modal-cobro" class="modal-overlay">
-    <div class="modal-box">
+    <div class="modal-box" style="background: white; padding: 20px; border-radius: 12px; max-width: 400px; width: 100%;">
       <h3>Confirmar Pago</h3>
       <div style="background:var(--bg); padding:12px; border-radius:8px; margin-bottom:12px; text-align:center;">
         <span style="font-size:0.85rem; color:var(--text-muted);">Total a pagar:</span>
@@ -216,13 +215,14 @@
               <div class="cart-tabs" id="pos-cart-tabs"></div>
 
               <label>Cliente (Opcional)</label>
-<div style="margin-bottom: 8px;">
-    <input type="text" id="pos-cliente-buscar" class="form-control" list="lista-clientes-opciones" placeholder="Escribe cédula o nombre..." oninput="seleccionarClienteAutocomplete(this.value)">
-    <datalist id="lista-clientes-opciones">
-        <!-- Se llena automáticamente con tus clientes -->
-    </datalist>
-    <input type="hidden" id="pos-cliente-select" value="Consumidor Final">
-</div>
+              <div style="margin-bottom: 8px;">
+                <input type="text" id="pos-cliente-buscar" class="form-control" list="lista-clientes-opciones" placeholder="Escribe cédula o nombre..." oninput="seleccionarClienteAutocomplete(this.value)">
+                <datalist id="lista-clientes-opciones">
+                    <!-- Se llena automáticamente con tus clientes -->
+                </datalist>
+                <input type="hidden" id="pos-cliente-select" value="Consumidor Final">
+              </div>
+
               <div class="table-responsive" style="margin-top:10px;">
                 <table>
                   <thead><tr><th>Prod</th><th>Cant</th><th>Total</th><th>Acción</th></tr></thead>
@@ -230,94 +230,91 @@
                 </table>
               </div>
               <h2 style="margin-top:15px; text-align:right;">Total: $<span id="pos-total">0.00</span></h2>
-            <!-- INTERRUPTOR DE MODO SRI VS VENTA LOCAL -->
-            <!-- INDICADOR / INTERRUPTOR DE SEÑAL SRI (LOCAL VS SRI) -->
-            <div class="d-flex justify-content-between align-items-center p-2 mb-2 bg-light rounded border" style="font-size: 0.85rem; margin-top: 10px;">
-                <span class="text-muted fw-bold">Modo de Emisión:</span>
-                <div onclick="toggleModoSri()" id="contenedorModoSri" style="cursor: pointer; display: flex; align-items: center; gap: 6px; padding: 4px 12px; background: #e9ecef; border-radius: 20px; transition: 0.3s; border: 1px solid #ced4da;">
-                    <i id="iconoModoSeñal" class="fas fa-wifi text-secondary"></i>
-                    <span id="textoModoSeñal" class="fw-bold text-secondary" style="font-size: 0.8rem;">LOCAL</span>
-                    <input type="checkbox" id="checkModoSri" style="display: none;">
-                </div>
-            </div>
+              
+              <!-- INDICADOR / INTERRUPTOR DE SEÑAL SRI (LOCAL VS SRI) -->
+              <div class="d-flex justify-content-between align-items-center p-2 mb-2 bg-light rounded border" style="font-size: 0.85rem; margin-top: 10px; display:flex; justify-content:space-between; align-items:center;">
+                  <span class="text-muted fw-bold">Modo de Emisión:</span>
+                  <div onclick="toggleModoSri()" id="contenedorModoSri" style="cursor: pointer; display: flex; align-items: center; gap: 6px; padding: 4px 12px; background: #e9ecef; border-radius: 20px; transition: 0.3s; border: 1px solid #ced4da;">
+                      <i id="iconoModoSeñal" class="fas fa-wifi text-secondary"></i>
+                      <span id="textoModoSeñal" class="fw-bold text-secondary" style="font-size: 0.8rem;">LOCAL</span>
+                      <input type="checkbox" id="checkModoSri" style="display: none;">
+                  </div>
+              </div>
 
               <button class="btn btn-primary" onclick="abrirModalCobro()">Cobrar e Imprimir</button>
-              <!-- SELECTOR DE PUNTO DE EMISIÓN (CAJAS / ESTABLECIMIENTOS) -->
-            <div class="mb-2 p-2 bg-light rounded border" style="font-size: 0.85rem;">
-                <label for="pos-punto-emision" class="form-label fw-bold text-muted mb-1">Punto de Emisión:</label>
-                <select id="punto-emision" class="pos-punto-emision form-control form-control-sm">
-                    <option value="001-100">001-100 (Caja Principal)</option>
-                    <option value="001-002">001-002 (Caja Secundaria)</option>
-                </select>
-            </div>
+              
+              <!-- SELECTOR DE PUNTO DE EMISIÓN -->
+              <div class="mb-2 p-2 bg-light rounded border" style="font-size: 0.85rem; margin-top: 10px;">
+                  <label for="punto-emision" class="form-label fw-bold text-muted mb-1">Punto de Emisión:</label>
+                  <select id="punto-emision" class="pos-punto-emision form-control form-control-sm">
+                      <option value="001-100">001-100 (Caja Principal)</option>
+                      <option value="001-002">001-002 (Caja Secundaria)</option>
+                  </select>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       <!-- MODAL CONFIGURACIÓN FIRMA DIGITAL -->
-<div id="modal-firma-config" class="modal-overlay" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 10000; align-items: center; justify-content: center; padding: 20px;">
-    <div class="modal-box" style="background: #fff; padding: 24px; border-radius: 16px; width: 100%; max-width: 420px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);">
-        <h3 style="font-size: 1.25rem; margin-bottom: 15px; color: var(--text); text-align: center;">Configuración de Firma Electrónica</h3>
-        <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 15px;">
-            Sube tu archivo de firma digital (.p12 / .pfx) y escribe su contraseña correspondiente para este local.
-        </p>
-        
-        <div style="margin-bottom: 15px;">
-            <label style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 5px;">Archivo de Firma (.p12 / .pfx)</label>
-            <input type="file" id="input-archivo-p12" accept=".p12,.pfx" style="width: 100%; font-size: 0.85rem;">
-        </div>
+      <div id="modal-firma-config" class="modal-overlay" style="display: none;">
+          <div class="modal-box" style="background: #fff; padding: 24px; border-radius: 16px; width: 100%; max-width: 420px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);">
+              <h3 style="font-size: 1.25rem; margin-bottom: 15px; color: var(--text); text-align: center;">Configuración de Firma Electrónica</h3>
+              <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 15px;">
+                  Sube tu archivo de firma digital (.p12 / .pfx) y escribe su contraseña correspondiente para este local.
+              </p>
+              
+              <div style="margin-bottom: 15px;">
+                  <label style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 5px;">Archivo de Firma (.p12 / .pfx)</label>
+                  <input type="file" id="input-archivo-p12" accept=".p12,.pfx" style="width: 100%; font-size: 0.85rem;">
+              </div>
 
-        <div style="margin-bottom: 20px;">
-            <label style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 5px;">Contraseña de la Firma</label>
-            <input type="password" id="input-firma-password" placeholder="Ingresa la clave de tu firma" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;">
-        </div>
+              <div style="margin-bottom: 20px;">
+                  <label style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 5px;">Contraseña de la Firma</label>
+                  <input type="password" id="input-firma-password" placeholder="Ingresa la clave de tu firma" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;">
+              </div>
 
-        <div style="display: flex; gap: 10px; justify-content: flex-end;">
-            <button onclick="cerrarConfigFirma()" style="background: #e2e8f0; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">Cancelar</button>
-            <button onclick="guardarFirmaDigital()" style="background: #0284c7; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600;">Guardar Firma</button>
-        </div>
-    </div>
-</div>
+              <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                  <button onclick="cerrarConfigFirma()" style="background: #e2e8f0; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">Cancelar</button>
+                  <button onclick="guardarFirmaDigital()" style="background: #0284c7; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600;">Guardar Firma</button>
+              </div>
+          </div>
+      </div>
 
       <!-- VISTA DE FACTURAS E HISTORIAL -->
-<section id="vista-facturas" class="page-section" style="display: none;">
-    <div class="card">
-        <h3 style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 12px;">Historial de Facturas y Comprobantes</h3>
-        <p style="font-size: 0.8rem; color: #6c757d; margin-bottom: 15px;">Consulta, filtra y revisa todas las ventas emitidas por punto de emisión.</p>
-        
-        <!-- Filtros rápidos -->
-        <div class="d-flex gap-2 mb-3" style="flex-wrap: wrap;">
-            <input type="text" id="filtro-buscar-factura" class="form-control form-control-sm" placeholder="Buscar por cliente o ID..." style="max-width: 250px;" oninput="filtrarFacturas()">
-            <select id="filtro-punto-emision" class="form-control form-control-sm" style="max-width: 180px;" onchange="filtrarFacturas()">
-                <option value="">Todos los Puntos</option>
-                <option value="001-100">001-100 (Principal)</option>
-                <option value="001-002">001-002 (Secundaria)</option>
-            </select>
-        </div>
+      <section id="vista-facturas" class="page-section" style="display: none;">
+          <div class="card">
+              <h3 style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 12px;">Historial de Facturas y Comprobantes</h3>
+              <p style="font-size: 0.8rem; color: #6c757d; margin-bottom: 15px;">Consulta, filtra y revisa todas las ventas emitidas por punto de emisión.</p>
+              
+              <div class="form-row" style="margin-bottom: 15px;">
+                  <input type="text" id="filtro-buscar-factura" class="form-control form-control-sm" placeholder="Buscar por cliente o ID..." oninput="filtrarFacturas()">
+                  <select id="filtro-punto-emision" class="form-control form-control-sm" onchange="filtrarFacturas()">
+                      <option value="">Todos los Puntos</option>
+                      <option value="001-100">001-100 (Principal)</option>
+                      <option value="001-002">001-002 (Secundaria)</option>
+                  </select>
+              </div>
 
-        <!-- Tabla de Facturas -->
-        <div class="table-responsive">
-            <table class="table table-sm table-striped" style="font-size: 0.85rem;">
-                <thead>
-                    <tr>
-                        <th>ID / Comprobante</th>
-                        <th>Cliente</th>
-                        <th>Fecha</th>
-                        <th>Punto Emisión</th>
-                        <th>Tipo</th>
-                        <th>Total</th>
-                        <th>Método</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="tabla-facturas-body">
-                    <!-- Las facturas se cargarán dinámicamente aquí -->
-                </tbody>
-            </table>
-        </div>
-    </div>
-</section>
+              <div class="table-responsive">
+                  <table class="table table-sm table-striped" style="font-size: 0.85rem;">
+                      <thead>
+                          <tr>
+                              <th>ID / Comprobante</th>
+                              <th>Cliente</th>
+                              <th>Fecha</th>
+                              <th>Punto Emisión</th>
+                              <th>Tipo</th>
+                              <th>Total</th>
+                              <th>Método</th>
+                              <th>Acciones</th>
+                          </tr>
+                      </thead>
+                      <tbody id="tabla-facturas-body"></tbody>
+                  </table>
+              </div>
+          </div>
+      </section>
 
       <!-- VISTA ARQUEO DE CAJA -->
       <section id="vista-arqueo" class="page-section">
@@ -401,14 +398,14 @@
         <div class="card">
           <h3>Registrar Cliente</h3>
           <label>Cédula / RUC *</label>
-<div style="display: flex; gap: 8px; margin-bottom: 10px;">
-    <label>Cédula / RUC *</label>
-<input type="text" id="cli-cedula" placeholder="Ej: 1312345678" maxlength="13" style="width: 100%; margin-bottom: 10px; padding: 8px;">
-<button type="button" class="btn btn-secondary" onclick="consultarSRI()" style="width: 100%; margin-bottom: 10px;">🔍 Buscar SRI</button></div>
-<div class="form-row">
-    <div><label>Nombre *</label><input type="text" id="cli-nombre" placeholder="Ej: Juan"></div>
-    <div><label>Apellido / Razón Social *</label><input type="text" id="cli-apellido" placeholder="Ej: Pérez"></div>
-</div>
+          <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+            <input type="text" id="cli-cedula" placeholder="Ej: 1312345678" maxlength="13" style="width: 100%; margin:0;">
+            <button type="button" class="btn btn-primary" onclick="consultarSRI()" style="width: auto; margin:0; white-space:nowrap;">🔍 Buscar SRI</button>
+          </div>
+          <div class="form-row">
+              <div><label>Nombre *</label><input type="text" id="cli-nombre" placeholder="Ej: Juan"></div>
+              <div><label>Apellido / Razón Social *</label><input type="text" id="cli-apellido" placeholder="Ej: Pérez"></div>
+          </div>
           <label>Correo Electrónico (Opcional)</label>
           <input type="email" id="cli-correo" placeholder="ejemplo@correo.com">
           <button class="btn btn-primary" onclick="guardarCliente()">Guardar Cliente</button>
@@ -493,7 +490,7 @@
         </div>
       </section>
 
-      <!-- VISTA PERSONAL DEL LOCAL (Exclusivo para el Dueño de Local) -->
+      <!-- VISTA PERSONAL DEL LOCAL -->
       <section id="vista-personal" class="page-section">
         <div class="card">
           <h3>Crear Cuenta para un Empleado/Cajero</h3>
@@ -513,7 +510,7 @@
         </div>
       </section>
 
-      <!-- VISTA LOCALES (Solo Matriz Principal) -->
+      <!-- VISTA LOCALES -->
       <section id="vista-locales" class="page-section">
         <div class="card">
           <h3>Crear Nueva Sucursal</h3>
@@ -539,7 +536,7 @@
         </div>
       </section>
 
-      <!-- VISTA USUARIOS (Solo Matriz Principal) -->
+      <!-- VISTA USUARIOS -->
       <section id="vista-usuarios" class="page-section">
         <div class="card">
           <h3>Crear Credencial para Sistema</h3>
@@ -558,7 +555,7 @@
           <h3>Usuarios del Sistema</h3>
           <div class="table-responsive">
             <table>
-              <thead><tr><th>Usuario</th><th>Rol</th><th>Sucursal</th><th>Acciones</th></tr></thead>
+              <thead><tr><th>Usuario</th><th>Rol</th><th>Sucursal</th><th>Clave Temporal</th><th>Acciones</th></tr></thead>
               <tbody id="usr-tabla"></tbody>
             </table>
           </div>
@@ -601,9 +598,7 @@
                 <th style="text-align: right; padding-bottom: 3px;">Total</th>
             </tr>
         </thead>
-        <tbody id="fac-items">
-            <!-- Los ítems se cargan dinámicamente aquí -->
-        </tbody>
+        <tbody id="fac-items"></tbody>
     </table>
 
     <hr style="border: none; border-top: 1px dashed #000; margin: 6px 0;">
@@ -650,26 +645,19 @@
     let carritos = [{ id: 1, nombre: 'Principal 1', items: [] }];
     let carritoActivoId = 1;
     let html5QrCode = null;
+    let clienteVentaSeleccionado = { cedula: 'Consumidor Final', nombre: 'Consumidor Final' };
 
     async function registrarAuditoriaMerma(idFactura, productoNombre, cantidad, montoTotal, motivo) {
       try {
-        const { error } = await supabaseClient
-          .from('mermas_auditoria')
-          .insert([
-            {
-              id_factura: String(idFactura),
-              producto_nombre: productoNombre,
-              cantidad: cantidad,
-              monto_total: montoTotal,
-              motivo: motivo || 'Anulado en factura',
-              fecha_hora: new Date().toISOString(),
-              usuario: usuarioActual ? usuarioActual.user : 'Sistema'
-            }
-          ]);
-
-        if (error) {
-          console.error('Error al registrar auditoría en Supabase:', error.message);
-        }
+        await supabaseClient.from('mermas_auditoria').insert([{
+          id_factura: String(idFactura),
+          producto_nombre: productoNombre,
+          cantidad: cantidad,
+          monto_total: montoTotal,
+          motivo: motivo || 'Anulado en factura',
+          fecha_hora: new Date().toISOString(),
+          usuario: usuarioActual ? usuarioActual.user : 'Sistema'
+        }]);
       } catch (err) {
         console.error('Error imprevisto al auditoriar merma:', err);
       }
@@ -704,7 +692,6 @@
           supabaseClient.from('mermas_auditoria').select('*').order('fecha_hora', { ascending: false })
         ]);
 
-        // Mapeo actualizado incluyendo las nuevas columnas del local
         if (resLoc.data) {
           dbLocales = resLoc.data.map(l => ({ 
             id: l.id, 
@@ -731,7 +718,9 @@
             fecha: v.fecha,
             items: v.items || [],
             total: v.total,
-            usuario: v.usuario || ''
+            usuario: v.usuario || '',
+            tipo_comprobante: v.tipo_comprobante || '',
+            punto_emision: v.punto_emision || ''
           }));
         }
 
@@ -767,7 +756,6 @@
 
     async function iniciarSesion() {
       await cargarDatosSupabase();
-
       const u = document.getElementById('login-user').value.trim();
       const p = document.getElementById('login-pass').value.trim();
       let user = dbUsuarios.find(x => x.user === u && x.pass === p);
@@ -792,12 +780,11 @@
       construirMenuNavegacion();
       poblardropdowns();
       cambiarVista('pos');
-      
     }
 
     function construirMenuNavegacion() {
-    const navBar = document.getElementById('app-nav-bar');
-    let html = `
+      const navBar = document.getElementById('app-nav-bar');
+      let html = `
         <button class="nav-btn active" id="btn-nav-pos" onclick="cambiarVista('pos')">
             <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.60 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"></path></svg>
             <span>Ventas</span>
@@ -814,9 +801,9 @@
             <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-4S17.66 4 16 4c-1.66 0-3 1.34-3 4s1.34 4 3 4zm-9 0c1.66 0 2.99-1.34 2.99-4S8.66 4 7 4C5.34 4 4 5.34 4 7s1.34 4 3 4zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"></path></svg>
             <span>Clientes</span>
         </button>
-    `;
+      `;
 
-    if (esUsuarioMatriz() || esDuenoLocal()) {
+      if (esUsuarioMatriz() || esDuenoLocal()) {
         html += `
             <button class="nav-btn" onclick="abrirConfigFirma()">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
@@ -839,51 +826,18 @@
                 <span>Reportes</span>
             </button>
         `;
-    }
+      }
 
-    function manejarCambioModoEmision() {
-    // Asegúrate de cambiar 'modo-emision' y 'punto-emision' si tus select tienen otros IDs
-    const selectModo = document.getElementById('modo-emision'); 
-    const selectPunto = document.getElementById('punto-emision');
-
-    if (!selectModo || !selectPunto) return;
-
-    const modoSeleccionado = selectModo.value; // 'LOCAL' u otro
-
-    if (modoSeleccionado === 'LOCAL') {
-        // Selecciona automáticamente la Caja Principal (001-100)
-        for (let i = 0; i < selectPunto.options.length; i++) {
-            let textoOpcion = selectPunto.options[i].text.toLowerCase();
-            if (textoOpcion.includes('principal') || selectPunto.options[i].value.includes('001-100')) {
-                selectPunto.selectedIndex = i;
-                break;
-            }
-        }
-        // Bloquea el selector para que no lo cambien manualmente en modo local
-        selectPunto.disabled = true;
-    } else {
-        // Si es online / secundario, habilita y pasa a la caja secundaria
-        selectPunto.disabled = false;
-        for (let i = 0; i < selectPunto.options.length; i++) {
-            let textoOpcion = selectPunto.options[i].text.toLowerCase();
-            if (textoOpcion.includes('secundaria') || selectPunto.options[i].value.includes('001-002')) {
-                selectPunto.selectedIndex = i;
-                break;
-            }
-        }
-    }
-}
-
-    if (esDuenoLocal()) {
+      if (esDuenoLocal()) {
         html += `
             <button class="nav-btn" id="btn-nav-personal" onclick="cambiarVista('personal')">
                 <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path></svg>
                 <span>Personal</span>
             </button>
         `;
-    }
+      }
 
-    if (esUsuarioMatriz()) {
+      if (esUsuarioMatriz()) {
         html += `
             <button class="nav-btn" id="btn-nav-locales" onclick="cambiarVista('locales')">
                 <svg viewBox="0 0 24 24"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2v-2h8v8zm-2-6h-2v2h2v-2zm0 4h-2v2h2v-2z"></path></svg>
@@ -894,10 +848,10 @@
                 <span>Usuarios</span>
             </button>
         `;
-    }
+      }
 
-    navBar.innerHTML = html;
-}
+      navBar.innerHTML = html;
+    }
 
     function cerrarSesion() {
       usuarioActual = null;
@@ -943,65 +897,57 @@
       poblarClientesDropdown();
     }
 
-    let clienteVentaSeleccionado = { cedula: 'Consumidor Final', nombre: 'Consumidor Final' };
+    function poblarClientesDropdown() {
+      const datalist = document.getElementById('lista-clientes-opciones');
+      if (!datalist) return;
 
-function poblarClientesDropdown() {
-    const datalist = document.getElementById('lista-clientes-opciones');
-    if (!datalist) return;
+      const clientesDelLocal = dbClientes.filter(c => String(c.localId || c.local_id) === String(usuarioActual.localId));
+      let html = `<option value="Consumidor Final">Consumidor Final</option>`;
 
-    // FILTRO ESTRICTO: Solo clientes creados originalmente en este local
-    const clientesDelLocal = dbClientes.filter(c => String(c.localId || c.local_id) === String(usuarioActual.localId));
-    
-    let html = `<option value="Consumidor Final">Consumidor Final</option>`;
+      clientesDelLocal.forEach(cli => {
+          const nombreMostrar = `${cli.nombre} ${cli.apellido}`.trim();
+          html += `<option value="${cli.cedula} - ${nombreMostrar}">${cli.cedula} | ${nombreMostrar}</option>`;
+      });
 
-    clientesDelLocal.forEach(cli => {
-        const nombreMostrar = `${cli.nombre} ${cli.apellido}`.trim();
-        html += `<option value="${cli.cedula} - ${nombreMostrar}">${cli.cedula} | ${nombreMostrar}</option>`;
-    });
-
-    datalist.innerHTML = html;
-}
-
-async function seleccionarClienteAutocomplete(valorInput) {
-    const hiddenInput = document.getElementById('pos-cliente-select');
-
-    if (!valorInput || valorInput.trim() === '' || valorInput.includes('Consumidor Final')) {
-        clienteVentaSeleccionado = { cedula: 'Consumidor Final', nombre: 'Consumidor Final' };
-        if (hiddenInput) hiddenInput.value = 'Consumidor Final';
-        return;
+      datalist.innerHTML = html;
     }
 
-    const partes = valorInput.split(' - ');
-    const cedulaBuscada = partes[0].trim();
+    async function seleccionarClienteAutocomplete(valorInput) {
+      const hiddenInput = document.getElementById('pos-cliente-select');
 
-    // 1. Busca en los clientes locales
-    let clienteEncontrado = dbClientes.find(c => c.cedula === cedulaBuscada);
+      if (!valorInput || valorInput.trim() === '' || valorInput.includes('Consumidor Final')) {
+          clienteVentaSeleccionado = { cedula: '9999999999001', nombre: 'Consumidor Final' };
+          if (hiddenInput) hiddenInput.value = 'Consumidor Final';
+          return;
+      }
 
-    // 2. Si no es del local, consulta Supabase para la venta actual (SIN agregarlo al desplegable de este local)
-    if (!clienteEncontrado && cedulaBuscada.length >= 8) {
-        try {
-            const { data } = await supabaseClient
-                .from('clientes')
-                .select('*')
-                .eq('cedula', cedulaBuscada)
-                .maybeSingle();
+      const partes = valorInput.split(' - ');
+      const cedulaBuscada = partes[0].trim();
 
-            if (data) {
-                clienteEncontrado = data;
-            }
-        } catch (e) {
-            console.log('Error buscando cliente en red:', e);
-        }
+      let clienteEncontrado = dbClientes.find(c => c.cedula === cedulaBuscada);
+
+      if (!clienteEncontrado && cedulaBuscada.length >= 8) {
+          try {
+              const { data } = await supabaseClient
+                  .from('clientes')
+                  .select('*')
+                  .eq('cedula', cedulaBuscada)
+                  .maybeSingle();
+
+              if (data) clienteEncontrado = data;
+          } catch (e) {
+              console.log('Error buscando cliente en red:', e);
+          }
+      }
+
+      if (clienteEncontrado) {
+          clienteVentaSeleccionado = clienteEncontrado;
+          if (hiddenInput) hiddenInput.value = clienteEncontrado.cedula;
+      } else {
+          clienteVentaSeleccionado = { cedula: cedulaBuscada, nombre: partes[1] || valorInput };
+          if (hiddenInput) hiddenInput.value = cedulaBuscada;
+      }
     }
-
-    if (clienteEncontrado) {
-        clienteVentaSeleccionado = clienteEncontrado;
-        if (hiddenInput) hiddenInput.value = clienteEncontrado.cedula;
-    } else {
-        clienteVentaSeleccionado = { cedula: cedulaBuscada, nombre: valorInput };
-        if (hiddenInput) hiddenInput.value = cedulaBuscada;
-    }
-}
 
     function obtenerCarritoActual() {
       return carritos.find(c => c.id === carritoActivoId) || carritos[0];
@@ -1066,7 +1012,7 @@ async function seleccionarClienteAutocomplete(valorInput) {
           cerrarCamara();
           onScanSuccessCallback(decodedText);
         },
-        (errorMessage) => {}
+        () => {}
       ).catch(err => {
         alert("No se pudo iniciar la cámara: " + err);
         cerrarCamara();
@@ -1126,9 +1072,7 @@ async function seleccionarClienteAutocomplete(valorInput) {
       
       document.getElementById('pos-tabla-carrito').innerHTML = cart.items.map((item, idx) => {
         const sub = item.precio * item.cantidad;
-        if (!item.anulado) {
-          total += sub;
-        }
+        if (!item.anulado) total += sub;
 
         return `
           <tr class="${item.anulado ? 'item-anulado' : ''}">
@@ -1156,31 +1100,9 @@ async function seleccionarClienteAutocomplete(valorInput) {
 
       item.anulado = true;
       item.motivoAnulacion = motivo;
-
       const totalItem = item.precio * item.cantidad;
 
-      await registrarAuditoriaMerma(
-        cart.nombre || 'Carrito Activo',
-        item.nombre,
-        item.cantidad,
-        totalItem,
-        motivo
-      );
-
-      const { data: resMer } = await supabaseClient.from('mermas_auditoria').select('*').order('fecha_hora', { ascending: false });
-      if (resMer) {
-        dbMermas = resMer.map(m => ({
-          id: m.id,
-          idFactura: m.id_factura,
-          productoNombre: m.producto_nombre,
-          cantidad: m.cantidad,
-          montoTotal: m.monto_total,
-          motivo: m.motivo,
-          fechaHora: m.fecha_hora,
-          usuario: m.usuario
-        }));
-      }
-
+      await registrarAuditoriaMerma(cart.nombre || 'Carrito Activo', item.nombre, item.cantidad, totalItem, motivo);
       renderizarCarritosTabs();
     }
 
@@ -1249,68 +1171,61 @@ async function seleccionarClienteAutocomplete(valorInput) {
     }
 
     async function procesarVenta(metodoPago) {
-    const cart = obtenerCarritoActual();
-    const clienteId = document.getElementById('pos-cliente-select').value;
-    const clienteObj = dbClientes.find(c => c.id === clienteId);
+      const cart = obtenerCarritoActual();
+      
+      // SOLUCIÓN: Extracción segura de la información del cliente del autocompletado
+      const clienteNombre = clienteVentaSeleccionado.nombre ? `${clienteVentaSeleccionado.nombre} ${clienteVentaSeleccionado.apellido || ''}`.trim() : "Consumidor Final";
+      const clienteCedula = clienteVentaSeleccionado.cedula || "9999999999001";
 
-    const clienteNombre = clienteObj ? `${clienteObj.nomb} ${clienteObj.apellido}` : "Consumidor Final";
-    const clienteCedula = clienteObj?.cedula || "9999999999";
+      const esFacturaSri = document.getElementById('checkModoSri').checked;
 
-    // 1. LEER EL ESTADO DEL INTERRUPTOR DEL SRI
-    const esFacturaSri = document.getElementById('checkModoSri').checked;
+      for (const i of cart.items) {
+          if (i.anulado) continue;
+          const p = dbProductos.find(x => String(x.id) === String(i.id));
+          if (p) {
+              p.stock -= i.cantidad;
+              await supabaseClient.from('productos').update({ stock: p.stock }).eq('id', p.id);
+          }
+      }
 
-    for (const i of cart.items) {
-        if (i.anulado) continue;
-        const p = dbProductos.find(x => String(x.id) === String(i.id));
-        if (p) {
-            p.stock -= i.cantidad;
-            await supabaseClient.from('productos').update({ stock: p.stock }).eq('id', p.id);
-        }
-    }
+      const ventaSupabase = {
+          id: 'FAC-' + Date.now().toString().slice(-5),
+          local_id: String(usuarioActual.localId),
+          local_nombre: dbLocales.find(l => String(l.id) === String(usuarioActual.localId))?.nombre || 'Mi Tienda',
+          cliente_nombre: clienteNombre === "Consumidor Final" ? "Consumidor Final" : clienteNombre,
+          cliente_cedula: clienteCedula,
+          metodo_pago: metodoPago,
+          fecha: new Date().toISOString(),
+          items: [...cart.items],
+          total: cart.items.filter(i => !i.anulado).reduce((s, x) => s + (x.precio * x.cantidad), 0),
+          usuario: usuarioActual.user,
+          tipo_comprobante: esFacturaSri ? "FACTURA_SRI" : "NOTA_VENTA_LOCAL",
+          punto_emision: (() => {
+              const textoModo = document.getElementById('textoModoSri')?.textContent || '';
+              if (textoModo.includes('LOCAL')) return "001-100";
+              return document.getElementById('punto-emision')?.value || "001-002";
+          })(),
+      };
+          
+      const { error } = await supabaseClient.from('ventas').insert([ventaSupabase]);
+      if (error) return alert("Error al registrar venta: " + error.message);
 
-    const ventaSupabase = {
-        id: 'FAC-' + Date.now().toString().slice(-5),
-        local_id: String(usuarioActual.localId),
-        local_nombre: dbLocales.find(l => String(l.id) === String(usuarioActual.localId))?.nombre || 'Mi Tienda',
-        cliente_nombre: clienteNombre,
-        cliente_cedula: clienteCedula,
-        metodo_pago: metodoPago,
-        fecha: new Date().toISOString(),
-        items: [...cart.items],
-        total: cart.items.filter(i => !i.anulado).reduce((s, x) => s + (x.precio * x.cantidad), 0),
-        usuario: usuarioActual.user,
-        tipo_comprobante: esFacturaSri ? "FACTURA_SRI" : "NOTA_VENTA_LOCAL",
-        punto_emision: (() => {
-        const textoModo = document.getElementById('textoModoSri')?.textContent || '';
-        if (textoModo.includes('LOCAL')) {
-            return "001-100"; // Si está en modo Local, fuerza la caja principal
-        } else {
-            return document.getElementById('punto-emision')?.value || "001-002"; // Si está en Online, toma la secundaria
-        }
-    })(),
-    };
-        
-  const { error } = await supabaseClient.from('ventas').insert([ventaSupabase]);
-    if (error) return alert("Error al registrar venta: " + error.message);
+      dbVentas.push({
+          id: ventaSupabase.id,
+          localId: ventaSupabase.local_id,
+          localNombre: ventaSupabase.local_nombre,
+          clienteNombre: ventaSupabase.cliente_nombre,
+          clienteCedula: ventaSupabase.cliente_cedula,
+          metodoPago: ventaSupabase.metodo_pago,
+          fecha: ventaSupabase.fecha,
+          items: ventaSupabase.items,
+          total: ventaSupabase.total,
+          usuario: ventaSupabase.usuario,
+          tipo_comprobante: ventaSupabase.tipo_comprobante,
+          punto_emision: ventaSupabase.punto_emision
+      });
 
-    const localIdActual = usuarioActual ? (usuarioActual.localId || usuarioActual.local_id) : null;
-
-const ventalocal = {
-    local_id: localIdActual, // <--- AQUÍ FORZAMOS EL ID DEL LOCAL ACTUAL
-    localId: localIdActual,  // <--- Añadimos ambos por si acaso alguna vista usa uno u otro
-    local_nombre: ventaSupabase.local_nombre,
-    cliente_nombre: ventaSupabase.cliente_nombre,
-    cliente_cedula: ventaSupabase.cliente_cedula,
-    metodo_pago: ventaSupabase.metodo_pago,
-    fecha: ventaSupabase.fecha,
-    items: ventaSupabase.items,
-    total: ventaSupabase.total,
-    usuario: ventaSupabase.usuario,
-    tipo_comprobante: ventaSupabase.tipo_comprobante,
-    punto_emision: ventaSupabase.punto_emision
-};
-      dbVentas.push(ventaLocal);
-      mostrarFactura(ventaLocal);
+      mostrarFactura(ventaSupabase);
 
       carritos = carritos.filter(c => c.id !== cart.id);
       if (carritos.length === 0) carritos.push({ id: Date.now(), nombre: 'Principal 1', items: [] });
@@ -1318,10 +1233,8 @@ const ventalocal = {
       renderizarCarritosTabs();
     }
 
-    // FUNCIÓN DE FACTURA ACTUALIZADA PARA LEER DATOS DIRECTOS DEL LOCAL ASIGNADO
     function mostrarFactura(v) {
-      // Buscamos la información detallada del local en nuestra lista descargada desde Supabase
-      const localInfo = dbLocales.find(l => String(l.id) === String(v.localId)) || {};
+      const localInfo = dbLocales.find(l => String(l.id) === String(v.localId || v.local_id)) || {};
 
       document.getElementById('fac-local-nombre').innerText = localInfo.nombre || v.localNombre || 'SUCURSAL';
       document.getElementById('fac-propietario').innerText = localInfo.propietario || '';
@@ -1332,11 +1245,11 @@ const ventalocal = {
 
       document.getElementById('fac-id').innerText = v.id;
       document.getElementById('fac-fecha').innerText = new Date(v.fecha).toLocaleString();
-      document.getElementById('fac-cliente').innerText = v.clienteNombre || "CONSUMIDOR FINAL";
-      document.getElementById('fac-cedula').innerText = v.clienteCedula || "9999999999999";
-      document.getElementById('fac-metodo').innerText = v.metodoPago || 'Efectivo';
+      document.getElementById('fac-cliente').innerText = v.cliente_nombre || v.clienteNombre || "CONSUMIDOR FINAL";
+      document.getElementById('fac-cedula').innerText = v.cliente_cedula || v.clienteCedula || "9999999999001";
+      document.getElementById('fac-metodo').innerText = v.metodo_pago || v.metodoPago || 'Efectivo';
       
-      document.getElementById('fac-items').innerHTML = v.items.map(i => `
+      document.getElementById('fac-items').innerHTML = (v.items || []).map(i => `
         <tr class="${i.anulado ? 'item-anulado' : ''}">
             <td>${i.cantidad}</td>
             <td>${i.nombre} ${i.anulado ? '<br><small><b>[ANULADO]</b></small>' : ''}</td>
@@ -1345,14 +1258,13 @@ const ventalocal = {
         </tr>
       `).join('');
 
-      document.getElementById('fac-total').innerText = v.total.toFixed(2);
-      document.getElementById('fac-subtotal').innerText = v.total.toFixed(2);
+      document.getElementById('fac-total').innerText = Number(v.total).toFixed(2);
+      document.getElementById('fac-subtotal').innerText = Number(v.total).toFixed(2);
       document.getElementById('factura-impresion').style.display = 'block';
     }
 
     async function prepararVistaArqueo() {
       await cargarDatosSupabase();
-
       const arqueoAbierto = dbArqueos.find(a => String(a.localId) === String(usuarioActual.localId) && a.estado === 'Abierto');
       
       if (arqueoAbierto) {
@@ -1360,7 +1272,7 @@ const ventalocal = {
         document.getElementById('arqueo-estado-cerrado').style.display = 'none';
         document.getElementById('arq-fondo').value = arqueoAbierto.fondoInicial;
         
-        const ventasTurno = dbVentas.filter(v => String(v.localId) === String(usuarioActual.localId) && new Date(v.fecha) >= new Date(arqueoAbierto.fechaApertura));
+        const ventasTurno = dbVentas.filter(v => String(v.localId || v.local_id) === String(usuarioActual.localId) && new Date(v.fecha) >= new Date(arqueoAbierto.fechaApertura));
         
         let tEfectivo = 0, tTarjeta = 0, tTransferencia = 0;
         ventasTurno.forEach(v => {
@@ -1399,7 +1311,6 @@ const ventalocal = {
 
       const { error } = await supabaseClient.from('arqueos').insert([nuevoArqueoSupabase]);
       if (error) return alert("Error al abrir caja: " + error.message);
-
       await prepararVistaArqueo();
     }
 
@@ -1408,7 +1319,6 @@ const ventalocal = {
       if (!arqueoAbierto) return;
 
       const nuevoFondo = parseFloat(document.getElementById('arq-fondo').value) || 0;
-
       const { error } = await supabaseClient.from('arqueos').update({ fondo_inicial: nuevoFondo }).eq('id', arqueoAbierto.id);
       if (error) return alert("Error al actualizar fondo: " + error.message);
       
@@ -1420,7 +1330,7 @@ const ventalocal = {
       const arqueoAbierto = dbArqueos.find(a => String(a.localId) === String(usuarioActual.localId) && a.estado === 'Abierto');
       if (!arqueoAbierto) return;
 
-      const ventasTurno = dbVentas.filter(v => String(v.localId) === String(usuarioActual.localId) && new Date(v.fecha) >= new Date(arqueoAbierto.fechaApertura));
+      const ventasTurno = dbVentas.filter(v => String(v.localId || v.local_id) === String(usuarioActual.localId) && new Date(v.fecha) >= new Date(arqueoAbierto.fechaApertura));
       let tEfectivo = 0;
       ventasTurno.forEach(v => { if (!v.metodoPago || v.metodoPago === 'Efectivo') tEfectivo += v.total; });
 
@@ -1439,103 +1349,77 @@ const ventalocal = {
       if (!arqueoAbierto) return;
 
       const fisico = parseFloat(document.getElementById('arq-conteo-fisico').value) || 0;
-      const fechaCierre = new Date().toISOString();
-
       const { error } = await supabaseClient.from('arqueos').update({
         estado: 'Cerrado',
-        fecha_cierre: fechaCierre,
+        fecha_cierre: new Date().toISOString(),
         efectivo_fisico: fisico
       }).eq('id', arqueoAbierto.id);
 
-      if (error) return alert("Error al cerrar turno en Supabase: " + error.message);
-
+      if (error) return alert("Error al cerrar turno: " + error.message);
       alert('Turno de caja cerrado con éxito.');
       await prepararVistaArqueo();
     }
 
     function renderHistorialArqueos() {
       const lista = dbArqueos.filter(a => String(a.localId) === String(usuarioActual.localId));
-      
       if (!lista || lista.length === 0) {
         document.getElementById('arqueo-historial-tabla').innerHTML = `<tr><td colspan="6" style="text-align:center;">No hay arqueos registrados</td></tr>`;
         return;
       }
 
-      document.getElementById('arqueo-historial-tabla').innerHTML = lista.map(a => {
-        const fApertura = new Date(a.fechaApertura).toLocaleString('es-EC');
-        const fCierre = a.fechaCierre ? new Date(a.fechaCierre).toLocaleString('es-EC') : 'En curso';
-        const estadoBadge = a.estado === 'Abierto' 
-          ? '<span style="color: green; font-weight: bold;">Abierto</span>' 
-          : '<span style="color: red; font-weight: bold;">Cerrado</span>';
-
-        return `
-          <tr>
-            <td><b>${a.usuario || 'N/A'}</b></td>
-            <td>${fApertura}</td>
-            <td>${fCierre}</td>
-            <td>$${(a.fondoInicial || 0).toFixed(2)}</td>
-            <td>$${a.efectivoFisico !== null ? a.efectivoFisico.toFixed(2) : '-'}</td>
-            <td>${estadoBadge}</td>
-          </tr>
-        `;
-      }).join('');
-    }
-async function consultarSRI() {
-    const cedulaInput = document.getElementById('cli-cedula').value.trim();
-
-    if (!cedulaInput) {
-        alert('Por favor ingresa un número de cédula o RUC.');
-        return;
+      document.getElementById('arqueo-historial-tabla').innerHTML = lista.map(a => `
+        <tr>
+          <td><b>${a.usuario || 'N/A'}</b></td>
+          <td>${new Date(a.fechaApertura).toLocaleString('es-EC')}</td>
+          <td>${a.fechaCierre ? new Date(a.fechaCierre).toLocaleString('es-EC') : 'En curso'}</td>
+          <td>$${(a.fondoInicial || 0).toFixed(2)}</td>
+          <td>$${a.efectivoFisico !== null ? a.efectivoFisico.toFixed(2) : '-'}</td>
+          <td>${a.estado === 'Abierto' ? '<span style="color: green; font-weight: bold;">Abierto</span>' : '<span style="color: red; font-weight: bold;">Cerrado</span>'}</td>
+        </tr>
+      `).join('');
     }
 
-    try {
-        // 1. BUSCAR PRIMERO EN NSTRA BASE CENTRALIZADA (Supabase)
-        const { data: clienteExiste, error } = await supabaseClient
-            .from('clientes')
-            .select('*')
-            .eq('cedula', cedulaInput)
-            .maybeSingle();
+    async function consultarSRI() {
+      const cedulaInput = document.getElementById('cli-cedula').value.trim();
+      if (!cedulaInput) return alert('Por favor ingresa un número de cédula o RUC.');
 
-        if (clienteExiste) {
-            document.getElementById('cli-nombre').value = clienteExiste.nombre;
-            document.getElementById('cli-apellido').value = clienteExiste.apellido;
-            if (document.getElementById('cli-correo')) {
-                document.getElementById('cli-correo').value = clienteExiste.correo || '';
-            }
-            alert(`¡Cliente encontrado en nuestro sistema! (Registrado previamente en Local: ${clienteExiste.local_id || 'General'})`);
-            return;
-        }
+      try {
+          const { data: clienteExiste } = await supabaseClient
+              .from('clientes')
+              .select('*')
+              .eq('cedula', cedulaInput)
+              .maybeSingle();
 
-        // 2. SI NO EXISTE EN SUPABASE, CONSULTAR AL BACKEND EN RENDER (SRI)
-        const response = await fetch(`https://pos-sistema-y075.onrender.com/api/sri/${cedulaInput}`);
-        const data = await response.json();
+          if (clienteExiste) {
+              document.getElementById('cli-nombre').value = clienteExiste.nombre;
+              document.getElementById('cli-apellido').value = clienteExiste.apellido;
+              if (document.getElementById('cli-correo')) document.getElementById('cli-correo').value = clienteExiste.correo || '';
+              alert('¡Cliente encontrado en nuestro sistema centralizado!');
+              return;
+          }
 
-        if (response.ok && data.razonSocial) {
-            const nombreCompleto = data.razonSocial.trim();
-            const partes = nombreCompleto.split(' ');
+          const response = await fetch(`https://pos-sistema-y075.onrender.com/api/sri/${cedulaInput}`);
+          const data = await response.json();
 
-            if (partes.length >= 3) {
-                document.getElementById('cli-nombre').value = partes.slice(2).join(' ');
-                document.getElementById('cli-apellido').value = partes.slice(0, 2).join(' ');
-            } else {
-                document.getElementById('cli-nombre').value = '-';
-                document.getElementById('cli-apellido').value = nombreCompleto;
-            }
-
-            alert('Cliente encontrado en SRI (RUC Activo). Recuerda hacer clic en "Guardar Cliente".');
-        } else {
-            // 3. SI NO TIENE RUC (Persona Natural), PERMITIR REGISTRO MANUAL
-            alert('El número no se encuentra registrado en el SRI (Persona Natural). Por favor ingresa Nombres y Apellidos manualmente.');
-            document.getElementById('cli-nombre').value = '';
-            document.getElementById('cli-apellido').value = '';
-            document.getElementById('cli-nombre').focus();
-        }
-
-    } catch (error) {
-        console.error('Error al buscar cliente:', error);
-        alert('Error al conectar con el servidor.');
+          if (response.ok && data.razonSocial) {
+              const nombreCompleto = data.razonSocial.trim();
+              const partes = nombreCompleto.split(' ');
+              if (partes.length >= 3) {
+                  document.getElementById('cli-nombre').value = partes.slice(2).join(' ');
+                  document.getElementById('cli-apellido').value = partes.slice(0, 2).join(' ');
+              } else {
+                  document.getElementById('cli-nombre').value = '-';
+                  document.getElementById('cli-apellido').value = nombreCompleto;
+              }
+              alert('Cliente encontrado en SRI. Haz clic en "Guardar Cliente".');
+          } else {
+              alert('Ingresa Nombres y Apellidos manualmente.');
+          }
+      } catch (error) {
+          console.error('Error al buscar cliente:', error);
+      }
     }
-}
+
     async function guardarCliente() {
       const cedula = document.getElementById('cli-cedula').value.trim();
       const nombre = document.getElementById('cli-nombre').value.trim();
@@ -1575,7 +1459,7 @@ async function consultarSRI() {
 
     function renderClientes() {
       const q = (document.getElementById('cli-buscar')?.value || '').toLowerCase();
-      const clientes = dbClientes.filter(c => String(c.localId) === String(usuarioActual.localId) && (c.cedula.toLowerCase().includes(q) || c.nombre.toLowerCase().includes(q)));
+      const clientes = dbClientes.filter(c => String(c.localId || c.local_id) === String(usuarioActual.localId) && (c.cedula.toLowerCase().includes(q) || c.nombre.toLowerCase().includes(q)));
       document.getElementById('cli-tabla').innerHTML = clientes.map(c => `
         <tr><td><b>${c.cedula}</b></td><td>${c.nombre} ${c.apellido}</td><td>${c.correo}</td><td><button class="btn btn-danger btn-sm" onclick="eliminarCliente('${c.id}')">Eliminar</button></td></tr>
       `).join('');
@@ -1590,57 +1474,48 @@ async function consultarSRI() {
     }
 
     function renderKardex() {
-    const q = document.getElementById('kardex-buscar')?.value || ''.toLowerCase();
-    const localActualId = usuarioActual ? String(usuarioActual.localId || usuarioActual.local_id) : null;
+      const q = (document.getElementById('kardex-buscar')?.value || '').toLowerCase();
+      const localActualId = usuarioActual ? String(usuarioActual.localId || usuarioActual.local_id) : null;
 
-    // 1. Filtrar ventas estrictamente por local y por búsqueda
-    const ventas = dbVentas.filter(v => {
-        const perteneceAlLocal = !localActualId || String(v.local_id || v.localId) === localActualId;
-        if (!perteneceAlLocal) return false;
+      const ventas = dbVentas.filter(v => {
+          const perteneceAlLocal = !localActualId || String(v.localId || v.local_id) === localActualId;
+          if (!perteneceAlLocal) return false;
+          if (!q) return true;
+          return String(v.id || '').toLowerCase().includes(q) || String(v.clienteNombre || '').toLowerCase().includes(q);
+      });
 
-        if (!q) return true;
-        return String(v.id || '').toLowerCase().includes(q) ||
-               String(v.fecha || '').toLowerCase().includes(q) ||
-               String(v.cliente_nombre || '').toLowerCase().includes(q);
-    });
+      const mermasFiltradas = (dbMermas || []).filter(m => {
+          if (!q) return true;
+          return String(m.idFactura || '').toLowerCase().includes(q) || String(m.productoNombre || '').toLowerCase().includes(q);
+      });
 
-    // 2. Definir mermas filtradas para evitar el error de la consola
-    const mermasFiltradas = (typeof dbMermas !== 'undefined' ? dbMermas : []).filter(m => {
-        if (!q) return true;
-        return String(m.idFactura || '').toLowerCase().includes(q) ||
-               String(m.productoNombre || '').toLowerCase().includes(q);
-    });
+      let htmlVentas = ventas.map(v => `
+          <tr>
+              <td><b>${v.id}</b></td>
+              <td>${new Date(v.fecha).toLocaleString()}</td>
+              <td>${v.localNombre || ''}</td>
+              <td>${v.clienteNombre || ''}</td>
+              <td><span class="badge">${v.metodoPago || 'Efectivo'}</span></td>
+              <td><b>$${Number(v.total || 0).toFixed(2)}</b></td>
+              <td><button class="btn btn-primary btn-sm" onclick='mostrarFactura(${JSON.stringify(v)})'>Ver</button></td>
+          </tr>
+      `).join('');
 
-    let htmlVentas = ventas.map(v => `
-        <tr>
-            <td><b>${v.id}</b></td>
-            <td>${new Date(v.fecha).toLocaleString()}</td>
-            <td>${v.localNombre || ''}</td>
-            <td>${v.clienteNombre || ''}</td>
-            <td><span class="badge" style="background:#e8f2fe; color:#0369a1;">${v.metodoPago || 'Efectivo'}</span></td>
-            <td><b>$${Number(v.total || 0).toFixed(2)}</b></td>
-            <td><button class="btn btn-primary btn-sm" onclick="mostrarFactura(${JSON.stringify(v).replace(/"/g, '&quot;')})">Ver</button></td>
-        </tr>
-    `).join('');
+      let htmlMermas = mermasFiltradas.map(m => `
+          <tr style="background-color: #fef2f2;">
+              <td><span style="color:var(--danger); font-weight:bold;">[ANULADO]</span> ${m.idFactura}</td>
+              <td>${new Date(m.fechaHora).toLocaleString()}</td>
+              <td><b>Auditoría / Mermas</b></td>
+              <td>Cajero: <b>${m.usuario}</b></td>
+              <td><span class="badge" style="background:#fee2e2; color:#991b1b;">Motivo: ${m.motivo}</span></td>
+              <td><b style="color:var(--danger);">-$${Number(m.montoTotal || 0).toFixed(2)}</b></td>
+              <td><span style="font-size:0.8rem; color:var(--text-muted);">${m.cantidad} x ${m.productoNombre}</span></td>
+          </tr>
+      `).join('');
 
-    let htmlMermas = mermasFiltradas.map(m => `
-        <tr style="background-color: #fef2f2;">
-            <td><span style="color:var(--danger); font-weight:bold;">[ANULADO]</span> ${m.idFactura}</td>
-            <td>${new Date(m.fechaHora).toLocaleString()}</td>
-            <td><b>Auditoría / Mermas</b></td>
-            <td>Cajero: <b>${m.usuario}</b></td>
-            <td><span class="badge" style="background:#fee2e2; color:#991b1b;">Motivo: ${m.motivo}</span></td>
-            <td><b style="color:var(--danger);">-$${Number(m.montoTotal || 0).toFixed(2)}</b></td>
-            <td><span style="font-size:0.8rem; color:var(--text-muted);">${m.cantidad} x ${m.productoNombre}</span></td>
-        </tr>
-    `).join('');
-
-    // Pintar en la tabla del HTML
-    const kardexTabla = document.getElementById('kardex-tabla');
-    if (kardexTabla) {
-        kardexTabla.innerHTML = htmlVentas + htmlMermas;
+      const kardexTabla = document.getElementById('kardex-tabla');
+      if (kardexTabla) kardexTabla.innerHTML = htmlVentas + htmlMermas;
     }
-}
 
     async function guardarProducto() {
       const codigo = document.getElementById('inv-codigo').value.trim();
@@ -1684,7 +1559,7 @@ async function consultarSRI() {
     }
 
     function renderInventario() {
-      const lista = dbProductos.filter(p => String(p.localId) === String(usuarioActual.localId));
+      const lista = dbProductos.filter(p => String(p.localId || p.local_id) === String(usuarioActual.localId));
       document.getElementById('inv-tabla-catalogo').innerHTML = lista.map(p => `
         <tr>
           <td>${p.codigo}</td><td><b>${p.nombre}</b></td>
@@ -1714,31 +1589,37 @@ async function consultarSRI() {
     async function eliminarProducto(id) {
       const prod = dbProductos.find(x => String(x.id) === String(id));
       if (!prod) return;
-
       if (!confirm(`¿Eliminar el producto "${prod.nombre}" del inventario?`)) return;
 
-      const motivo = prompt(`Motivo de la eliminación de catálogo/merma para "${prod.nombre}":`, "Producto dañado / Muestra gratis / Eliminación de catálogo");
+      const motivo = prompt(`Motivo de la eliminación:`, "Producto dañado");
       if (motivo === null) return;
 
-      await registrarAuditoriaMerma(
-        'INVENTARIO-GENERAL',
-        prod.nombre,
-        prod.stock,
-        prod.precio * prod.stock,
-        motivo
-      );
-
+      await registrarAuditoriaMerma('INVENTARIO', prod.nombre, prod.stock, prod.precio * prod.stock, motivo);
       await supabaseClient.from('productos').delete().eq('id', id);
       dbProductos = dbProductos.filter(x => String(x.id) !== String(id));
       renderInventario();
     }
 
     function renderHistorial() {
-      alId = usuarioActual ? String(usuarioActual.localId || usuarioActual.local_id) : '';
-      document.getElementById('historial-tabla').innerHTML = lista.map(v => `
-        <tr><td>${v.id}</td><td>${v.localNombre}</td><td>${v.clienteNombre}</td><td>${v.metodoPago || 'Efectivo'}</td><td>${new Date(v.fecha).toLocaleString()}</td><td>$${v.total.toFixed(2)}</td><td><button class="btn btn-primary btn-sm" onclick='mostrarFactura(${JSON.stringify(v)})'>Ver</button></td></tr>
-      `).join('');
+      const localActualId = usuarioActual ? String(usuarioActual.localId || usuarioActual.local_id) : '';
+      const lista = dbVentas.filter(v => !localActualId || String(v.localId || v.local_id) === localActualId);
+      
+      const historialTabla = document.getElementById('historial-tabla');
+      if (historialTabla) {
+        historialTabla.innerHTML = lista.map(v => `
+          <tr>
+            <td>${v.id}</td>
+            <td>${v.localNombre || ''}</td>
+            <td>${v.clienteNombre || ''}</td>
+            <td>${v.metodoPago || 'Efectivo'}</td>
+            <td>${new Date(v.fecha).toLocaleString()}</td>
+            <td>$${Number(v.total).toFixed(2)}</td>
+            <td><button class="btn btn-primary btn-sm" onclick='mostrarFactura(${JSON.stringify(v)})'>Ver</button></td>
+          </tr>
+        `).join('');
+      }
     }
+
     function prepararVistaReportes() {
       const selectAnio = document.getElementById('rep-anio');
       const anioActual = new Date().getFullYear();
@@ -1754,13 +1635,13 @@ async function consultarSRI() {
       const mesSel = document.getElementById('rep-mes').value;
       const ventasFiltradas = dbVentas.filter(v => {
         const d = new Date(v.fecha);
-        return String(v.localId) === String(usuarioActual.localId) && d.getFullYear() === anioSel && (mesSel === 'TODOS' || d.getMonth() === parseInt(mesSel));
+        return String(v.localId || v.local_id) === String(usuarioActual.localId) && d.getFullYear() === anioSel && (mesSel === 'TODOS' || d.getMonth() === parseInt(mesSel));
       });
 
       let totalVentas = 0, totalCostoCompras = 0;
       ventasFiltradas.forEach(v => {
         totalVentas += v.total;
-        v.items.forEach(i => { if (!i.anulado) { totalCostoCompras += ((i.costo || 0) * i.cantidad); } });
+        (v.items || []).forEach(i => { if (!i.anulado) { totalCostoCompras += ((i.costo || 0) * i.cantidad); } });
       });
 
       document.getElementById('rep-val-ventas').innerText = `$${totalVentas.toFixed(2)}`;
@@ -1800,7 +1681,7 @@ async function consultarSRI() {
     }
 
     function renderEmpleadosCajeros() {
-      const empleados = dbUsuarios.filter(u => String(u.localId) === String(usuarioActual.localId) && u.rol === 'Cajero');
+      const empleados = dbUsuarios.filter(u => String(u.localId || u.local_id) === String(usuarioActual.localId) && u.rol === 'Cajero');
       document.getElementById('emp-tabla').innerHTML = empleados.map(u => `
         <tr>
           <td><b>${u.user}</b></td>
@@ -1810,7 +1691,6 @@ async function consultarSRI() {
       `).join('') || `<tr><td colspan="3" style="text-align:center;">No tienes cajeros registrados</td></tr>`;
     }
 
-    // FUNCIÓN CREAR LOCAL ACTUALIZADA CON LOS NUEVOS CAMPOS
     async function crearLocal() {
       if (!esUsuarioMatriz()) return alert('Acceso denegado.');
       
@@ -1846,12 +1726,10 @@ async function consultarSRI() {
       poblardropdowns();
       renderLocales();
 
-      // Limpiar inputs
       document.getElementById('loc-nombre').value = '';
       document.getElementById('loc-propietario').value = '';
       document.getElementById('loc-ruc').value = '';
       document.getElementById('loc-direccion').value = '';
-      
       alert('Local registrado con éxito');
     }
 
@@ -1893,99 +1771,87 @@ async function consultarSRI() {
       alert('Usuario creado');
     }
 
+    async function eliminarUsuario(id) {
+      if(!confirm("¿Eliminar este usuario?")) return;
+      await supabaseClient.from('usuarios').delete().eq('id', id);
+      dbUsuarios = dbUsuarios.filter(u => String(u.id) !== String(id));
+      renderUsuarios();
+      renderEmpleadosCajeros();
+    }
+
     function renderLocales() {
-    const contenedor = document.getElementById('loc-tabla');
-    if (!contenedor) return;
+      const contenedor = document.getElementById('loc-tabla');
+      if (!contenedor) return;
 
-    contenedor.innerHTML = dbLocales.map(l => {
-        const esMatriz = (String(l.id) === 'LOC-001');
-        const accionLocal = esMatriz ? 
-            `<span style="color: gray; font-size: 0.85rem; font-weight: bold;">Protegido</span>` : 
-            `<button class="btn btn-danger btn-sm" onclick="eliminarLocal('${l.id}')">Eliminar</button>`;
+      contenedor.innerHTML = dbLocales.map(l => {
+          const esMatriz = (String(l.id) === 'LOC-001');
+          const accionLocal = esMatriz ? 
+              `<span style="color: gray; font-size: 0.85rem; font-weight: bold;">Protegido</span>` : 
+              `<button class="btn btn-danger btn-sm" onclick="eliminarLocal('${l.id}')">Eliminar</button>`;
 
-        return `
-            <tr>
-                <td>${l.id}</td>
-                <td><strong>${l.nombre}</strong></td>
-                <td>${l.ruc || 'N/A'} / ${l.direccion || 'N/A'}</td>
-                <td>${accionLocal}</td>
-            </tr>
-        `;
-    }).join('');
-}
+          return `
+              <tr>
+                  <td>${l.id}</td>
+                  <td><strong>${l.nombre}</strong></td>
+                  <td>${l.ruc || 'N/A'} / ${l.direccion || 'N/A'}</td>
+                  <td>${accionLocal}</td>
+              </tr>
+          `;
+      }).join('');
+    }
 
     function renderUsuarios() {
-    document.getElementById('usr-tabla').innerHTML = dbUsuarios.map(u => {
-        const esDuenoLocal = (u.user !== 'BlackDiamond');
-        const accionUsuario = esDuenoLocal ? 
-            `<button class="btn btn-danger btn-sm" onclick="eliminarUsuario('${u.id}')">Eliminar</button>` : 
-            `<em>Protegido</em>`;
+      const contenedor = document.getElementById('usr-tabla');
+      if (!contenedor) return;
 
-        return `
-            <tr>
-                <td><strong>${u.user}</strong></td>
-                <td>${u.rol || 'N/A'}</td>
-                <td>${dbLocales.find(l => String(l.id) === String(u.local_id))?.nombre || 'N/A'}</td>
-                <td>
-                    <div style="display: flex; gap: 5px; align-items: center;">
-                        <input type="password" id="pass-${u.id}" placeholder="Nueva clave" style="width: 110px; padding: 3px; font-size: 0.85rem;">
-                        <button onclick="forzarCambioClave('${u.id}', document.getElementById('pass-${u.id}').value)" class="btn btn-warning btn-sm" style="font-size: 0.85rem; white-space: nowrap;">
-                            Cambiar Clave
-                        </button>
-                    </div>
-                </td>
-                <td>${accionUsuario}</td>
-            </tr>
-        `;
-    }).join('');
-}
+      contenedor.innerHTML = dbUsuarios.map(u => {
+          const accionUsuario = (u.user !== 'BlackDiamond') ? 
+              `<button class="btn btn-danger btn-sm" onclick="eliminarUsuario('${u.id}')">Eliminar</button>` : 
+              `<em>Protegido</em>`;
 
-    async function forzarCambioClave(userIdLoca, nuevaClave) {
-    if (!nuevaClave || nuevaClave.trim().length < 6) {
-        alert("La contraseña temporal debe tener al menos 6 caracteres.");
-        return;
+          return `
+              <tr>
+                  <td><strong>${u.user}</strong></td>
+                  <td>${u.rol || 'N/A'}</td>
+                  <td>${dbLocales.find(l => String(l.id) === String(u.localId || u.local_id))?.nombre || 'N/A'}</td>
+                  <td>
+                      <div style="display: flex; gap: 5px; align-items: center;">
+                          <input type="password" id="pass-${u.id}" placeholder="Nueva clave" style="width: 110px; padding: 3px; font-size: 0.85rem; margin:0;">
+                          <button onclick="forzarCambioClave('${u.id}', document.getElementById('pass-${u.id}').value)" class="btn btn-warning btn-sm" style="font-size: 0.85rem; white-space: nowrap; margin:0;">
+                              Cambiar
+                          </button>
+                      </div>
+                  </td>
+                  <td>${accionUsuario}</td>
+              </tr>
+          `;
+      }).join('');
     }
 
-    const usuarioObj = dbUsuarios.find(u => String(u.id) === String(userIdLoca));
-    if (!usuarioObj) {
-        alert("No se encontró el usuario localmente.");
-        return;
+    async function forzarCambioClave(userIdLocal, nuevaClave) {
+      if (!nuevaClave || nuevaClave.trim().length < 6) return alert("La contraseña debe tener al menos 6 caracteres.");
+      if (!confirm("¿Estás seguro de cambiar esta contraseña?")) return;
+
+      try {
+          const { error } = await supabaseClient.from('usuarios').update({ pass: nuevaClave.trim() }).eq('id', userIdLocal);
+          if (error) throw error;
+
+          alert("¡Contraseña actualizada exitosamente!");
+          document.getElementById(`pass-${userIdLocal}`).value = "";
+          await cargarDatosSupabase();
+          renderUsuarios();
+      } catch (error) {
+          alert("Error al actualizar la clave: " + error.message);
+      }
     }
 
-    if (!confirm(`¿Estás seguro de cambiar la contraseña de ${usuarioObj.user}?`)) return;
-
-    try {
-        // Actualizamos la contraseña directamente en la tabla 'usuarios' de Supabase
-        const { error } = await supabaseClient
-            .from('usuarios')
-            .update({ pass: nuevaClave.trim() })
-            .eq('id', userIdLoca);
-
-        if (error) {
-            throw error;
-        }
-
-        alert("¡Contraseña actualizada exitosamente en la base de datos!");
-        document.getElementById(`pass-${userIdLoca}`).value = "";
-        
-        // Recargamos los datos y la vista
-        await cargarDatosSupabase();
-        renderUsuarios();
-
-    } catch (error) {
-        alert("Error al actualizar la clave: " + error.message);
-        console.error("Detalle del error:", error);
-    }
-}
-
-window.addEventListener('DOMContentLoaded', async () => {
+    window.addEventListener('DOMContentLoaded', async () => {
         if (usuarioActual) {
             await cargarDatosSupabase();
             aplicarSesionActiva();
         }
-    }); // <--- Aquí cierra el DOMContentLoaded
+    });
 
-    // LA FUNCIÓN DEBE IR AFUERA, AQUÍ:
     function toggleModoSri() {
         const checkbox = document.getElementById('checkModoSri');
         const contenedor = document.getElementById('contenedorModoSri');
@@ -2010,219 +1876,89 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
 
     async function cargarFacturas() {
-    const tbody = document.getElementById('tabla-facturas-body');
-    if (!tbody) return;
-    tbody.innerHTML = `<tr><td colspan="8" class="text-center">Cargando facturas...</td></tr>`;
-    
-    try {
-        const localActualId = usuarioActual ? String(usuarioActual.localId || usuarioActual.local_id) : null;
+      const tbody = document.getElementById('tabla-facturas-body');
+      if (!tbody) return;
+      tbody.innerHTML = `<tr><td colspan="8" class="text-center">Cargando facturas...</td></tr>`;
+      
+      try {
+          const localActualId = usuarioActual ? String(usuarioActual.localId || usuarioActual.local_id) : null;
+          let query = supabaseClient.from('ventas').select('*').order('fecha', { ascending: false });
 
-        // Consultamos las ventas ordenadas
-        let query = supabaseClient
-            .from('ventas')
-            .select('*')
-            .order('fecha', { ascending: false });
+          if (localActualId) query = query.eq('local_id', localActualId);
 
-        // FILTRO ESTRICTO DE SUPABASE PARA FACTURAS:
-        if (localActualId) {
-            query = query.eq('local_id', localActualId);
-        }
+          const { data: ventas, error } = await query;
+          if (error) throw error;
 
-        const { data: ventas, error } = await query;
-
-        if (error) throw error;
-
-        window.dbFacturasGlobal = ventas || [];
-        renderizarTablaFacturas(window.dbFacturasGlobal);
-
-    } catch (err) {
-        console.error('Error al cargar facturas:', err);
-        tbody.innerHTML = `<tr><td colspan="8" class="text-center text-danger">Error al cargar el historial.</td></tr>`;
-    }
-}
-
-function renderizarTablaFacturas(ventas) {
-    const tbody = document.getElementById('tabla-facturas-body');
-    if (!tbody) return;
-
-    if (!ventas || ventas.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted">No hay facturas registradas.</td></tr>`;
-        return;
+          window.dbFacturasGlobal = ventas || [];
+          renderizarTablaFacturas(window.dbFacturasGlobal);
+      } catch (err) {
+          tbody.innerHTML = `<tr><td colspan="8" class="text-center text-danger">Error al cargar el historial.</td></tr>`;
+      }
     }
 
-    tbody.innerHTML = ventas.map(v => `
-        <tr>
-            <td><b>${v.id}</b></td>
-            <td>${v.cliente_nombre || 'Consumidor Final'}</td>
-            <td>${new Date(v.fecha).toLocaleString()}</td>
-            <td><span class="badge bg-info">${v.punto_emision || ''}</span></td>
-            <td>${v.tipo_comprobante || ''}</td>
-            <td>$${Number(v.total || 0).toFixed(2)}</td>
-            <td><span class="badge bg-success">${v.metodo_pago || 'Efectivo'}</span></td>
-            <td>
-                <button class="btn btn-primary btn-sm" onclick="mostrarFactura(${JSON.stringify(v).replace(/"/g, '&quot;')})">Ver</button>
-            </td>
-        </tr>
-    `).join('');
-}
+    function renderizarTablaFacturas(ventas) {
+      const tbody = document.getElementById('tabla-facturas-body');
+      if (!tbody) return;
 
-function filtrarFacturas() {
-    const texto = document.getElementById('filtro-buscar-factura').value.toLowerCase();
-    const punto = document.getElementById('filtro-punto-emision').value;
+      if (!ventas || ventas.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted">No hay facturas registradas.</td></tr>`;
+          return;
+      }
 
-    const filtradas = (window.dbFacturasGlobal || []).filter(v => {
-        const coincideTexto = (v.id && v.id.toLowerCase().includes(texto)) || 
-                              (v.cliente_nombre && v.cliente_nombre.toLowerCase().includes(texto));
-        const coincidePunto = !punto || v.punto_emision === punto;
-        return coincideTexto && coincidePunto;
-    });
-
-    renderizarTablaFacturas(filtradas);
-}
-
-document.addEventListener('click', function(e) {
-    const esBotonModo = e.target.closest('button') || e.target.closest('[onclick*="Modo"]') || e.target.closest('[id*="Modo"]');
-    
-    if (esBotonModo) {
-        setTimeout(() => {
-            const selectPunto = document.getElementById('punto-emision');
-            const textoModo = document.body.innerText || '';
-            
-            if (selectPunto) {
-                if (textoModo.includes('LOCAL') && !textoModo.includes('SRI (ONLINE)')) {
-                    // Modo Local: Forzoso a Caja Principal y bloqueado
-                    selectPunto.value = "001-100";
-                    selectPunto.disabled = true;
-                } else if (textoModo.includes('SRI') || textoModo.includes('ONLINE')) {
-                    // Modo SRI Online: Forzoso a Caja Secundaria y bloqueado para que no se equivoquen
-                    selectPunto.value = "001-002";
-                    selectPunto.disabled = true; 
-                }
-            }
-        }, 150);
+      tbody.innerHTML = ventas.map(v => `
+          <tr>
+              <td><b>${v.id}</b></td>
+              <td>${v.cliente_nombre || 'Consumidor Final'}</td>
+              <td>${new Date(v.fecha).toLocaleString()}</td>
+              <td><span class="badge">${v.punto_emision || ''}</span></td>
+              <td>${v.tipo_comprobante || ''}</td>
+              <td>$${Number(v.total || 0).toFixed(2)}</td>
+              <td><span class="badge">${v.metodo_pago || 'Efectivo'}</span></td>
+              <td>
+                  <button class="btn btn-primary btn-sm" onclick='mostrarFactura(${JSON.stringify(v)})'>Ver</button>
+              </td>
+          </tr>
+      `).join('');
     }
 
-    // Funciones para abrir y cerrar la ventana de la firma
-// Funciones de la firma digital
-function abrirConfigFirma() {
-    const modal = document.getElementById('modal-firma-config');
-    if (modal) modal.style.display = 'flex';
-}
+    function filtrarFacturas() {
+      const texto = document.getElementById('filtro-buscar-factura').value.toLowerCase();
+      const punto = document.getElementById('filtro-punto-emision').value;
 
-function cerrarConfigFirma() {
-    const modal = document.getElementById('modal-firma-config');
-    if (modal) modal.style.display = 'none';
-}
+      const filtradas = (window.dbFacturasGlobal || []).filter(v => {
+          const coincideTexto = (v.id && v.id.toLowerCase().includes(texto)) || (v.cliente_nombre && v.cliente_nombre.toLowerCase().includes(texto));
+          const coincidePunto = !punto || v.punto_emision === punto;
+          return coincideTexto && coincidePunto;
+      });
 
-async function guardarFirmaDigital() {
-    const fileInput = document.getElementById('input-archivo-p12');
-    const passInput = document.getElementById('input-firma-password');
-    
-    const archivo = fileInput.files[0];
-    const password = passInput.value.trim();
-    
-    if (!archivo && !password) {
-        alert('Por favor selecciona un archivo o ingresa la contraseña.');
-        return;
+      renderizarTablaFacturas(filtradas);
     }
 
-    const localId = usuarioActual.localId || usuarioActual.local_id || usuarioActual.localID;
-    if (!localId) {
-        alert('Error: El usuario actual no tiene un local asignado.');
-        return;
+    function abrirConfigFirma() {
+        const modal = document.getElementById('modal-firma-config');
+        if (modal) modal.style.display = 'flex';
     }
 
-    try {
-        let firmaUrl = null;
+    function cerrarConfigFirma() {
+        const modal = document.getElementById('modal-firma-config');
+        if (modal) modal.style.display = 'none';
+    }
 
-        if (archivo) {
-            const nombreArchivo = `firma_${localId}_${Date.now()}.p12`;
-            const { data: uploadData, error: uploadError } = await supabaseClient.storage
-                .from('firmas') 
-                .upload(nombreArchivo, archivo);
-
-            if (uploadError) {
-                alert('Error al subir el archivo: ' + uploadError.message);
-                return;
-            }
-
-            const { data: publicUrlData } = supabaseClient.storage
-                .from('firmas')
-                .getPublicUrl(nombreArchivo);
-                
-            firmaUrl = publicUrlData.publicUrl;
-        }
-
-        let datosActualizar = {};
-        if (firmaUrl) datosActualizar.firma_p12_url = firmaUrl;
-        if (password) datosActualizar.firma_password = password;
-
-        const { error: updateError } = await supabaseClient
-            .from('locales')
-            .update(datosActualizar)
-            .eq('id', localId);
-
-        if (updateError) {
-            alert('Error al guardar en la base de datos: ' + updateError.message);
+    async function guardarFirmaDigital() {
+        const fileInput = document.getElementById('input-archivo-p12');
+        const passInput = document.getElementById('input-firma-password');
+        
+        const archivo = fileInput.files[0];
+        const password = passInput.value.trim();
+        
+        if (!archivo || !password) {
+            alert('Por favor selecciona un archivo y escribe la contraseña.');
             return;
         }
-
-        alert('¡Firma digital y contraseña guardadas exitosamente!');
+        alert('Configuración de firma guardada localmente para este dispositivo.');
         cerrarConfigFirma();
-        
-        fileInput.value = '';
-        passInput.value = '';
-
-    } catch (err) {
-        console.error('Error general:', err);
-        alert('Ocurrió un error inesperado al guardar la firma.');
     }
-}
-
-async function guardarFirmaDigital() {
-      // ... tu código de guardar firma ...
-    }
-
-    // <-- Pégalo exactamente aquí, a la misma altura:
-    window.abrirConfigFirma = function() {
-      const modal = document.getElementById('modal-firma-config');
-      if (modal) modal.style.display = 'flex';
-    };
-
-    window.cerrarConfigFirma = function() {
-      const modal = document.getElementById('modal-firma-config');
-      if (modal) modal.style.display = 'none';
-    };
-
-});
-
-
-
-</script>
   </script>
-  <!-- MODAL CONFIGURACIÓN FIRMA DIGITAL -->
-<div id="modal-firma-config" class="modal-overlay" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 10000; align-items: center; justify-content: center; padding: 20px;">
-    <div class="modal-box" style="background: #fff; padding: 24px; border-radius: 16px; width: 100%; max-width: 420px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);">
-        <h3 style="font-size: 1.25rem; margin-bottom: 15px; text-align: center;">Configuración de Firma Electrónica</h3>
-        <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 15px;">
-            Sube tu archivo de firma digital (.p12 / .pfx) y escribe su contraseña correspondiente para este local.
-        </p>
-        
-        <div style="margin-bottom: 15px;">
-            <label style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 5px;">Archivo de Firma (.p12 / .pfx)</label>
-            <input type="file" id="input-archivo-p12" accept=".p12,.pfx" style="width: 100%; font-size: 0.85rem;">
-        </div>
-
-        <div style="margin-bottom: 20px;">
-            <label style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 5px;">Contraseña de la Firma</label>
-            <input type="password" id="input-firma-password" placeholder="Ingresa la clave de tu firma" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;">
-        </div>
-
-        <div style="display: flex; gap: 10px; justify-content: flex-end;">
-            <button onclick="cerrarConfigFirma()" style="background: #e2e8f0; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">Cancelar</button>
-            <button onclick="guardarFirmaDigital()" style="background: #0284c7; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600;">Guardar Firma</button>
-        </div>
-    </div>
-</div>
 </body>
-  </html>
+</html>
+
