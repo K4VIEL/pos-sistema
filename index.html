@@ -2244,62 +2244,8 @@ async function guardarFirmaDigital() {
 
 
 </script>
-  </script> 
-  <script>
-    function abrirConfigFirma() {
-        const modal = document.getElementById('modal-firma-config');
-        if (modal) modal.style.display = 'flex';
-    }
-
-    function cerrarConfigFirma() {
-        const modal = document.getElementById('modal-firma-config');
-        if (modal) modal.style.display = 'none';
-    }
-
-    async function guardarFirmaDigital() {
-        const fileInput = document.getElementById('input-archivo-p12');
-        const passwordInput = document.getElementById('input-firma-password');
-
-        if (!fileInput.files || fileInput.files.length === 0) {
-            return alert('Por favor selecciona un archivo de firma digital (.p12 o .pfx).');
-        }
-
-        const file = fileInput.files[0];
-        const password = passwordInput.value;
-
-        if (!password) {
-            return alert('Por favor ingresa la contraseña de la firma.');
-        }
-
-        const reader = new FileReader();
-        reader.onload = async function(e) {
-            const base64File = e.target.result.split(',')[1];
-            const localId = usuarioActual ? (usuarioActual.localId || usuarioActual.local_id) : null;
-
-            if (!localId) {
-                return alert('No se pudo identificar el local actual.');
-            }
-
-            const { error } = await supabaseClient
-                .from('locales')
-                .update({
-                    firma_p12_url: base64File,
-                    firma_password: password
-                })
-                .eq('id', localId);
-
-            if (error) {
-                console.error(error);
-                return alert('Error al guardar la firma en Supabase: ' + error.message);
-            }
-
-            alert('¡Firma digital configurada y guardada con éxito!');
-            cerrarConfigFirma();
-        };
-
-        reader.readAsDataURL(file);
-    }
-</script>
+  </script>
+  
   <!-- MODAL CONFIGURACIÓN FIRMA DIGITAL -->
 <div id="modal-firma-config" class="modal-overlay" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 10000; align-items: center; justify-content: center; padding: 20px;">
     <div class="modal-box" style="background: #fff; padding: 24px; border-radius: 16px; width: 100%; max-width: 420px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);">
