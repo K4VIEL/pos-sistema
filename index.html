@@ -697,6 +697,14 @@
     let html5QrCode = null;
     let clienteVentaSeleccionado = { cedula: '9999999999001', nombre: 'Consumidor Final' };
 
+    // Si ya había sesión guardada, cargar los datos automáticamente al abrir
+    if (usuarioActual) {
+      window.addEventListener('DOMContentLoaded', async () => {
+        await cargarDatosSupabase();
+        aplicarSesionActiva();
+      });
+    }
+
     async function registrarAuditoriaMerma(idFactura, productoNombre, cantidad, montoTotal, motivo) {
       try {
         await supabaseClient.from('mermas_auditoria').insert([{
@@ -758,7 +766,7 @@
         if (resProd.data) {
           dbProductos = resProd.data.map(p => ({ 
             id: p.id, 
-            localId: p.local_id || p.localId, 
+            localId: String(p.local_id || p.localId || ''), 
             codigo: p.codigo, 
             nombre: p.nombre, 
             costo: p.costo || 0, 
@@ -772,12 +780,12 @@
           }));
         }
 
-        if (resCli.data) dbClientes = resCli.data.map(c => ({ id: c.id, localId: c.local_id || c.localId, cedula: c.cedula || c.cliente_cedula, nombre: c.nombre, apellido: c.apellido, correo: c.correo }));
+        if (resCli.data) dbClientes = resCli.data.map(c => ({ id: c.id, localId: String(c.local_id || c.localId || ''), cedula: c.cedula || c.cliente_cedula, nombre: c.nombre, apellido: c.apellido, correo: c.correo }));
         
         if (resVen.data) {
           dbVentas = resVen.data.map(v => ({
             id: v.id,
-            localId: v.local_id || v.localId,
+            localId: String(v.local_id || v.localId || ''),
             localNombre: v.local_nombre || v.localNombre,
             clienteNombre: v.cliente_nombre || v.clienteNombre,
             clienteCedula: v.cliente_cedula || v.clienteCedula,
@@ -794,7 +802,7 @@
         if (resArq.data) {
           dbArqueos = resArq.data.map(a => ({
             id: a.id,
-            localId: a.local_id || a.localId,
+            localId: String(a.local_id || a.localId || ''),
             usuario: a.usuario,
             fechaApertura: a.fecha_apertura || a.fechaApertura,
             fondoInicial: parseFloat(a.fondo_inicial || a.fondoInicial || 0),
@@ -968,7 +976,7 @@
       const datalist = document.getElementById('lista-clientes-opciones');
       if (!datalist) return;
 
-      const clientesDelLocal = dbClientes.filter(c => String(c.localId || c.local_id) === String(usuarioActual.localId));
+      const clientesDelLocal = dbClientes.filter(c => String(c.localId) === String(usuarioActual.localId));
       let html = `<option value="Consumidor Final">Consumidor Final</option>`;
 
       clientesDelLocal.forEach(cli => {
@@ -1268,32 +1276,27 @@
 
       cerrarModalCobro();
       await procesarVenta(metodo);
-      
     }
 
     async function procesarVenta(metodoPago) {
       const cart = obtenerCarritoActual();
       
-      // Captura el texto ingresado en el buscador si no hay objeto seleccionado
-  const inputBuscarCliente = document.getElementById('pos-cliente-buscar')?.value.trim() || "";
+      const inputBuscarCliente = document.getElementById('pos-cliente-buscar')?.value.trim() || "";
 
-  // Busca el cliente en la lista global si no está asignado en clienteVentaSeleccionado
-  if (!clienteVentaSeleccionado && inputBuscarCliente !== "") {
-    clienteVentaSeleccionado = dbClientes.find(c => 
-      String(c.cedula).trim() === inputBuscarCliente || 
-      String(c.id).trim() === inputBuscarCliente
-      
-    );
-  }
+      if (!clienteVentaSeleccionado && inputBuscarCliente !== "") {
+        clienteVentaSeleccionado = dbClientes.find(c => 
+          String(c.cedula).trim() === inputBuscarCliente || 
+          String(c.id).trim() === inputBuscarCliente
+        );
+      }
 
-  // Construye el nombre y la cédula con los datos encontrados o la alternativa por defecto
-  const clienteNombre = clienteVentaSeleccionado 
-    ? `${clienteVentaSeleccionado.nombre} ${clienteVentaSeleccionado.apellido}`.trim() 
-    : 'Consumidor Final';
+      const clienteNombre = clienteVentaSeleccionado 
+        ? `${clienteVentaSeleccionado.nombre} ${clienteVentaSeleccionado.apellido}`.trim() 
+        : 'Consumidor Final';
 
-  const clienteCedula = clienteVentaSeleccionado 
-    ? (clienteVentaSeleccionado.cedula || clienteVentaSeleccionado.id) 
-    : '9999999999';
+      const clienteCedula = clienteVentaSeleccionado 
+        ? (clienteVentaSeleccionado.cedula || clienteVentaSeleccionado.id) 
+        : '9999999999';
 
       const esFacturaSri = document.getElementById('checkModoSri').checked;
 
@@ -1319,7 +1322,7 @@
           usuario: usuarioActual.user,
           tipo_comprobante: esFacturaSri ? "FACTURA_SRI" : "NOTA_VENTA_LOCAL",
           punto_emision: (() => {
-              const textoModo = document.getElementById('textoModoSri')?.textContent || '';
+              const textoModo = document.getElementById('textoModoSeñal')?.textContent || '';
               if (textoModo.includes('LOCAL')) return "001-100";
               return document.getElementById('punto-emision')?.value || "001-002";
           })(),
@@ -1349,7 +1352,6 @@
       if (carritos.length === 0) carritos.push({ id: Date.now(), nombre: 'Principal 1', items: [] });
       carritoActivoId = carritos[0].id;
       
-      // Reiniciar cliente seleccionado
       clienteVentaSeleccionado = { cedula: '9999999999001', nombre: 'Consumidor Final' };
       if (document.getElementById('pos-cliente-buscar')) document.getElementById('pos-cliente-buscar').value = '';
 
@@ -1395,7 +1397,7 @@
         document.getElementById('arqueo-estado-cerrado').style.display = 'none';
         document.getElementById('arq-fondo').value = arqueoAbierto.fondoInicial;
         
-        const ventasTurno = dbVentas.filter(v => String(v.localId || v.local_id) === String(usuarioActual.localId) && new Date(v.fecha) >= new Date(arqueoAbierto.fechaApertura));
+        const ventasTurno = dbVentas.filter(v => String(v.localId) === String(usuarioActual.localId) && new Date(v.fecha) >= new Date(arqueoAbierto.fechaApertura));
         
         let tEfectivo = 0, tTarjeta = 0, tTransferencia = 0;
         ventasTurno.forEach(v => {
@@ -1453,7 +1455,7 @@
       const arqueoAbierto = dbArqueos.find(a => String(a.localId) === String(usuarioActual.localId) && a.estado === 'Abierto');
       if (!arqueoAbierto) return;
 
-      const ventasTurno = dbVentas.filter(v => String(v.localId || v.local_id) === String(usuarioActual.localId) && new Date(v.fecha) >= new Date(arqueoAbierto.fechaApertura));
+      const ventasTurno = dbVentas.filter(v => String(v.localId) === String(usuarioActual.localId) && new Date(v.fecha) >= new Date(arqueoAbierto.fechaApertura));
       let tEfectivo = 0;
       ventasTurno.forEach(v => { if (!v.metodoPago || v.metodoPago === 'Efectivo') tEfectivo += v.total; });
 
@@ -1564,7 +1566,7 @@
 
       dbClientes.push({
         id: nuevoClienteSupabase.id,
-        localId: nuevoClienteSupabase.local_id,
+        localId: String(nuevoClienteSupabase.local_id),
         cedula: nuevoClienteSupabase.cedula,
         nombre: nuevoClienteSupabase.nombre,
         apellido: nuevoClienteSupabase.apellido,
@@ -1582,7 +1584,7 @@
 
     function renderClientes() {
       const q = (document.getElementById('cli-buscar')?.value || '').toLowerCase();
-      const clientes = dbClientes.filter(c => String(c.localId || c.local_id) === String(usuarioActual.localId) && (c.cedula.toLowerCase().includes(q) || c.nombre.toLowerCase().includes(q)));
+      const clientes = dbClientes.filter(c => String(c.localId) === String(usuarioActual.localId) && (c.cedula.toLowerCase().includes(q) || c.nombre.toLowerCase().includes(q)));
       document.getElementById('cli-tabla').innerHTML = clientes.map(c => `
         <tr><td><b>${c.cedula}</b></td><td>${c.nombre} ${c.apellido}</td><td>${c.correo}</td><td><button class="btn btn-danger btn-sm" onclick="eliminarCliente('${c.id}')">Eliminar</button></td></tr>
       `).join('');
@@ -1598,10 +1600,10 @@
 
     function renderKardex() {
       const q = (document.getElementById('kardex-buscar')?.value || '').toLowerCase();
-      const localActualId = usuarioActual ? String(usuarioActual.localId || usuarioActual.local_id) : null;
+      const localActualId = usuarioActual ? String(usuarioActual.localId) : null;
 
       const ventas = dbVentas.filter(v => {
-          const perteneceAlLocal = !localActualId || String(v.localId || v.local_id) === localActualId;
+          const perteneceAlLocal = !localActualId || String(v.localId) === localActualId;
           if (!perteneceAlLocal) return false;
           if (!q) return true;
           return String(v.id || '').toLowerCase().includes(q) || String(v.clienteNombre || '').toLowerCase().includes(q);
@@ -1674,7 +1676,7 @@
 
       dbProductos.push({
         id: nuevoProdSupabase.id,
-        localId: nuevoProdSupabase.local_id,
+        localId: String(nuevoProdSupabase.local_id),
         codigo: nuevoProdSupabase.codigo,
         nombre: nuevoProdSupabase.nombre,
         costo: nuevoProdSupabase.costo,
@@ -1701,8 +1703,11 @@
     }
 
     function renderInventario() {
-      const lista = dbProductos.filter(p => String(p.localId || p.local_id) === String(usuarioActual.localId));
-      document.getElementById('inv-tabla-catalogo').innerHTML = lista.map(p => `
+      const lista = dbProductos.filter(p => String(p.localId) === String(usuarioActual.localId));
+      const tablaInv = document.getElementById('inv-tabla-catalogo');
+      if (!tablaInv) return;
+
+      tablaInv.innerHTML = lista.map(p => `
         <tr>
           <td>${p.codigo}</td>
           <td><b>${p.nombre}</b></td>
@@ -1725,7 +1730,7 @@
             <button class="btn btn-danger btn-sm" onclick="eliminarProducto('${p.id}')">X</button>
           </td>
         </tr>
-      `).join('');
+      `).join('') || `<tr><td colspan="11" style="text-align:center;">No hay productos registrados en este local</td></tr>`;
     }
 
     async function actualizarProducto(id) {
@@ -1779,8 +1784,8 @@
     }
 
     function renderHistorial() {
-      const localActualId = usuarioActual ? String(usuarioActual.localId || usuarioActual.local_id) : '';
-      const lista = dbVentas.filter(v => !localActualId || String(v.localId || v.local_id) === localActualId);
+      const localActualId = usuarioActual ? String(usuarioActual.localId) : '';
+      const lista = dbVentas.filter(v => !localActualId || String(v.localId) === localActualId);
       
       const historialTabla = document.getElementById('historial-tabla');
       if (historialTabla) {
@@ -1813,7 +1818,7 @@
       const mesSel = document.getElementById('rep-mes').value;
       const ventasFiltradas = dbVentas.filter(v => {
         const d = new Date(v.fecha);
-        return String(v.localId || v.local_id) === String(usuarioActual.localId) && d.getFullYear() === anioSel && (mesSel === 'TODOS' || d.getMonth() === parseInt(mesSel));
+        return String(v.localId) === String(usuarioActual.localId) && d.getFullYear() === anioSel && (mesSel === 'TODOS' || d.getMonth() === parseInt(mesSel));
       });
 
       let totalVentas = 0, totalCostoCompras = 0;
@@ -1849,7 +1854,7 @@
         user: nuevoEmpleado.user,
         pass: nuevoEmpleado.pass,
         rol: nuevoEmpleado.rol,
-        localId: nuevoEmpleado.local_id
+        localId: String(nuevoEmpleado.local_id)
       });
 
       document.getElementById('emp-user').value = '';
@@ -1859,7 +1864,7 @@
     }
 
     function renderEmpleadosCajeros() {
-      const empleados = dbUsuarios.filter(u => String(u.localId || u.local_id) === String(usuarioActual.localId) && u.rol === 'Cajero');
+      const empleados = dbUsuarios.filter(u => String(u.localId) === String(usuarioActual.localId) && u.rol === 'Cajero');
       document.getElementById('emp-tabla').innerHTML = empleados.map(u => `
         <tr>
           <td><b>${u.user}</b></td>
@@ -1963,7 +1968,7 @@
         user: nuevoUsuarioSupabase.user,
         pass: nuevoUsuarioSupabase.pass,
         rol: nuevoUsuarioSupabase.rol,
-        localId: nuevoUsuarioSupabase.local_id
+        localId: String(nuevoUsuarioSupabase.local_id)
       });
 
       document.getElementById('usr-user').value = '';
@@ -2032,59 +2037,20 @@
 
     function guardarFirmaDigital() {
       const fileInput = document.getElementById('input-archivo-p12');
-      const passInput = document.getElementById('input-firma-password');
+      const passInput = document.getElementById('input-firma-password').value.trim();
 
       if (!fileInput.files || fileInput.files.length === 0) {
-        return alert('Debes seleccionar un archivo de firma .p12 o .pfx');
-      }
-      if (!passInput.value) {
-        return alert('Debes ingresar la contraseña correspondiente.');
+        return alert('Por favor selecciona un archivo de firma digital (.p12 o .pfx).');
       }
 
-      alert('Firma digital guardada localmente para este terminal.');
+      if (!passInput) {
+        return alert('Por favor ingresa la contraseña de tu firma digital.');
+      }
+
+      alert('Configuración de firma electrónica guardada correctamente para este local.');
       cerrarConfigFirma();
     }
-
-    function cargarFacturas() {
-      filtrarFacturas();
-    }
-
-    function filtrarFacturas() {
-      const q = (document.getElementById('filtro-buscar-factura')?.value || '').toLowerCase();
-      const pEmision = document.getElementById('filtro-punto-emision')?.value || '';
-
-      const filtradas = dbVentas.filter(v => {
-        const pertenecePunto = !pEmision || (v.punto_emision || '001-100') === pEmision;
-        const coincideQ = !q || (v.id || '').toLowerCase().includes(q) || (v.clienteNombre || '').toLowerCase().includes(q);
-        return pertenecePunto && coincideQ;
-      });
-
-      const body = document.getElementById('tabla-facturas-body');
-      if (body) {
-        body.innerHTML = filtradas.map(v => `
-          <tr>
-            <td><b>${v.id}</b></td>
-            <td>${v.clienteNombre || v.cliente || 'Consumidor Final'}</td>
-            <td>${new Date(v.fecha).toLocaleString()}</td>
-            <td>${v.punto_emision || '001-100'}</td>
-            <td><span class="badge">${v.tipo_comprobante || 'NOTA_VENTA_LOCAL'}</span></td>
-            <td><b>$${Number(v.total).toFixed(2)}</b></td>
-            <td>${v.metodoPago || 'Efectivo'}</td>
-            <td><button class="btn btn-primary btn-sm" onclick='mostrarFactura(${JSON.stringify(v)})'>Ver / Imprimir</button></td>
-          </tr>
-        `).join('') || `<tr><td colspan="8" style="text-align:center;">No se encontraron facturas emitidas.</td></tr>`;
-      }
-    }
-
-    // Inicialización al cargar la ventana
-    window.addEventListener('DOMContentLoaded', async () => {
-      if (usuarioActual) {
-        await cargarDatosSupabase();
-        aplicarSesionActiva();
-      } else {
-        document.getElementById('login-screen').style.display = 'flex';
-      }
-    });
   </script>
 </body>
 </html>
+
