@@ -697,14 +697,6 @@
     let html5QrCode = null;
     let clienteVentaSeleccionado = { cedula: '9999999999001', nombre: 'Consumidor Final' };
 
-    // Si ya existe una sesión guardada al cargar la página, aplicarla automáticamente
-    window.addEventListener('DOMContentLoaded', async () => {
-      await cargarDatosSupabase();
-      if (usuarioActual) {
-        aplicarSesionActiva();
-      }
-    });
-
     async function registrarAuditoriaMerma(idFactura, productoNombre, cantidad, montoTotal, motivo) {
       try {
         await supabaseClient.from('mermas_auditoria').insert([{
@@ -1800,43 +1792,6 @@
       }
     }
 
-    function cargarFacturas() {
-      const q = (document.getElementById('filtro-buscar-factura')?.value || '').toLowerCase();
-      const puntoFiltro = document.getElementById('filtro-punto-emision')?.value || '';
-      const localActualId = usuarioActual ? String(usuarioActual.localId || usuarioActual.local_id) : '';
-
-      const lista = dbVentas.filter(v => {
-        const mismoLocal = !localActualId || String(v.localId || v.local_id) === localActualId;
-        if (!mismoLocal) return false;
-
-        const coincidePunto = !puntoFiltro || String(v.punto_emision || '') === puntoFiltro;
-        if (!coincidePunto) return false;
-
-        if (!q) return true;
-        return String(v.id).toLowerCase().includes(q) || String(v.clienteNombre || '').toLowerCase().includes(q) || String(v.clienteCedula || '').toLowerCase().includes(q);
-      });
-
-      const body = document.getElementById('tabla-facturas-body');
-      if (body) {
-        body.innerHTML = lista.map(v => `
-          <tr>
-            <td><b>${v.id}</b></td>
-            <td>${v.clienteNombre || 'Consumidor Final'}</td>
-            <td>${new Date(v.fecha).toLocaleString()}</td>
-            <td><span class="badge" style="background:#e0f2fe; color:#0369a1;">${v.punto_emision || '001-100'}</span></td>
-            <td><span class="badge">${v.tipo_comprobante || 'NOTA'}</span></td>
-            <td><b>$${Number(v.total).toFixed(2)}</b></td>
-            <td>${v.metodoPago || 'Efectivo'}</td>
-            <td><button class="btn btn-primary btn-sm" onclick='mostrarFactura(${JSON.stringify(v)})'>Ver</button></td>
-          </tr>
-        `).join('') || `<tr><td colspan="8" style="text-align:center;">No se encontraron facturas registradas</td></tr>`;
-      }
-    }
-
-    function filtrarFacturas() {
-      cargarFacturas();
-    }
-
     function prepararVistaReportes() {
       const selectAnio = document.getElementById('rep-anio');
       const anioActual = new Date().getFullYear();
@@ -2080,7 +2035,7 @@
         return alert('Por favor ingresa la contraseña de la firma digital');
       }
 
-      alert('Firma digital configurada con éxito para este local.');
+      alert('Configuración de firma guardada correctamente para este local.');
       cerrarConfigFirma();
     }
   </script>
