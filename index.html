@@ -255,6 +255,31 @@
         </div>
       </section>
 
+      <!-- MODAL CONFIGURACIÓN FIRMA DIGITAL -->
+<div id="modal-firma-config" class="modal-overlay" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 10000; align-items: center; justify-content: center; padding: 20px;">
+    <div class="modal-box" style="background: #fff; padding: 24px; border-radius: 16px; width: 100%; max-width: 420px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);">
+        <h3 style="font-size: 1.25rem; margin-bottom: 15px; color: var(--text); text-align: center;">Configuración de Firma Electrónica</h3>
+        <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 15px;">
+            Sube tu archivo de firma digital (.p12 / .pfx) y escribe su contraseña correspondiente para este local.
+        </p>
+        
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 5px;">Archivo de Firma (.p12 / .pfx)</label>
+            <input type="file" id="input-archivo-p12" accept=".p12,.pfx" style="width: 100%; font-size: 0.85rem;">
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 5px;">Contraseña de la Firma</label>
+            <input type="password" id="input-firma-password" placeholder="Ingresa la clave de tu firma" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;">
+        </div>
+
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button onclick="cerrarConfigFirma()" style="background: #e2e8f0; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">Cancelar</button>
+            <button onclick="guardarFirmaDigital()" style="background: #0284c7; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600;">Guardar Firma</button>
+        </div>
+    </div>
+</div>
+
       <!-- VISTA DE FACTURAS E HISTORIAL -->
 <section id="vista-facturas" class="page-section" style="display: none;">
     <div class="card">
@@ -793,6 +818,10 @@
 
     if (esUsuarioMatriz() || esDuenoLocal()) {
         html += `
+            <button class="nav-btn" onclick="abrirConfigFirma()">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                <span>Firma Digital</span>
+            </button>
             <button class="nav-btn" id="btn-nav-kardex" onclick="cambiarVista('kardex')">
                 <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2h14c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"></path></svg>
                 <span>Kardex</span>
@@ -1710,7 +1739,6 @@ async function consultarSRI() {
         <tr><td>${v.id}</td><td>${v.localNombre}</td><td>${v.clienteNombre}</td><td>${v.metodoPago || 'Efectivo'}</td><td>${new Date(v.fecha).toLocaleString()}</td><td>$${v.total.toFixed(2)}</td><td><button class="btn btn-primary btn-sm" onclick='mostrarFactura(${JSON.stringify(v)})'>Ver</button></td></tr>
       `).join('');
     }
-https://gemini.google.com/app/c2f46a6ef141cde3?hl=es_419
     function prepararVistaReportes() {
       const selectAnio = document.getElementById('rep-anio');
       const anioActual = new Date().getFullYear();
@@ -2073,9 +2101,128 @@ document.addEventListener('click', function(e) {
             }
         }, 150);
     }
+
+    // Funciones para abrir y cerrar la ventana de la firma
+// Funciones de la firma digital
+function abrirConfigFirma() {
+    const modal = document.getElementById('modal-firma-config');
+    if (modal) modal.style.display = 'flex';
+}
+
+function cerrarConfigFirma() {
+    const modal = document.getElementById('modal-firma-config');
+    if (modal) modal.style.display = 'none';
+}
+
+async function guardarFirmaDigital() {
+    const fileInput = document.getElementById('input-archivo-p12');
+    const passInput = document.getElementById('input-firma-password');
+    
+    const archivo = fileInput.files[0];
+    const password = passInput.value.trim();
+    
+    if (!archivo && !password) {
+        alert('Por favor selecciona un archivo o ingresa la contraseña.');
+        return;
+    }
+
+    const localId = usuarioActual.localId || usuarioActual.local_id || usuarioActual.localID;
+    if (!localId) {
+        alert('Error: El usuario actual no tiene un local asignado.');
+        return;
+    }
+
+    try {
+        let firmaUrl = null;
+
+        if (archivo) {
+            const nombreArchivo = `firma_${localId}_${Date.now()}.p12`;
+            const { data: uploadData, error: uploadError } = await supabaseClient.storage
+                .from('firmas') 
+                .upload(nombreArchivo, archivo);
+
+            if (uploadError) {
+                alert('Error al subir el archivo: ' + uploadError.message);
+                return;
+            }
+
+            const { data: publicUrlData } = supabaseClient.storage
+                .from('firmas')
+                .getPublicUrl(nombreArchivo);
+                
+            firmaUrl = publicUrlData.publicUrl;
+        }
+
+        let datosActualizar = {};
+        if (firmaUrl) datosActualizar.firma_p12_url = firmaUrl;
+        if (password) datosActualizar.firma_password = password;
+
+        const { error: updateError } = await supabaseClient
+            .from('locales')
+            .update(datosActualizar)
+            .eq('id', localId);
+
+        if (updateError) {
+            alert('Error al guardar en la base de datos: ' + updateError.message);
+            return;
+        }
+
+        alert('¡Firma digital y contraseña guardadas exitosamente!');
+        cerrarConfigFirma();
+        
+        fileInput.value = '';
+        passInput.value = '';
+
+    } catch (err) {
+        console.error('Error general:', err);
+        alert('Ocurrió un error inesperado al guardar la firma.');
+    }
+}
+
+async function guardarFirmaDigital() {
+      // ... tu código de guardar firma ...
+    }
+
+    // <-- Pégalo exactamente aquí, a la misma altura:
+    window.abrirConfigFirma = function() {
+      const modal = document.getElementById('modal-firma-config');
+      if (modal) modal.style.display = 'flex';
+    };
+
+    window.cerrarConfigFirma = function() {
+      const modal = document.getElementById('modal-firma-config');
+      if (modal) modal.style.display = 'none';
+    };
+
 });
+
+
 
 </script>
   </script>
+  <!-- MODAL CONFIGURACIÓN FIRMA DIGITAL -->
+<div id="modal-firma-config" class="modal-overlay" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 10000; align-items: center; justify-content: center; padding: 20px;">
+    <div class="modal-box" style="background: #fff; padding: 24px; border-radius: 16px; width: 100%; max-width: 420px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);">
+        <h3 style="font-size: 1.25rem; margin-bottom: 15px; text-align: center;">Configuración de Firma Electrónica</h3>
+        <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 15px;">
+            Sube tu archivo de firma digital (.p12 / .pfx) y escribe su contraseña correspondiente para este local.
+        </p>
+        
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 5px;">Archivo de Firma (.p12 / .pfx)</label>
+            <input type="file" id="input-archivo-p12" accept=".p12,.pfx" style="width: 100%; font-size: 0.85rem;">
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 5px;">Contraseña de la Firma</label>
+            <input type="password" id="input-firma-password" placeholder="Ingresa la clave de tu firma" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;">
+        </div>
+
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button onclick="cerrarConfigFirma()" style="background: #e2e8f0; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">Cancelar</button>
+            <button onclick="guardarFirmaDigital()" style="background: #0284c7; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600;">Guardar Firma</button>
+        </div>
+    </div>
+</div>
 </body>
   </html>
