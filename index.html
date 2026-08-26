@@ -70,7 +70,6 @@
     input:focus, select:focus { border-color: var(--primary); }
     
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
 
     .btn { font-weight: 600; border: none; cursor: pointer; transition: background 0.2s; display: inline-flex; justify-content: center; align-items: center; gap: 8px; margin-top: 8px; }
     .btn-primary { background: var(--primary); color: white; }
@@ -97,12 +96,10 @@
     th { color: var(--text-muted); font-weight: 600; background: var(--bg); }
     .text-success { color: var(--success); font-weight: bold; }
 
-    /* ESTILOS DE PESTAÑAS DE CARRITO */
     .cart-tabs { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 10px; padding-bottom: 4px; }
     .cart-tab-btn { padding: 6px 12px; font-size: 0.8rem; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; white-space: nowrap; }
     .cart-tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); font-weight: bold; }
     
-    /* ESTILOS PARA ITEMS ANULADOS EN FACTURA/CARRITO */
     .item-anulado { text-decoration: line-through; color: var(--danger); background-color: #fef2f2; }
     
     @media (min-width: 768px) {
@@ -112,13 +109,6 @@
       .nav-btn.active { background: #eff6ff; }
       main { padding-bottom: 20px; }
       .grid-pos { grid-template-columns: 1.6fr 1fr; }
-    }
-
-    @media print {
-      body * { visibility: hidden; }
-      #factura-impresion, #factura-impresion * { visibility: visible; }
-      #factura-impresion { position: absolute; left: 0; top: 0; width: 100%; max-width: 300px; padding: 10px; }
-      .no-print { display: none !important; }
     }
   </style>
 </head>
@@ -178,7 +168,7 @@
   </div>
 
   <!-- HEADER -->
-  <header class="no-print">
+  <header>
     <div class="brand-title">POS Pro System</div>
     <div class="user-badge">
       <span class="badge" id="session-local">-</span>
@@ -188,10 +178,7 @@
   </header>
 
   <div class="app-container">
-    <!-- NAVEGACIÓN DINÁMICA SEGÚN ROL -->
-    <nav class="nav-bar no-print" id="app-nav-bar">
-      <!-- Se llena dinámicamente según permisos -->
-    </nav>
+    <nav class="nav-bar" id="app-nav-bar"></nav>
 
     <main>
       <!-- VISTA POS -->
@@ -228,10 +215,8 @@
                 </div>
                 <div>
                   <label>Buscar / Seleccionar Cliente</label>
-                  <input type="text" id="pos-cliente-buscar" class="form-control" list="lista-clientes-opciones" placeholder="Escribe cédula o nombre..." onchange="seleccionarClienteAutocomplete(this.value)" oninput="seleccionarClienteAutocomplete(this.value)">
-                  <datalist id="lista-clientes-opciones">
-                      <!-- Se llena automáticamente con tus clientes -->
-                  </datalist>
+                  <input type="text" id="pos-cliente-buscar" class="form-control" list="lista-clientes-opciones" placeholder="Cédula o nombre..." oninput="seleccionarClienteAutocomplete(this.value)">
+                  <datalist id="lista-clientes-opciones"></datalist>
                   <input type="hidden" id="pos-cliente-select" value="Consumidor Final">
                 </div>
               </div>
@@ -244,193 +229,8 @@
               </div>
               <h2 style="margin-top:15px; text-align:right;">Total: $<span id="pos-total">0.00</span></h2>
               
-              <!-- INDICADOR / INTERRUPTOR DE SEÑAL SRI (LOCAL VS SRI) -->
-              <div class="d-flex justify-content-between align-items-center p-2 mb-2 bg-light rounded border" style="font-size: 0.85rem; margin-top: 10px; display:flex; justify-content:space-between; align-items:center;">
-                  <span class="text-muted fw-bold">Modo de Emisión:</span>
-                  <div onclick="toggleModoSri()" id="contenedorModoSri" style="cursor: pointer; display: flex; align-items: center; gap: 6px; padding: 4px 12px; background: #e9ecef; border-radius: 20px; transition: 0.3s; border: 1px solid #ced4da;">
-                      <i id="iconoModoSeñal" class="fas fa-wifi text-secondary"></i>
-                      <span id="textoModoSeñal" class="fw-bold text-secondary" style="font-size: 0.8rem;">LOCAL</span>
-                      <input type="checkbox" id="checkModoSri" style="display: none;">
-                  </div>
-              </div>
-
-              <button class="btn btn-primary" onclick="abrirModalCobro()">Cobrar e Imprimir</button>
-              
-              <!-- SELECTOR DE PUNTO DE EMISIÓN -->
-              <div class="mb-2 p-2 bg-light rounded border" style="font-size: 0.85rem; margin-top: 10px;">
-                  <label for="punto-emision" class="form-label fw-bold text-muted mb-1">Punto de Emisión:</label>
-                  <select id="punto-emision" class="pos-punto-emision form-control form-control-sm">
-                      <option value="001-100">001-100 (Caja Principal)</option>
-                      <option value="001-002">001-002 (Caja Secundaria)</option>
-                  </select>
-              </div>
+              <button class="btn btn-primary" onclick="abrirModalCobro()" style="margin-top: 15px;">Cobrar e Imprimir</button>
             </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- MODAL CONFIGURACIÓN FIRMA DIGITAL -->
-      <div id="modal-firma-config" class="modal-overlay" style="display: none;">
-          <div class="modal-box" style="background: #fff; padding: 24px; border-radius: 16px; width: 100%; max-width: 420px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);">
-              <h3 style="font-size: 1.25rem; margin-bottom: 15px; color: var(--text); text-align: center;">Configuración de Firma Electrónica</h3>
-              <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 15px;">
-                  Sube tu archivo de firma digital (.p12 / .pfx) y escribe su contraseña correspondiente para este local.
-              </p>
-              
-              <div style="margin-bottom: 15px;">
-                  <label style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 5px;">Archivo de Firma (.p12 / .pfx)</label>
-                  <input type="file" id="input-archivo-p12" accept=".p12,.pfx" style="width: 100%; font-size: 0.85rem;">
-              </div>
-
-              <div style="margin-bottom: 20px;">
-                  <label style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 5px;">Contraseña de la Firma</label>
-                  <input type="password" id="input-firma-password" placeholder="Ingresa la clave de tu firma" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;">
-              </div>
-
-              <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                  <button onclick="cerrarConfigFirma()" style="background: #e2e8f0; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">Cancelar</button>
-                  <button onclick="guardarFirmaDigital()" style="background: #0284c7; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600;">Guardar Firma</button>
-              </div>
-          </div>
-      </div>
-
-      <!-- VISTA DE FACTURAS E HISTORIAL -->
-      <section id="vista-facturas" class="page-section" style="display: none;">
-          <div class="card">
-              <h3 style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 12px;">Historial de Facturas y Comprobantes</h3>
-              <p style="font-size: 0.8rem; color: #6c757d; margin-bottom: 15px;">Consulta, filtra y revisa todas las ventas emitidas por punto de emisión.</p>
-              
-              <div class="form-row" style="margin-bottom: 15px;">
-                  <input type="text" id="filtro-buscar-factura" class="form-control form-control-sm" placeholder="Buscar por cliente o ID..." oninput="filtrarFacturas()">
-                  <select id="filtro-punto-emision" class="form-control form-control-sm" onchange="filtrarFacturas()">
-                      <option value="">Todos los Puntos</option>
-                      <option value="001-100">001-100 (Principal)</option>
-                      <option value="001-002">001-002 (Secundaria)</option>
-                  </select>
-              </div>
-
-              <div class="table-responsive">
-                  <table class="table table-sm table-striped" style="font-size: 0.85rem;">
-                      <thead>
-                          <tr>
-                              <th>ID / Comprobante</th>
-                              <th>Cliente</th>
-                              <th>Fecha</th>
-                              <th>Punto Emisión</th>
-                              <th>Tipo</th>
-                              <th>Total</th>
-                              <th>Método</th>
-                              <th>Acciones</th>
-                          </tr>
-                      </thead>
-                      <tbody id="tabla-facturas-body"></tbody>
-                  </table>
-              </div>
-          </div>
-      </section>
-
-      <!-- VISTA ARQUEO DE CAJA -->
-      <section id="vista-arqueo" class="page-section">
-        <div class="card">
-          <h3>Arqueo y Cierre de Caja (Turnos)</h3>
-          <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:12px;">Control de efectivo y conciliación del turno actual.</p>
-          
-          <div id="arqueo-estado-abierto" style="display:none;">
-            <div class="form-row">
-              <div>
-                <label>Fondo Inicial en Caja ($)</label>
-                <input type="number" step="0.01" id="arq-fondo" placeholder="0.00">
-              </div>
-              <div>
-                <label>&nbsp;</label>
-                <button class="btn btn-primary" onclick="guardarFondoCaja()" style="margin-top:4px;">Actualizar Fondo</button>
-              </div>
-            </div>
-
-            <div class="kpi-grid" style="margin-top: 15px;">
-              <div class="kpi-card"><label>Fondo Inicial</label><div class="kpi-val" id="arq-lbl-fondo">$0.00</div></div>
-              <div class="kpi-card"><label>Ventas en Efectivo</label><div class="kpi-val text-success" id="arq-lbl-efectivo">$0.00</div></div>
-              <div class="kpi-card"><label>Ventas Tarjeta</label><div class="kpi-val" id="arq-lbl-tarjeta">$0.00</div></div>
-              <div class="kpi-card"><label>Ventas Transferencia</label><div class="kpi-val" id="arq-lbl-transferencia">$0.00</div></div>
-            </div>
-
-            <div style="margin-top: 20px; background:var(--bg); padding:15px; border-radius:8px;">
-              <h4>Cierre de Turno</h4>
-              <label>Conteo Físico de Efectivo en Caja ($)</label>
-              <input type="number" step="0.01" id="arq-conteo-fisico" placeholder="0.00" oninput="calcularDiferenciaArqueo()">
-              <div style="margin-top:10px;">
-                <span>Diferencia / Descuadré:</span>
-                <div style="font-size:1.3rem; font-weight:bold;" id="arq-lbl-diferencia">$0.00</div>
-              </div>
-              <button class="btn btn-danger" style="margin-top:12px;" onclick="cerrarTurnoCaja()">Cerrar Caja y Registrar Arqueo</button>
-            </div>
-          </div>
-
-          <div id="arqueo-estado-cerrado">
-            <p style="color:var(--danger); font-weight:bold; margin-bottom:10px;">No hay un turno de caja activo o ya fue cerrado.</p>
-            <button class="btn btn-primary" onclick="iniciarNuevoTurno()">Abrir Nuevo Turno de Caja</button>
-          </div>
-        </div>
-
-        <div class="card">
-          <h3>Historial de Arqueos de Caja</h3>
-          <div class="table-responsive">
-            <table>
-              <thead>
-                <tr>
-                  <th>Usuario</th>
-                  <th>Apertura</th>
-                  <th>Cierre</th>
-                  <th>Fondo Inicial</th>
-                  <th>Efectivo Físico</th>
-                  <th>Estado</th>
-                </tr>
-              </thead>
-              <tbody id="arqueo-historial-tabla"></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <!-- VISTA KARDEX -->
-      <section id="vista-kardex" class="page-section">
-        <div class="card">
-          <h3>Kardex de Facturación y Salida de Productos</h3>
-          <input type="text" id="kardex-buscar" placeholder="🔍 Buscar por N° ticket, cliente o producto..." oninput="renderKardex()">
-          <div class="table-responsive" style="margin-top:10px;">
-            <table>
-              <thead><tr><th>Ticket</th><th>Fecha y Hora</th><th>Sucursal</th><th>Cliente</th><th>Pago</th><th>Total</th><th>Acción</th></tr></thead>
-              <tbody id="kardex-tabla"></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <!-- VISTA CLIENTES -->
-      <section id="vista-clientes" class="page-section">
-        <div class="card">
-          <h3>Registrar Cliente</h3>
-          <label>Cédula / RUC *</label>
-          <div style="display: flex; gap: 8px; margin-bottom: 10px;">
-            <input type="text" id="cli-cedula" placeholder="Ej: 1312345678" maxlength="13" style="width: 100%; margin:0;">
-            <button type="button" class="btn btn-primary" onclick="consultarSRI()" style="width: auto; margin:0; white-space:nowrap;">🔍 Buscar SRI</button>
-          </div>
-          <div class="form-row">
-              <div><label>Nombre *</label><input type="text" id="cli-nombre" placeholder="Ej: Juan"></div>
-              <div><label>Apellido / Razón Social *</label><input type="text" id="cli-apellido" placeholder="Ej: Pérez"></div>
-          </div>
-          <label>Correo Electrónico (Opcional)</label>
-          <input type="email" id="cli-correo" placeholder="ejemplo@correo.com">
-          <button class="btn btn-primary" onclick="guardarCliente()">Guardar Cliente</button>
-        </div>
-        <div class="card">
-          <h3>Clientes Registrados</h3>
-          <input type="text" id="cli-buscar" placeholder="🔍 Buscar cliente..." oninput="renderClientes()">
-          <div class="table-responsive">
-            <table>
-              <thead><tr><th>Cédula</th><th>Cliente</th><th>Correo</th><th></th></tr></thead>
-              <tbody id="cli-tabla"></tbody>
-            </table>
           </div>
         </div>
       </section>
@@ -466,7 +266,6 @@
             <div><label>P. Normal ($)</label><input type="number" id="inv-precio" step="0.01" placeholder="Normal"></div>
           </div>
 
-          <!-- LISTAS DE PRECIOS ADICIONALES -->
           <label style="margin-top:10px; font-weight:bold; color:var(--primary);">Listas de Precios Especiales ($)</label>
           <div class="form-row">
             <div><label>P. Revendedor ($)</label><input type="number" id="inv-precio-revendedor" step="0.01" placeholder="Revendedor"></div>
@@ -505,176 +304,31 @@
         </div>
       </section>
 
-      <!-- VISTA HISTORIAL -->
+      <!-- OTRAS VISTAS (Clientes, Historial, etc.) -->
+      <section id="vista-clientes" class="page-section">
+        <div class="card">
+          <h3>Clientes Registrados</h3>
+          <div class="table-responsive">
+            <table>
+              <thead><tr><th>Cédula</th><th>Cliente</th><th>Correo</th></tr></thead>
+              <tbody id="cli-tabla"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
       <section id="vista-historial" class="page-section">
         <div class="card">
           <h3>Historial de Ventas</h3>
           <div class="table-responsive">
             <table>
-              <thead><tr><th>Ticket</th><th>Sucursal</th><th>Cliente</th><th>Método</th><th>Fecha</th><th>Total</th><th></th></tr></thead>
+              <thead><tr><th>Ticket</th><th>Cliente</th><th>Método</th><th>Fecha</th><th>Total</th></tr></thead>
               <tbody id="historial-tabla"></tbody>
             </table>
           </div>
         </div>
       </section>
-
-      <!-- VISTA REPORTES -->
-      <section id="vista-reportes" class="page-section">
-        <div class="card">
-          <h3>Reporte de Desempeño</h3>
-          <div class="form-row">
-            <div><label>Año</label><select id="rep-anio" onchange="generarReporte()"></select></div>
-            <div>
-              <label>Mes</label>
-              <select id="rep-mes" onchange="generarReporte()">
-                <option value="TODOS">Todos (Anual)</option>
-                <option value="0">Enero</option><option value="1">Febrero</option><option value="2">Marzo</option><option value="3">Abril</option><option value="4">Mayo</option><option value="5">Junio</option><option value="6">Julio</option><option value="7">Agosto</option><option value="8">Septiembre</option><option value="9">Octubre</option><option value="10">Noviembre</option><option value="11">Diciembre</option>
-              </select>
-            </div>
-          </div>
-          <div class="kpi-grid">
-            <div class="kpi-card"><label>Ventas Totales</label><div class="kpi-val text-success" id="rep-val-ventas">$0.00</div></div>
-            <div class="kpi-card"><label>Costo de Compras</label><div class="kpi-val" style="color:var(--danger);" id="rep-val-compras">$0.00</div></div>
-            <div class="kpi-card"><label>Ganancia Neta</label><div class="kpi-val" style="color:var(--primary);" id="rep-val-ganancia">$0.00</div></div>
-          </div>
-        </div>
-      </section>
-
-      <!-- VISTA PERSONAL DEL LOCAL -->
-      <section id="vista-personal" class="page-section">
-        <div class="card">
-          <h3>Crear Cuenta para un Empleado/Cajero</h3>
-          <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:10px;">Esta cuenta estará limitada exclusivamente al módulo de ventas y cobro de tu local.</p>
-          <input type="text" id="emp-user" placeholder="Nombre de Usuario del Cajero">
-          <input type="password" id="emp-pass" placeholder="Contraseña">
-          <button class="btn btn-primary" onclick="crearEmpleadoCajero()">Guardar Empleado</button>
-        </div>
-        <div class="card">
-          <h3>Cajeros de tu Local</h3>
-          <div class="table-responsive">
-            <table>
-              <thead><tr><th>Usuario</th><th>Rol</th><th>Acciones</th></tr></thead>
-              <tbody id="emp-tabla"></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <!-- VISTA LOCALES -->
-      <section id="vista-locales" class="page-section">
-        <div class="card">
-          <h3>Crear Nueva Sucursal</h3>
-          <input type="text" id="loc-nombre" placeholder="Nombre de Sucursal / Local">
-          <input type="text" id="loc-propietario" placeholder="Nombre del Propietario / Emisor">
-          <input type="text" id="loc-ruc" placeholder="RUC (13 dígitos)">
-          <input type="text" id="loc-direccion" placeholder="Dirección">
-          <label>¿Obligado a llevar contabilidad?</label>
-          <select id="loc-contabilidad">
-            <option value="NO">NO</option>
-            <option value="SI">SÍ</option>
-          </select>
-          <button class="btn btn-primary" onclick="crearLocal()">Registrar Local</button>
-        </div>
-        <div class="card">
-          <h3>Locales Activos</h3>
-          <div class="table-responsive">
-            <table>
-              <thead><tr><th>ID</th><th>Nombre</th><th>RUC / Dir</th><th>Acciones</th></tr></thead>
-              <tbody id="loc-tabla"></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <!-- VISTA USUARIOS -->
-      <section id="vista-usuarios" class="page-section">
-        <div class="card">
-          <h3>Crear Credencial para Sistema</h3>
-          <input type="text" id="usr-user" placeholder="Nombre de Usuario">
-          <input type="password" id="usr-pass" placeholder="Contraseña">
-          <select id="usr-rol">
-            <option value="Dueno">Dueño de Local</option>
-            <option value="Cajero">Cajero / Encargado</option>
-            <option value="Administrador">Administrador General (Matriz)</option>
-          </select>
-          <label>Sucursal Asignada</label>
-          <select id="usr-local-select"></select>
-          <button class="btn btn-primary" onclick="crearUsuario()">Guardar Credencial</button>
-        </div>
-        <div class="card">
-          <h3>Usuarios del Sistema</h3>
-          <div class="table-responsive">
-            <table>
-              <thead><tr><th>Usuario</th><th>Rol</th><th>Sucursal</th><th>Acciones</th></tr></thead>
-              <tbody id="usr-tabla"></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
     </main>
-  </div>
-
-  <!-- COMPROBANTE DE IMPRESIÓN -->
-  <div id="factura-impresion" style="display:none; max-width: 300px; margin: 0 auto; font-family: monospace; font-size: 12px; color: #000; background: #fff; padding: 10px;">
-    <div style="text-align: center; line-height: 1.3;">
-        <h3 id="fac-local-nombre" style="margin: 0; font-size: 14px; font-weight: bold;"></h3>
-        <p style="margin: 2px 0;" id="fac-propietario"></p>
-
-        <p style="margin: 2px 0;">RUC: <span id="fac-ruc"></span></p>
-        <p style="margin: 2px 0; font-size: 11px;" id="fac-dir"></p>
-        <p style="margin: 2px 0; font-size: 11px;">Obligado contabilidad: <span id="fac-contabilidad">NO</span></p>
-        <p style="margin: 2px 0;">Usuario Venta: <span id="fac-usuario"></span></p>
-    </div>
-    
-    <div style="margin-top: 8px; border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 5px 0; line-height: 1.3;">
-        <p style="margin: 2px 0; font-weight: bold;">Factura #: <span id="fac-id"></span></p>
-        <p style="margin: 2px 0; font-size: 11px;">Fecha Emisión: <span id="fac-fecha"></span></p>
-        <p style="margin: 2px 0; font-size: 10px;">Nro. de autorización:<br><span id="fac-autorizacion">AUTORIZADO</span></p>
-    </div>
-
-    <div style="margin-top: 5px; line-height: 1.3; font-size: 11px;">
-        <p style="margin: 2px 0;"><b>Cliente:</b> <span id="fac-cliente">CONSUMIDOR FINAL</span></p>
-        <p style="margin: 2px 0;"><b>RUC/CI:</b> <span id="fac-cedula">9999999999999</span></p>
-    </div>
-
-    <hr style="border: none; border-top: 1px dashed #000; margin: 6px 0;">
-
-    <table style="width: 100%; font-size: 11px; border-collapse: collapse;">
-        <thead>
-            <tr style="border-bottom: 1px solid #000;">
-                <th style="text-align: left; padding-bottom: 3px;">Cant.</th>
-                <th style="text-align: left; padding-bottom: 3px;">Descripción</th>
-                <th style="text-align: right; padding-bottom: 3px;">P.Unit</th>
-                <th style="text-align: right; padding-bottom: 3px;">Total</th>
-            </tr>
-        </thead>
-        <tbody id="fac-items"></tbody>
-    </table>
-
-    <hr style="border: none; border-top: 1px dashed #000; margin: 6px 0;">
-
-    <div style="text-align: right; font-size: 12px; line-height: 1.4;">
-        <p style="margin: 2px 0;">Subtotal 0%: $0.00</p>
-        <p style="margin: 2px 0;">Subtotal: $<span id="fac-subtotal">0.00</span></p>
-        <p style="margin: 2px 0; font-weight: bold; font-size: 13px;">TOTAL: $<span id="fac-total">0.00</span></p>
-    </div>
-
-    <hr style="border: none; border-top: 1px dashed #000; margin: 6px 0;">
-
-    <div style="font-size: 11px; line-height: 1.3;">
-        <p style="margin: 2px 0; font-weight: bold;">FORMA DE PAGO:</p>
-        <p style="margin: 2px 0;">Pago <span id="fac-metodo">Efectivo</span></p>
-    </div>
-
-    <div style="text-align: center; margin-top: 10px; font-size: 10px;">
-        <p style="margin: 2px 0;">Gracias por su compra</p>
-        <p style="margin: 2px 0;">Documento electrónico autorizado</p>
-    </div>
-
-    <div class="no-print" style="margin-top: 15px; text-align: center;">
-      <button class="btn btn-primary" onclick="window.print()">Imprimir Ticket</button>
-      <button class="btn btn-danger" onclick="document.getElementById('factura-impresion').style.display='none'">Cerrar</button>
-    </div>
   </div>
 
   <script>
@@ -687,137 +341,48 @@
     let dbProductos = [];
     let dbClientes = [];
     let dbVentas = [];
-    let dbArqueos = [];
-    let dbMermas = [];
     
     let usuarioActual = JSON.parse(localStorage.getItem('usuarioActual')) || null;
-    
     let carritos = [{ id: 1, nombre: 'Principal 1', items: [] }];
     let carritoActivoId = 1;
     let html5QrCode = null;
     let clienteVentaSeleccionado = { cedula: '9999999999001', nombre: 'Consumidor Final' };
 
-    async function registrarAuditoriaMerma(idFactura, productoNombre, cantidad, montoTotal, motivo) {
-      try {
-        await supabaseClient.from('mermas_auditoria').insert([{
-          id_factura: String(idFactura),
-          producto_nombre: productoNombre,
-          cantidad: cantidad,
-          monto_total: montoTotal,
-          motivo: motivo || 'Anulado en factura',
-          fecha_hora: new Date().toISOString(),
-          usuario: usuarioActual ? usuarioActual.user : 'Sistema'
-        }]);
-      } catch (err) {
-        console.error('Error imprevisto al auditoriar merma:', err);
-      }
-    }
-
-    function esLocalMatriz(localId, localNombre = '') {
-      const idStr = String(localId || '').toUpperCase();
-      const nomStr = String(localNombre || '').toLowerCase();
-      return idStr === 'LOC-001' || nomStr.includes('matriz') || nomStr.includes('black');
-    }
-
-    function esUsuarioMatriz() {
-      if (!usuarioActual) return false;
-      const localObj = dbLocales.find(l => String(l.id) === String(usuarioActual.localId));
-      return usuarioActual.rol === 'Administrador' && (esLocalMatriz(usuarioActual.localId, localObj?.nombre));
-    }
-
-    function esDuenoLocal() {
-      if (!usuarioActual) return false;
-      return usuarioActual.rol === 'Dueno' || usuarioActual.rol === 'Dueño';
-    }
-
     async function cargarDatosSupabase() {
       try {
-        const [resLoc, resUsr, resProd, resCli, resVen, resArq, resMer] = await Promise.all([
+        const [resLoc, resUsr, resProd, resCli, resVen] = await Promise.all([
           supabaseClient.from('locales').select('*'),
           supabaseClient.from('usuarios').select('*'),
           supabaseClient.from('productos').select('*'),
           supabaseClient.from('clientes').select('*'),
-          supabaseClient.from('ventas').select('*'),
-          supabaseClient.from('arqueos').select('*').order('fecha_apertura', { ascending: false }),
-          supabaseClient.from('mermas_auditoria').select('*').order('fecha_hora', { ascending: false })
+          supabaseClient.from('ventas').select('*')
         ]);
 
-        if (resLoc.data) {
-          dbLocales = resLoc.data.map(l => ({ 
-            id: l.id, 
-            nombre: l.nombre, 
-            direccion: l.direccion,
-            ruc: l.ruc || '',
-            propietario: l.propietario || '',
-            obligadoContabilidad: l.obligado_contabilidad || 'NO'
-          }));
-        }
-
-        if (resUsr.data) dbUsuarios = resUsr.data.map(u => ({ id: u.id, user: u.user || u.usuario, pass: u.pass || u.password, rol: u.rol, localId: u.local_id || u.localId }));
+        if (resLoc.data) dbLocales = resLoc.data;
+        if (resUsr.data) dbUsuarios = resUsr.data;
         
         if (resProd.data) {
+          // Mapeo adaptado exactamente a los nombres de columnas de tu base de datos
           dbProductos = resProd.data.map(p => ({ 
             id: p.id, 
-            localId: p.local_id || p.localId, 
-            codigo: p.codigo, 
-            nombre: p.nombre, 
-            costo: p.costo || 0, 
-            precio: p.precio,
-            precio_revendedor: p.precio_revendedor || p.precio,
-            precio_proveedor: p.precio_proveedor || p.precio,
-            precio_familia: p.precio_familia || p.precio,
-            precio_mayorista: p.precio_mayorista || p.precio,
-            unidad_medida: p.unidad_medida || 'Unidad',
-            stock: p.stock 
+            localId: String(p.local_id || ''), 
+            codigo: p.codigo || '', 
+            nombre: p.nombre || '', 
+            costo: Number(p.costo || 0), 
+            precio: Number(p.precio || 0),
+            precio_revendedor: Number(p.precio_revendedor || p.precio || 0),
+            precio_proveedor: Number(p.precio_proveedor || p.precio || 0),
+            precio_familia: Number(p.precio_familia || p.precio || 0),
+            precio_mayorista: Number(p.precio_mayorista || p.precio || 0),
+            unidad_medida: p.unidad_medida || p.unidad || 'Unidad',
+            stock: Number(p.stock || 0) 
           }));
         }
 
-        if (resCli.data) dbClientes = resCli.data.map(c => ({ id: c.id, localId: c.local_id || c.localId, cedula: c.cedula || c.cliente_cedula, nombre: c.nombre, apellido: c.apellido, correo: c.correo }));
-        
-        if (resVen.data) {
-          dbVentas = resVen.data.map(v => ({
-            id: v.id,
-            localId: v.local_id || v.localId,
-            localNombre: v.local_nombre || v.localNombre,
-            clienteNombre: v.cliente_nombre || v.clienteNombre,
-            clienteCedula: v.cliente_cedula || v.clienteCedula,
-            metodoPago: v.metodo_pago || v.metodoPago,
-            fecha: v.fecha,
-            items: v.items || [],
-            total: v.total,
-            usuario: v.usuario || '',
-            tipo_comprobante: v.tipo_comprobante || '',
-            punto_emision: v.punto_emision || ''
-          }));
-        }
-
-        if (resArq.data) {
-          dbArqueos = resArq.data.map(a => ({
-            id: a.id,
-            localId: a.local_id || a.localId,
-            usuario: a.usuario,
-            fechaApertura: a.fecha_apertura || a.fechaApertura,
-            fondoInicial: parseFloat(a.fondo_inicial || a.fondoInicial || 0),
-            estado: a.estado,
-            fechaCierre: a.fecha_cierre || a.fechaCierre,
-            efectivoFisico: a.efectivo_fisico !== null && a.efectivo_fisico !== undefined ? parseFloat(a.efectivo_fisico) : null
-          }));
-        }
-
-        if (resMer.data) {
-          dbMermas = resMer.data.map(m => ({
-            id: m.id,
-            idFactura: m.id_factura,
-            productoNombre: m.producto_nombre,
-            cantidad: m.cantidad,
-            montoTotal: m.monto_total,
-            motivo: m.motivo,
-            fechaHora: m.fecha_hora,
-            usuario: m.usuario
-          }));
-        }
+        if (resCli.data) dbClientes = resCli.data;
+        if (resVen.data) dbVentas = resVen.data;
       } catch (err) {
-        console.error("Aviso al cargar Supabase:", err);
+        console.error("Error al conectar con Supabase:", err);
       }
     }
 
@@ -825,11 +390,16 @@
       await cargarDatosSupabase();
       const u = document.getElementById('login-user').value.trim();
       const p = document.getElementById('login-pass').value.trim();
-      let user = dbUsuarios.find(x => x.user === u && x.pass === p);
+      let user = dbUsuarios.find(x => (x.user === u || x.usuario === u) && (x.pass === p || x.password === p));
 
       if (user) {
-        usuarioActual = user;
-        localStorage.setItem('usuarioActual', JSON.stringify(user));
+        usuarioActual = {
+          id: user.id,
+          user: user.user || user.usuario,
+          rol: user.rol,
+          localId: String(user.local_id || user.localId || '')
+        };
+        localStorage.setItem('usuarioActual', JSON.stringify(usuarioActual));
         aplicarSesionActiva();
       } else {
         document.getElementById('login-error').style.display = 'block';
@@ -841,83 +411,21 @@
       document.getElementById('login-screen').style.setProperty('display', 'none', 'important');
       document.getElementById('session-user').innerText = usuarioActual.user;
       
-      const loc = dbLocales.find(l => String(l.id) === String(usuarioActual.localId))?.nombre || 'Mi Tienda';
+      const loc = dbLocales.find(l => String(l.id) === usuarioActual.localId)?.nombre || 'Mi Tienda';
       document.getElementById('session-local').innerText = loc;
 
       construirMenuNavegacion();
-      poblardropdowns();
       cambiarVista('pos');
     }
 
     function construirMenuNavegacion() {
       const navBar = document.getElementById('app-nav-bar');
-      let html = `
-        <button class="nav-btn active" id="btn-nav-pos" onclick="cambiarVista('pos')">
-            <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.60 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"></path></svg>
-            <span>Ventas</span>
-        </button>
-        <button class="nav-btn" id="btn-nav-facturas" onclick="cambiarVista('facturas')">
-            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"></path></svg>
-            <span>Facturas</span>
-        </button>
-        <button class="nav-btn" id="btn-nav-arqueo" onclick="cambiarVista('arqueo')">
-            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 4h-2v2h2V7zM7 7h2v2H7V7zm10 4h-2v2h2v-2zm-4 0h-2v2h2v-2zm-4 0H7v2h2v-2zm4 4h-2v2h2v-2zm-4 0H7v2h2v-2zm10 4H7v2h10v-2z"></path></svg>
-            <span>Arqueo Caja</span>
-        </button>
-        <button class="nav-btn" id="btn-nav-clientes" onclick="cambiarVista('clientes')">
-            <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-4S17.66 4 16 4c-1.66 0-3 1.34-3 4s1.34 4 3 4zm-9 0c1.66 0 2.99-1.34 2.99-4S8.66 4 7 4C5.34 4 4 5.34 4 7s1.34 4 3 4zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"></path></svg>
-            <span>Clientes</span>
-        </button>
+      navBar.innerHTML = `
+        <button class="nav-btn active" id="btn-nav-pos" onclick="cambiarVista('pos')"><span>Ventas</span></button>
+        <button class="nav-btn" id="btn-nav-inventario" onclick="cambiarVista('inventario')"><span>Stock</span></button>
+        <button class="nav-btn" id="btn-nav-clientes" onclick="cambiarVista('clientes')"><span>Clientes</span></button>
+        <button class="nav-btn" id="btn-nav-historial" onclick="cambiarVista('historial')"><span>Historial</span></button>
       `;
-
-      if (esUsuarioMatriz() || esDuenoLocal()) {
-        html += `
-            <button class="nav-btn" onclick="abrirConfigFirma()">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                <span>Firma Digital</span>
-            </button>
-            <button class="nav-btn" id="btn-nav-kardex" onclick="cambiarVista('kardex')">
-                <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2h14c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"></path></svg>
-                <span>Kardex</span>
-            </button>
-            <button class="nav-btn" id="btn-nav-inventario" onclick="cambiarVista('inventario')">
-                <svg viewBox="0 0 24 24"><path d="M20 13H4c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h16c.55 0 1-.45 1-1v-6c0-.55-.45-1-1-1zM7 19c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm10 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM20 9H4c-.55 0-1 .45-1 1v4c0 .55.45 1 1 1h16c.55 0 1-.45 1-1v-4c0-.55-.45-1-1-1zM7 13c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm10 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM12 3L2 8h20L12 3z"></path></svg>
-                <span>Stock</span>
-            </button>
-            <button class="nav-btn" id="btn-nav-historial" onclick="cambiarVista('historial')">
-                <svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.74-4.94-2.01-1.42 1.42-3.14 2.12-4.94 2.01C2.08 19.89 0 16.27 0 12c0-4.97 4.03-9 9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"></path></svg>
-                <span>Historial</span>
-            </button>
-            <button class="nav-btn" id="btn-nav-reportes" onclick="cambiarVista('reportes')">
-                <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"></path></svg>
-                <span>Reportes</span>
-            </button>
-        `;
-      }
-
-      if (esDuenoLocal()) {
-        html += `
-            <button class="nav-btn" id="btn-nav-personal" onclick="cambiarVista('personal')">
-                <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path></svg>
-                <span>Personal</span>
-            </button>
-        `;
-      }
-
-      if (esUsuarioMatriz()) {
-        html += `
-            <button class="nav-btn" id="btn-nav-locales" onclick="cambiarVista('locales')">
-                <svg viewBox="0 0 24 24"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2v-2h8v8zm-2-6h-2v2h2v-2zm0 4h-2v2h2v-2z"></path></svg>
-                <span>Locales</span>
-            </button>
-            <button class="nav-btn" id="btn-nav-usuarios" onclick="cambiarVista('usuarios')">
-                <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-4S17.66 4 16 4c-1.66 0-3 1.34-3 4s1.34 4 3 4zm-9 0c1.66 0 2.99-1.34 2.99-4S8.66 4 7 4C5.34 4 4 5.34 4 7s1.34 4 3 4zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"></path></svg>
-                <span>Usuarios</span>
-            </button>
-        `;
-      }
-
-      navBar.innerHTML = html;
     }
 
     function cerrarSesion() {
@@ -927,15 +435,6 @@
     }
 
     async function cambiarVista(vista) {
-      const esCajero = usuarioActual && (usuarioActual.rol === 'Cajero' || usuarioActual.rol === 'Encargado');
-      if (esCajero && (vista === 'kardex' || vista === 'inventario' || vista === 'historial' || vista === 'reportes' || vista === 'personal' || vista === 'locales' || vista === 'usuarios')) {
-        return alert('Acceso denegado. Tu cuenta de Cajero solo permite procesar ventas, abrir/cerrar caja y registrar clientes.');
-      }
-
-      if ((vista === 'locales' || vista === 'usuarios') && !esUsuarioMatriz()) {
-        return alert('Acceso denegado. Esta sección solo está disponible para la administración de la Matriz Principal.');
-      }
-
       document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
 
@@ -944,76 +443,10 @@
       const btnNav = document.getElementById(`btn-nav-${vista}`);
       if(btnNav) btnNav.classList.add('active');
 
-      if (vista === 'pos') renderizarCarritosTabs();
-      if (vista === 'arqueo') await prepararVistaArqueo();
-      if (vista === 'kardex') renderKardex();
+      if (vista === 'pos') { await cargarDatosSupabase(); renderizarCarritosTabs(); }
+      if (vista === 'inventario') { await cargarDatosSupabase(); renderInventario(); }
       if (vista === 'clientes') renderClientes();
-      if (vista === 'facturas') cargarFacturas();
-      if (vista === 'inventario') renderInventario();
       if (vista === 'historial') renderHistorial();
-      if (vista === 'reportes') prepararVistaReportes();
-      if (vista === 'personal') renderEmpleadosCajeros();
-      if (vista === 'locales') renderLocales();
-      if (vista === 'usuarios') renderUsuarios();
-    }
-
-    function poblardropdowns() {
-      const opts = dbLocales.map(l => `<option value="${l.id}">${l.nombre}</option>`).join('');
-      const selectUsr = document.getElementById('usr-local-select');
-      if (selectUsr) selectUsr.innerHTML = opts;
-      poblarClientesDropdown();
-    }
-
-    function poblarClientesDropdown() {
-      const datalist = document.getElementById('lista-clientes-opciones');
-      if (!datalist) return;
-
-      const clientesDelLocal = dbClientes.filter(c => String(c.localId || c.local_id) === String(usuarioActual.localId));
-      let html = `<option value="Consumidor Final">Consumidor Final</option>`;
-
-      clientesDelLocal.forEach(cli => {
-          const nombreMostrar = `${cli.nombre} ${cli.apellido}`.trim();
-          html += `<option value="${cli.cedula} - ${nombreMostrar}">${cli.cedula} | ${nombreMostrar}</option>`;
-      });
-
-      datalist.innerHTML = html;
-    }
-
-    async function seleccionarClienteAutocomplete(valorInput) {
-      const hiddenInput = document.getElementById('pos-cliente-select');
-
-      if (!valorInput || valorInput.trim() === '' || valorInput.includes('Consumidor Final')) {
-          clienteVentaSeleccionado = { cedula: '9999999999001', nombre: 'Consumidor Final' };
-          if (hiddenInput) hiddenInput.value = 'Consumidor Final';
-          return;
-      }
-
-      const partes = valorInput.split(' - ');
-      const cedulaBuscada = partes[0].trim();
-
-      let clienteEncontrado = dbClientes.find(c => c.cedula === cedulaBuscada);
-
-      if (!clienteEncontrado && cedulaBuscada.length >= 8) {
-          try {
-              const { data } = await supabaseClient
-                  .from('clientes')
-                  .select('*')
-                  .eq('cedula', cedulaBuscada)
-                  .maybeSingle();
-
-              if (data) clienteEncontrado = data;
-          } catch (e) {
-              console.log('Error buscando cliente en red:', e);
-          }
-      }
-
-      if (clienteEncontrado) {
-          clienteVentaSeleccionado = clienteEncontrado;
-          if (hiddenInput) hiddenInput.value = clienteEncontrado.cedula;
-      } else {
-          clienteVentaSeleccionado = { cedula: cedulaBuscada, nombre: partes[1] || valorInput };
-          if (hiddenInput) hiddenInput.value = cedulaBuscada;
-      }
     }
 
     function obtenerCarritoActual() {
@@ -1044,97 +477,42 @@
     }
 
     function ponerCarritoEnEspera() {
-      const cart = obtenerCarritoActual();
-      if (cart.items.filter(i => !i.anulado).length === 0) return alert('El carrito actual está vacío');
       crearNuevoCarrito();
-    }
-
-    function abrirCamaraPOS() {
-      abrirCamara(function(decodedText) {
-        agregarPorCodigoBarras(decodedText);
-      });
-    }
-
-    function abrirCamaraInventario() {
-      abrirCamara(function(decodedText) {
-        document.getElementById('inv-codigo').value = decodedText;
-        const prodExistente = dbProductos.find(p => String(p.localId) === String(usuarioActual.localId) && p.codigo.trim() === decodedText.trim());
-        if(prodExistente) {
-          alert("Este código ya pertenece a: " + prodExistente.nombre + ". Puedes actualizar sus datos abajo.");
-          document.getElementById('inv-nombre').value = prodExistente.nombre;
-          document.getElementById('inv-costo').value = prodExistente.costo || 0;
-          document.getElementById('inv-precio').value = prodExistente.precio;
-          document.getElementById('inv-precio-revendedor').value = prodExistente.precio_revendedor || prodExistente.precio;
-          document.getElementById('inv-precio-proveedor').value = prodExistente.precio_proveedor || prodExistente.precio;
-          document.getElementById('inv-precio-familia').value = prodExistente.precio_familia || prodExistente.precio;
-          document.getElementById('inv-precio-mayorista').value = prodExistente.precio_mayorista || prodExistente.precio;
-          document.getElementById('inv-unidad').value = prodExistente.unidad_medida || 'Unidad';
-          document.getElementById('inv-stock').value = prodExistente.stock;
-        }
-      });
-    }
-
-    function abrirCamara(onScanSuccessCallback) {
-      document.getElementById('modal-camara').style.display = 'flex';
-      html5QrCode = new Html5Qrcode("reader");
-      html5QrCode.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: { width: 250, height: 150 } },
-        (decodedText) => {
-          cerrarCamara();
-          onScanSuccessCallback(decodedText);
-        },
-        () => {}
-      ).catch(err => {
-        alert("No se pudo iniciar la cámara: " + err);
-        cerrarCamara();
-      });
-    }
-
-    function cerrarCamara() {
-      if (html5QrCode) {
-        html5QrCode.stop().then(() => {
-          document.getElementById('modal-camara').style.display = 'none';
-        }).catch(() => {
-          document.getElementById('modal-camara').style.display = 'none';
-        });
-      } else {
-        document.getElementById('modal-camara').style.display = 'none';
-      }
-    }
-
-    function agregarPorCodigoBarras(codigo) {
-      const prod = dbProductos.find(p => String(p.localId) === String(usuarioActual.localId) && p.codigo.trim() === codigo.trim());
-      if (!prod) return alert('Producto no encontrado con código: ' + codigo);
-      agregarAlCarrito(prod.id);
     }
 
     function obtenerPrecioSegunLista(prod) {
       const tipo = document.getElementById('pos-tipo-precio')?.value || 'normal';
       switch(tipo) {
-        case 'revendedor': return prod.precio_revendedor || prod.precio;
-        case 'proveedor': return prod.precio_proveedor || prod.precio;
-        case 'familia': return prod.precio_familia || prod.precio;
-        case 'mayorista': return prod.precio_mayorista || prod.precio;
+        case 'revendedor': return prod.precio_revendedor;
+        case 'proveedor': return prod.precio_proveedor;
+        case 'familia': return prod.precio_familia;
+        case 'mayorista': return prod.precio_mayorista;
         default: return prod.precio;
       }
     }
 
     function renderProductosPOS() {
       const q = (document.getElementById('pos-buscar')?.value || '').toLowerCase();
-      const productos = dbProductos.filter(p => String(p.localId) === String(usuarioActual.localId) && (p.nombre.toLowerCase().includes(q) || p.codigo.includes(q)));
+      const localActual = usuarioActual ? String(usuarioActual.localId) : '';
+      
+      const productos = dbProductos.filter(p => 
+        p.localId === localActual && 
+        (p.nombre.toLowerCase().includes(q) || p.codigo.toLowerCase().includes(q))
+      );
 
-      document.getElementById('pos-grid-productos').innerHTML = productos.map(p => {
+      const grid = document.getElementById('pos-grid-productos');
+      if (!grid) return;
+
+      grid.innerHTML = productos.map(p => {
         const precioAplicado = obtenerPrecioSegunLista(p);
-        const unidad = p.unidad_medida || 'Unidad';
         return `
           <div class="product-card" onclick="agregarAlCarrito('${p.id}')">
             <div class="product-title">${p.nombre}</div>
-            <div class="product-price">$${precioAplicado.toFixed(2)} <small style="font-size:0.7rem; color:var(--text-muted);">/ ${unidad}</small></div>
-            <div class="product-stock ${p.stock <= 0 ? 'stock-negative' : ''}">Stock: ${p.stock} ${unidad}</div>
+            <div class="product-price">$${precioAplicado.toFixed(2)}</div>
+            <div class="product-stock ${p.stock <= 0 ? 'stock-negative' : ''}">Stock: ${p.stock} ${p.unidad_medida}</div>
           </div>
         `;
-      }).join('');
+      }).join('') || '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">No hay productos en stock para este local.</p>';
     }
 
     function agregarAlCarrito(id) {
@@ -1142,24 +520,15 @@
       if (!prod) return alert('Producto no encontrado');
 
       const precioAplicado = obtenerPrecioSegunLista(prod);
-      const unidad = prod.unidad_medida || 'Unidad';
-
-      let cantidad = 1;
-      if (unidad === 'Kilo' || unidad === 'Libra') {
-        const cantStr = prompt(`Ingresa la cantidad a vender en ${unidad}s para "${prod.nombre}":`, "1.00");
-        if (cantStr === null) return;
-        cantidad = parseFloat(cantStr);
-        if (isNaN(cantidad) || cantidad <= 0) return alert('Cantidad no válida.');
-      }
-
       const cart = obtenerCarritoActual();
+      
       cart.items.push({ 
         id: prod.id, 
         nombre: prod.nombre, 
         precio: precioAplicado, 
-        costo: prod.costo || 0, 
-        cantidad: cantidad,
-        unidad: unidad,
+        costo: prod.costo, 
+        cantidad: 1,
+        unidad: prod.unidad_medida,
         anulado: false 
       });
       renderizarCarritosTabs();
@@ -1172,466 +541,22 @@
       document.getElementById('pos-tabla-carrito').innerHTML = cart.items.map((item, idx) => {
         const sub = item.precio * item.cantidad;
         if (!item.anulado) total += sub;
-        const etiquetaMedida = item.unidad ? `(${item.unidad})` : '';
-
         return `
           <tr class="${item.anulado ? 'item-anulado' : ''}">
-            <td>${item.nombre} ${item.anulado ? '<br><small><b>[ANULADO]</b></small>' : ''}</td>
-            <td>${item.cantidad} ${etiquetaMedida}</td>
+            <td>${item.nombre}</td>
+            <td>${item.cantidad} ${item.unidad}</td>
             <td>$${sub.toFixed(2)}</td>
-            <td>
-              ${!item.anulado 
-                ? `<button class="btn btn-danger btn-sm" onclick="anularItemCarrito(${idx})">Anular</button>` 
-                : '<span style="font-size:0.8rem; color:var(--danger);">Cancelado</span>'}
-            </td>
+            <td>${!item.anulado ? `<button class="btn btn-danger btn-sm" onclick="anularItem(${idx})">X</button>` : ''}</td>
           </tr>`;
       }).join('');
 
       document.getElementById('pos-total').innerText = total.toFixed(2);
     }
 
-    async function anularItemCarrito(index) {
+    function anularItem(idx) {
       const cart = obtenerCarritoActual();
-      const item = cart.items[index];
-      if (!item || item.anulado) return;
-
-      const motivo = prompt(`¿Estás seguro de eliminar este artículo? "${item.nombre}":`, "Motivo");
-      if (motivo === null) return;
-
-      item.anulado = true;
-      item.motivoAnulacion = motivo;
-      const totalItem = item.precio * item.cantidad;
-
-      await registrarAuditoriaMerma(cart.nombre || 'Carrito Activo', item.nombre, item.cantidad, totalItem, motivo);
+      if(cart.items[idx]) cart.items[idx].anulado = true;
       renderizarCarritosTabs();
-    }
-
-    function abrirModalCobro() {
-      const cart = obtenerCarritoActual();
-      let activos = cart.items.filter(i => !i.anulado);
-      if (activos.length === 0) return alert('El carrito está vacío o todos sus ítems están anulados');
-      
-      let total = activos.reduce((s, x) => s + (x.precio * x.cantidad), 0);
-      document.getElementById('modal-total-txt').innerText = `$${total.toFixed(2)}`;
-      document.getElementById('modal-metodo-pago').value = 'Efectivo';
-      document.getElementById('modal-pago').value = total.toFixed(2);
-      document.getElementById('modal-vuelto-txt').innerText = '$0.00';
-      document.getElementById('seccion-efectivo').style.display = 'block';
-      
-      document.getElementById('modal-cobro').style.display = 'flex';
-      document.getElementById('modal-pago').focus();
-      document.getElementById('modal-pago').select();
-    }
-
-    function cerrarModalCobro() {
-      document.getElementById('modal-cobro').style.display = 'none';
-    }
-
-    function cambiarMetodoPago() {
-      const metodo = document.getElementById('modal-metodo-pago').value;
-      const seccionEfectivo = document.getElementById('seccion-efectivo');
-      if (metodo === 'Efectivo') {
-        seccionEfectivo.style.display = 'block';
-        document.getElementById('modal-pago').focus();
-        document.getElementById('modal-pago').select();
-      } else {
-        seccionEfectivo.style.display = 'none';
-      }
-    }
-
-    function calcularVuelto() {
-      const cart = obtenerCarritoActual();
-      let total = cart.items.filter(i => !i.anulado).reduce((s, x) => s + (x.precio * x.cantidad), 0);
-      let pago = parseFloat(document.getElementById('modal-pago').value) || 0;
-      let vuelto = pago - total;
-      
-      const vueltoTxt = document.getElementById('modal-vuelto-txt');
-      if (vuelto >= 0) {
-        vueltoTxt.style.color = 'var(--success)';
-        vueltoTxt.innerText = `$${vuelto.toFixed(2)}`;
-      } else {
-        vueltoTxt.style.color = 'var(--danger)';
-        vueltoTxt.innerText = `Faltan $${Math.abs(vuelto).toFixed(2)}`;
-      }
-    }
-
-    async function confirmarYProcesarVenta() {
-      const metodo = document.getElementById('modal-metodo-pago').value;
-      const cart = obtenerCarritoActual();
-      let activos = cart.items.filter(i => !i.anulado);
-      let total = activos.reduce((s, x) => s + (x.precio * x.cantidad), 0);
-
-      if (metodo === 'Efectivo') {
-        let pago = parseFloat(document.getElementById('modal-pago').value) || 0;
-        if (pago < total) return alert('El monto pagado es menor que el total de la venta.');
-      }
-
-      cerrarModalCobro();
-      await procesarVenta(metodo);
-    }
-
-    async function procesarVenta(metodoPago) {
-      const cart = obtenerCarritoActual();
-      
-      const inputBuscarCliente = document.getElementById('pos-cliente-buscar')?.value.trim() || "";
-
-      if (!clienteVentaSeleccionado && inputBuscarCliente !== "") {
-        clienteVentaSeleccionado = dbClientes.find(c => 
-          String(c.cedula).trim() === inputBuscarCliente || 
-          String(c.id).trim() === inputBuscarCliente
-        );
-      }
-
-      const clienteNombre = clienteVentaSeleccionado 
-        ? `${clienteVentaSeleccionado.nombre} ${clienteVentaSeleccionado.apellido}`.trim() 
-        : 'Consumidor Final';
-
-      const clienteCedula = clienteVentaSeleccionado 
-        ? (clienteVentaSeleccionado.cedula || clienteVentaSeleccionado.id) 
-        : '9999999999';
-
-      const esFacturaSri = document.getElementById('checkModoSri').checked;
-
-      for (const i of cart.items) {
-          if (i.anulado) continue;
-          const p = dbProductos.find(x => String(x.id) === String(i.id));
-          if (p) {
-              p.stock -= i.cantidad;
-              await supabaseClient.from('productos').update({ stock: p.stock }).eq('id', p.id);
-          }
-      }
-
-      const ventaSupabase = {
-          id: 'FAC-' + Date.now().toString().slice(-5),
-          local_id: String(usuarioActual.localId),
-          local_nombre: dbLocales.find(l => String(l.id) === String(usuarioActual.localId))?.nombre || 'Mi Tienda',
-          cliente_nombre: clienteNombre,
-          cliente_cedula: clienteCedula,
-          metodo_pago: metodoPago,
-          fecha: new Date().toISOString(),
-          items: [...cart.items],
-          total: cart.items.filter(i => !i.anulado).reduce((s, x) => s + (x.precio * x.cantidad), 0),
-          usuario: usuarioActual.user,
-          tipo_comprobante: esFacturaSri ? "FACTURA_SRI" : "NOTA_VENTA_LOCAL",
-          punto_emision: (() => {
-              const textoModo = document.getElementById('textoModoSri')?.textContent || '';
-              if (textoModo.includes('LOCAL')) return "001-100";
-              return document.getElementById('punto-emision')?.value || "001-002";
-          })(),
-      };
-          
-      const { error } = await supabaseClient.from('ventas').insert([ventaSupabase]);
-      if (error) return alert("Error al registrar venta: " + error.message);
-
-      dbVentas.push({
-          id: ventaSupabase.id,
-          localId: ventaSupabase.local_id,
-          localNombre: ventaSupabase.local_nombre,
-          clienteNombre: ventaSupabase.cliente_nombre,
-          clienteCedula: ventaSupabase.cliente_cedula,
-          metodoPago: ventaSupabase.metodo_pago,
-          fecha: ventaSupabase.fecha,
-          items: ventaSupabase.items,
-          total: ventaSupabase.total,
-          usuario: ventaSupabase.usuario,
-          tipo_comprobante: ventaSupabase.tipo_comprobante,
-          punto_emision: ventaSupabase.punto_emision
-      });
-
-      mostrarFactura(ventaSupabase);
-
-      carritos = carritos.filter(c => c.id !== cart.id);
-      if (carritos.length === 0) carritos.push({ id: Date.now(), nombre: 'Principal 1', items: [] });
-      carritoActivoId = carritos[0].id;
-      
-      clienteVentaSeleccionado = { cedula: '9999999999001', nombre: 'Consumidor Final' };
-      if (document.getElementById('pos-cliente-buscar')) document.getElementById('pos-cliente-buscar').value = '';
-
-      renderizarCarritosTabs();
-    }
-
-    function mostrarFactura(v) {
-      const localInfo = dbLocales.find(l => String(l.id) === String(v.localId || v.local_id)) || {};
-
-      document.getElementById('fac-local-nombre').innerText = localInfo.nombre || v.localNombre || 'SUCURSAL';
-      document.getElementById('fac-propietario').innerText = localInfo.propietario || '';
-      document.getElementById('fac-ruc').innerText = localInfo.ruc || 'S/N';
-      document.getElementById('fac-dir').innerText = 'Dir: ' + (localInfo.direccion || 'S/N');
-      document.getElementById('fac-contabilidad').innerText = localInfo.obligadoContabilidad || 'NO';
-      document.getElementById('fac-usuario').innerText = v.usuario || usuarioActual?.user || '';
-
-      document.getElementById('fac-id').innerText = v.id;
-      document.getElementById('fac-fecha').innerText = new Date(v.fecha).toLocaleString();
-      document.getElementById('fac-cliente').innerText = v.cliente_nombre || v.clienteNombre || "CONSUMIDOR FINAL";
-      document.getElementById('fac-cedula').innerText = v.cliente_cedula || v.clienteCedula || "9999999999001";
-      document.getElementById('fac-metodo').innerText = v.metodo_pago || v.metodoPago || 'Efectivo';
-      
-      document.getElementById('fac-items').innerHTML = (v.items || []).map(i => `
-        <tr class="${i.anulado ? 'item-anulado' : ''}">
-            <td>${i.cantidad} ${i.unidad ? i.unidad.substring(0,2) : ''}</td>
-            <td>${i.nombre} ${i.anulado ? '<br><small><b>[ANULADO]</b></small>' : ''}</td>
-            <td style="text-align: right;">$${Number(i.precio).toFixed(2)}</td>
-            <td style="text-align: right;">$${(i.cantidad * i.precio).toFixed(2)}</td>
-        </tr>
-      `).join('');
-
-      document.getElementById('fac-total').innerText = Number(v.total).toFixed(2);
-      document.getElementById('fac-subtotal').innerText = Number(v.total).toFixed(2);
-      document.getElementById('factura-impresion').style.display = 'block';
-    }
-
-    async function prepararVistaArqueo() {
-      await cargarDatosSupabase();
-      const arqueoAbierto = dbArqueos.find(a => String(a.localId) === String(usuarioActual.localId) && a.estado === 'Abierto');
-      
-      if (arqueoAbierto) {
-        document.getElementById('arqueo-estado-abierto').style.display = 'block';
-        document.getElementById('arqueo-estado-cerrado').style.display = 'none';
-        document.getElementById('arq-fondo').value = arqueoAbierto.fondoInicial;
-        
-        const ventasTurno = dbVentas.filter(v => String(v.localId || v.local_id) === String(usuarioActual.localId) && new Date(v.fecha) >= new Date(arqueoAbierto.fechaApertura));
-        
-        let tEfectivo = 0, tTarjeta = 0, tTransferencia = 0;
-        ventasTurno.forEach(v => {
-          if (v.metodoPago === 'Tarjeta') tTarjeta += v.total;
-          else if (v.metodoPago === 'Transferencia') tTransferencia += v.total;
-          else tEfectivo += v.total;
-        });
-
-        document.getElementById('arq-lbl-fondo').innerText = `$${arqueoAbierto.fondoInicial.toFixed(2)}`;
-        document.getElementById('arq-lbl-efectivo').innerText = `$${tEfectivo.toFixed(2)}`;
-        document.getElementById('arq-lbl-tarjeta').innerText = `$${tTarjeta.toFixed(2)}`;
-        document.getElementById('arq-lbl-transferencia').innerText = `$${tTransferencia.toFixed(2)}`;
-        document.getElementById('arq-conteo-fisico').value = (arqueoAbierto.fondoInicial + tEfectivo).toFixed(2);
-        calcularDiferenciaArqueo();
-      } else {
-        document.getElementById('arqueo-estado-abierto').style.display = 'none';
-        document.getElementById('arqueo-estado-cerrado').style.display = 'block';
-      }
-
-      renderHistorialArqueos();
-    }
-
-    async function iniciarNuevoTurno() {
-      const fondo = prompt("Ingrese el fondo inicial en caja ($):", "0.00");
-      if (fondo === null) return;
-      const fondoInicial = parseFloat(fondo) || 0;
-
-      const nuevoArqueoSupabase = {
-        id: 'ARQ-' + Date.now(),
-        local_id: String(usuarioActual.localId),
-        usuario: usuarioActual.user,
-        fecha_apertura: new Date().toISOString(),
-        fondo_inicial: fondoInicial,
-        estado: 'Abierto'
-      };
-
-      const { error } = await supabaseClient.from('arqueos').insert([nuevoArqueoSupabase]);
-      if (error) return alert("Error al abrir caja: " + error.message);
-      await prepararVistaArqueo();
-    }
-
-    async function guardarFondoCaja() {
-      const arqueoAbierto = dbArqueos.find(a => String(a.localId) === String(usuarioActual.localId) && a.estado === 'Abierto');
-      if (!arqueoAbierto) return;
-
-      const nuevoFondo = parseFloat(document.getElementById('arq-fondo').value) || 0;
-      const { error } = await supabaseClient.from('arqueos').update({ fondo_inicial: nuevoFondo }).eq('id', arqueoAbierto.id);
-      if (error) return alert("Error al actualizar fondo: " + error.message);
-      
-      alert('Fondo actualizado');
-      await prepararVistaArqueo();
-    }
-
-    function calcularDiferenciaArqueo() {
-      const arqueoAbierto = dbArqueos.find(a => String(a.localId) === String(usuarioActual.localId) && a.estado === 'Abierto');
-      if (!arqueoAbierto) return;
-
-      const ventasTurno = dbVentas.filter(v => String(v.localId || v.local_id) === String(usuarioActual.localId) && new Date(v.fecha) >= new Date(arqueoAbierto.fechaApertura));
-      let tEfectivo = 0;
-      ventasTurno.forEach(v => { if (!v.metodoPago || v.metodoPago === 'Efectivo') tEfectivo += v.total; });
-
-      const esperado = arqueoAbierto.fondoInicial + tEfectivo;
-      const fisico = parseFloat(document.getElementById('arq-conteo-fisico').value) || 0;
-      const diferencia = fisico - esperado;
-
-      const lbl = document.getElementById('arq-lbl-diferencia');
-      lbl.innerText = `$${diferencia.toFixed(2)}`;
-      lbl.style.color = diferencia === 0 ? 'var(--success)' : (diferencia > 0 ? 'var(--primary)' : 'var(--danger)');
-    }
-
-    async function cerrarTurnoCaja() {
-      if (!confirm("¿Está seguro de cerrar la caja de este turno?")) return;
-      const arqueoAbierto = dbArqueos.find(a => String(a.localId) === String(usuarioActual.localId) && a.estado === 'Abierto');
-      if (!arqueoAbierto) return;
-
-      const fisico = parseFloat(document.getElementById('arq-conteo-fisico').value) || 0;
-      const { error } = await supabaseClient.from('arqueos').update({
-        estado: 'Cerrado',
-        fecha_cierre: new Date().toISOString(),
-        efectivo_fisico: fisico
-      }).eq('id', arqueoAbierto.id);
-
-      if (error) return alert("Error al cerrar turno: " + error.message);
-      alert('Turno de caja cerrado con éxito.');
-      await prepararVistaArqueo();
-    }
-
-    function renderHistorialArqueos() {
-      const lista = dbArqueos.filter(a => String(a.localId) === String(usuarioActual.localId));
-      if (!lista || lista.length === 0) {
-        document.getElementById('arqueo-historial-tabla').innerHTML = `<tr><td colspan="6" style="text-align:center;">No hay arqueos registrados</td></tr>`;
-        return;
-      }
-
-      document.getElementById('arqueo-historial-tabla').innerHTML = lista.map(a => `
-        <tr>
-          <td><b>${a.usuario || 'N/A'}</b></td>
-          <td>${new Date(a.fechaApertura).toLocaleString('es-EC')}</td>
-          <td>${a.fechaCierre ? new Date(a.fechaCierre).toLocaleString('es-EC') : 'En curso'}</td>
-          <td>$${(a.fondoInicial || 0).toFixed(2)}</td>
-          <td>$${a.efectivoFisico !== null ? a.efectivoFisico.toFixed(2) : '-'}</td>
-          <td>${a.estado === 'Abierto' ? '<span style="color: green; font-weight: bold;">Abierto</span>' : '<span style="color: red; font-weight: bold;">Cerrado</span>'}</td>
-        </tr>
-      `).join('');
-    }
-
-    async function consultarSRI() {
-      const cedulaInput = document.getElementById('cli-cedula').value.trim();
-      if (!cedulaInput) return alert('Por favor ingresa un número de cédula o RUC.');
-
-      try {
-          const { data: clienteExiste } = await supabaseClient
-              .from('clientes')
-              .select('*')
-              .eq('cedula', cedulaInput)
-              .maybeSingle();
-
-          if (clienteExiste) {
-              document.getElementById('cli-nombre').value = clienteExiste.nombre;
-              document.getElementById('cli-apellido').value = clienteExiste.apellido;
-              if (document.getElementById('cli-correo')) document.getElementById('cli-correo').value = clienteExiste.correo || '';
-              alert('¡Cliente encontrado en nuestro sistema centralizado!');
-              return;
-          }
-
-          const response = await fetch(`https://pos-sistema-y075.onrender.com/api/sri/${cedulaInput}`);
-          const data = await response.json();
-
-          if (response.ok && data.razonSocial) {
-              const nombreCompleto = data.razonSocial.trim();
-              const partes = nombreCompleto.split(' ');
-              if (partes.length >= 3) {
-                  document.getElementById('cli-nombre').value = partes.slice(2).join(' ');
-                  document.getElementById('cli-apellido').value = partes.slice(0, 2).join(' ');
-              } else {
-                  document.getElementById('cli-nombre').value = '-';
-                  document.getElementById('cli-apellido').value = nombreCompleto;
-              }
-              alert('Cliente encontrado en SRI. Haz clic en "Guardar Cliente".');
-          } else {
-              alert('Ingresa Nombres y Apellidos manualmente.');
-          }
-      } catch (error) {
-          console.error('Error al buscar cliente:', error);
-      }
-    }
-
-    async function guardarCliente() {
-      const cedula = document.getElementById('cli-cedula').value.trim();
-      const nombre = document.getElementById('cli-nombre').value.trim();
-      const apellido = document.getElementById('cli-apellido').value.trim();
-      const correo = document.getElementById('cli-correo').value.trim();
-      if (!cedula || !nombre || !apellido) return alert('Cédula, Nombre y Apellido son obligatorios.');
-
-      const nuevoClienteSupabase = { 
-        id: Date.now().toString(), 
-        local_id: String(usuarioActual.localId), 
-        cedula, 
-        nombre, 
-        apellido, 
-        correo: correo || 'Sin correo' 
-      };
-      
-      const { error } = await supabaseClient.from('clientes').insert([nuevoClienteSupabase]);
-      if (error) return alert("Error: " + error.message);
-
-      dbClientes.push({
-        id: nuevoClienteSupabase.id,
-        localId: nuevoClienteSupabase.local_id,
-        cedula: nuevoClienteSupabase.cedula,
-        nombre: nuevoClienteSupabase.nombre,
-        apellido: nuevoClienteSupabase.apellido,
-        correo: nuevoClienteSupabase.correo
-      });
-
-      document.getElementById('cli-cedula').value = '';
-      document.getElementById('cli-nombre').value = '';
-      document.getElementById('cli-apellido').value = '';
-      document.getElementById('cli-correo').value = '';
-      poblarClientesDropdown();
-      renderClientes();
-      alert('Cliente registrado');
-    }
-
-    function renderClientes() {
-      const q = (document.getElementById('cli-buscar')?.value || '').toLowerCase();
-      const clientes = dbClientes.filter(c => String(c.localId || c.local_id) === String(usuarioActual.localId) && (c.cedula.toLowerCase().includes(q) || c.nombre.toLowerCase().includes(q)));
-      document.getElementById('cli-tabla').innerHTML = clientes.map(c => `
-        <tr><td><b>${c.cedula}</b></td><td>${c.nombre} ${c.apellido}</td><td>${c.correo}</td><td><button class="btn btn-danger btn-sm" onclick="eliminarCliente('${c.id}')">Eliminar</button></td></tr>
-      `).join('');
-    }
-
-    async function eliminarCliente(id) {
-      if(!confirm("¿Eliminar este cliente?")) return;
-      await supabaseClient.from('clientes').delete().eq('id', id);
-      dbClientes = dbClientes.filter(c => c.id !== id);
-      poblarClientesDropdown();
-      renderClientes();
-    }
-
-    function renderKardex() {
-      const q = (document.getElementById('kardex-buscar')?.value || '').toLowerCase();
-      const localActualId = usuarioActual ? String(usuarioActual.localId || usuarioActual.local_id) : null;
-
-      const ventas = dbVentas.filter(v => {
-          const perteneceAlLocal = !localActualId || String(v.localId || v.local_id) === localActualId;
-          if (!perteneceAlLocal) return false;
-          if (!q) return true;
-          return String(v.id || '').toLowerCase().includes(q) || String(v.clienteNombre || '').toLowerCase().includes(q);
-      });
-
-      const mermasFiltradas = (dbMermas || []).filter(m => {
-          if (!q) return true;
-          return String(m.idFactura || '').toLowerCase().includes(q) || String(m.productoNombre || '').toLowerCase().includes(q);
-      });
-
-      let htmlVentas = ventas.map(v => `
-          <tr>
-              <td><b>${v.id}</b></td>
-              <td>${new Date(v.fecha).toLocaleString()}</td>
-              <td>${v.localNombre || ''}</td>
-              <td>${v.clienteNombre || ''}</td>
-              <td><span class="badge">${v.metodoPago || 'Efectivo'}</span></td>
-              <td><b>$${Number(v.total || 0).toFixed(2)}</b></td>
-              <td><button class="btn btn-primary btn-sm" onclick='mostrarFactura(${JSON.stringify(v)})'>Ver</button></td>
-          </tr>
-      `).join('');
-
-      let htmlMermas = mermasFiltradas.map(m => `
-          <tr style="background-color: #fef2f2;">
-              <td><span style="color:var(--danger); font-weight:bold;">[ANULADO]</span> ${m.idFactura}</td>
-              <td>${new Date(m.fechaHora).toLocaleString()}</td>
-              <td><b>Auditoría / Mermas</b></td>
-              <td>Cajero: <b>${m.usuario}</b></td>
-              <td><span class="badge" style="background:#fee2e2; color:#991b1b;">Motivo: ${m.motivo}</span></td>
-              <td><b style="color:var(--danger);">-$${Number(m.montoTotal || 0).toFixed(2)}</b></td>
-              <td><span style="font-size:0.8rem; color:var(--text-muted);">${m.cantidad} x ${m.productoNombre}</span></td>
-          </tr>
-      `).join('');
-
-      const kardexTabla = document.getElementById('kardex-tabla');
-      if (kardexTabla) kardexTabla.innerHTML = htmlVentas + htmlMermas;
     }
 
     async function guardarProducto() {
@@ -1639,405 +564,92 @@
       const nombre = document.getElementById('inv-nombre').value.trim();
       const costo = parseFloat(document.getElementById('inv-costo').value) || 0;
       const precio = parseFloat(document.getElementById('inv-precio').value);
-      const precioRevendedor = parseFloat(document.getElementById('inv-precio-revendedor').value) || precio;
-      const precioProveedor = parseFloat(document.getElementById('inv-precio-proveedor').value) || precio;
-      const precioFamilia = parseFloat(document.getElementById('inv-precio-familia').value) || precio;
-      const precioMayorista = parseFloat(document.getElementById('inv-precio-mayorista').value) || precio;
-      const unidad = document.getElementById('inv-unidad').value || 'Unidad';
       const stock = parseFloat(document.getElementById('inv-stock').value) || 0;
+      const unidad_medida = document.getElementById('inv-unidad').value;
 
       if (!codigo || !nombre || isNaN(precio)) return alert('Completa los campos requeridos');
       
-      const nuevoProdSupabase = { 
-        id: Date.now().toString(), 
+      const nuevoProd = { 
         local_id: String(usuarioActual.localId), 
         codigo, 
         nombre, 
         costo, 
         precio,
-        precio_revendedor: precioRevendedor,
-        precio_proveedor: precioProveedor,
-        precio_familia: precioFamilia,
-        precio_mayorista: precioMayorista,
-        unidad_medida: unidad, 
+        precio_revendedor: parseFloat(document.getElementById('inv-precio-revendedor').value) || precio,
+        precio_proveedor: parseFloat(document.getElementById('inv-precio-proveedor').value) || precio,
+        precio_familia: parseFloat(document.getElementById('inv-precio-familia').value) || precio,
+        precio_mayorista: parseFloat(document.getElementById('inv-precio-mayorista').value) || precio,
+        unidad_medida, 
         stock 
       };
 
-      const { error } = await supabaseClient.from('productos').insert([nuevoProdSupabase]);
-      if (error) return alert("Error: " + error.message);
+      const { error } = await supabaseClient.from('productos').insert([nuevoProd]);
+      if (error) return alert("Error al guardar: " + error.message);
 
-      dbProductos.push({
-        id: nuevoProdSupabase.id,
-        localId: nuevoProdSupabase.local_id,
-        codigo: nuevoProdSupabase.codigo,
-        nombre: nuevoProdSupabase.nombre,
-        costo: nuevoProdSupabase.costo,
-        precio: nuevoProdSupabase.precio,
-        precio_revendedor: nuevoProdSupabase.precio_revendedor,
-        precio_proveedor: nuevoProdSupabase.precio_proveedor,
-        precio_familia: nuevoProdSupabase.precio_familia,
-        precio_mayorista: nuevoProdSupabase.precio_mayorista,
-        unidad_medida: nuevoProdSupabase.unidad_medida,
-        stock: nuevoProdSupabase.stock
-      });
-
-      document.getElementById('inv-codigo').value = '';
-      document.getElementById('inv-nombre').value = '';
-      document.getElementById('inv-costo').value = '';
-      document.getElementById('inv-precio').value = '';
-      document.getElementById('inv-precio-revendedor').value = '';
-      document.getElementById('inv-precio-proveedor').value = '';
-      document.getElementById('inv-precio-familia').value = '';
-      document.getElementById('inv-precio-mayorista').value = '';
-      document.getElementById('inv-stock').value = '';
+      await cargarDatosSupabase();
       renderInventario();
-      alert('Producto guardado');
+      alert('Producto guardado exitosamente');
     }
 
     function renderInventario() {
-      const lista = dbProductos.filter(p => String(p.localId || p.local_id) === String(usuarioActual.localId));
-      document.getElementById('inv-tabla-catalogo').innerHTML = lista.map(p => `
+      const localActual = usuarioActual ? String(usuarioActual.localId) : '';
+      const lista = dbProductos.filter(p => p.localId === localActual);
+      
+      const tabla = document.getElementById('inv-tabla-catalogo');
+      if(!tabla) return;
+
+      tabla.innerHTML = lista.map(p => `
         <tr>
           <td>${p.codigo}</td>
           <td><b>${p.nombre}</b></td>
-          <td>
-            <select id="edit-unidad-${p.id}" style="width:75px; margin:0; padding:4px; font-size:0.8rem;">
-              <option value="Unidad" ${p.unidad_medida === 'Unidad' ? 'selected' : ''}>Ud</option>
-              <option value="Kilo" ${p.unidad_medida === 'Kilo' ? 'selected' : ''}>Kg</option>
-              <option value="Libra" ${p.unidad_medida === 'Libra' ? 'selected' : ''}>Lb</option>
-            </select>
-          </td>
-          <td><input type="number" step="0.01" id="edit-costo-${p.id}" value="${(p.costo||0).toFixed(2)}" style="width:65px; margin:0; padding:4px;"></td>
-          <td><input type="number" step="0.01" id="edit-precio-${p.id}" value="${p.precio.toFixed(2)}" style="width:65px; margin:0; padding:4px;"></td>
-          <td><input type="number" step="0.01" id="edit-prevend-${p.id}" value="${(p.precio_revendedor||p.precio).toFixed(2)}" style="width:65px; margin:0; padding:4px;"></td>
-          <td><input type="number" step="0.01" id="edit-pprov-${p.id}" value="${(p.precio_proveedor||p.precio).toFixed(2)}" style="width:65px; margin:0; padding:4px;"></td>
-          <td><input type="number" step="0.01" id="edit-pfam-${p.id}" value="${(p.precio_familia||p.precio).toFixed(2)}" style="width:65px; margin:0; padding:4px;"></td>
-          <td><input type="number" step="0.01" id="edit-pmay-${p.id}" value="${(p.precio_mayorista||p.precio).toFixed(2)}" style="width:65px; margin:0; padding:4px;"></td>
-          <td><input type="number" step="0.01" id="edit-stock-${p.id}" value="${p.stock}" style="width:65px; margin:0; padding:4px;"></td>
-          <td>
-            <button class="btn btn-primary btn-sm" onclick="actualizarProducto('${p.id}')">Guardar</button>
-            <button class="btn btn-danger btn-sm" onclick="eliminarProducto('${p.id}')">X</button>
-          </td>
+          <td>${p.unidad_medida}</td>
+          <td>$${p.costo.toFixed(2)}</td>
+          <td>$${p.precio.toFixed(2)}</td>
+          <td>$${p.precio_revendedor.toFixed(2)}</td>
+          <td>$${p.precio_proveedor.toFixed(2)}</td>
+          <td>$${p.precio_familia.toFixed(2)}</td>
+          <td>$${p.precio_mayorista.toFixed(2)}</td>
+          <td>${p.stock}</td>
+          <td><button class="btn btn-danger btn-sm" onclick="eliminarProducto('${p.id}')">Eliminar</button></td>
         </tr>
-      `).join('');
-    }
-
-    async function actualizarProducto(id) {
-      const nuevoCosto = parseFloat(document.getElementById(`edit-costo-${id}`).value) || 0;
-      const nuevoPrecio = parseFloat(document.getElementById(`edit-precio-${id}`).value) || 0;
-      const nuevoPrevend = parseFloat(document.getElementById(`edit-prevend-${id}`).value) || nuevoPrecio;
-      const nuevoPprov = parseFloat(document.getElementById(`edit-pprov-${id}`).value) || nuevoPrecio;
-      const nuevoPfam = parseFloat(document.getElementById(`edit-pfam-${id}`).value) || nuevoPrecio;
-      const nuevoPmay = parseFloat(document.getElementById(`edit-pmay-${id}`).value) || nuevoPrecio;
-      const nuevaUnidad = document.getElementById(`edit-unidad-${id}`).value || 'Unidad';
-      const nuevoStock = parseFloat(document.getElementById(`edit-stock-${id}`).value) || 0;
-
-      await supabaseClient.from('productos').update({ 
-        costo: nuevoCosto, 
-        precio: nuevoPrecio, 
-        precio_revendedor: nuevoPrevend,
-        precio_proveedor: nuevoPprov,
-        precio_familia: nuevoPfam,
-        precio_mayorista: nuevoPmay,
-        unidad_medida: nuevaUnidad,
-        stock: nuevoStock 
-      }).eq('id', id);
-
-      const prod = dbProductos.find(p => String(p.id) === String(id));
-      if (prod) { 
-        prod.costo = nuevoCosto; 
-        prod.precio = nuevoPrecio; 
-        prod.precio_revendedor = nuevoPrevend;
-        prod.precio_proveedor = nuevoPprov;
-        prod.precio_familia = nuevoPfam;
-        prod.precio_mayorista = nuevoPmay;
-        prod.unidad_medida = nuevaUnidad;
-        prod.stock = nuevoStock; 
-      }
-      alert("Actualizado correctamente");
-      renderInventario();
+      `).join('') || `<tr><td colspan="11" style="text-align:center;">No hay productos registrados en este local.</td></tr>`;
     }
 
     async function eliminarProducto(id) {
-      const prod = dbProductos.find(x => String(x.id) === String(id));
-      if (!prod) return;
-      if (!confirm(`¿Eliminar el producto "${prod.nombre}" del inventario?`)) return;
-
-      const motivo = prompt(`Motivo de la eliminación:`, "Producto dañado");
-      if (motivo === null) return;
-
-      await registrarAuditoriaMerma('INVENTARIO', prod.nombre, prod.stock, prod.precio * prod.stock, motivo);
+      if (!confirm("¿Deseas eliminar este producto?")) return;
       await supabaseClient.from('productos').delete().eq('id', id);
-      dbProductos = dbProductos.filter(x => String(x.id) !== String(id));
+      await cargarDatosSupabase();
       renderInventario();
     }
 
-    function renderHistorial() {
-      const localActualId = usuarioActual ? String(usuarioActual.localId || usuarioActual.local_id) : '';
-      const lista = dbVentas.filter(v => !localActualId || String(v.localId || v.local_id) === localActualId);
-      
-      const historialTabla = document.getElementById('historial-tabla');
-      if (historialTabla) {
-        historialTabla.innerHTML = lista.map(v => `
-          <tr>
-            <td>${v.id}</td>
-            <td>${v.localNombre || ''}</td>
-            <td>${v.clienteNombre || ''}</td>
-            <td>${v.metodoPago || 'Efectivo'}</td>
-            <td>${new Date(v.fecha).toLocaleString()}</td>
-            <td>$${Number(v.total).toFixed(2)}</td>
-            <td><button class="btn btn-primary btn-sm" onclick='mostrarFactura(${JSON.stringify(v)})'>Ver</button></td>
-          </tr>
-        `).join('');
-      }
-    }
-
-    function prepararVistaReportes() {
-      const selectAnio = document.getElementById('rep-anio');
-      const anioActual = new Date().getFullYear();
-      let anios = new Set([anioActual]);
-      dbVentas.forEach(v => { const d = new Date(v.fecha); if (!isNaN(d.getFullYear())) anios.add(d.getFullYear()); });
-      selectAnio.innerHTML = Array.from(anios).sort((a,b) => b - a).map(a => `<option value="${a}">${a}</option>`).join('');
-      document.getElementById('rep-mes').value = "TODOS";
-      generarReporte();
-    }
-
-    function generarReporte() {
-      const anioSel = parseInt(document.getElementById('rep-anio').value);
-      const mesSel = document.getElementById('rep-mes').value;
-      const ventasFiltradas = dbVentas.filter(v => {
-        const d = new Date(v.fecha);
-        return String(v.localId || v.local_id) === String(usuarioActual.localId) && d.getFullYear() === anioSel && (mesSel === 'TODOS' || d.getMonth() === parseInt(mesSel));
-      });
-
-      let totalVentas = 0, totalCostoCompras = 0;
-      ventasFiltradas.forEach(v => {
-        totalVentas += v.total;
-        (v.items || []).forEach(i => { if (!i.anulado) { totalCostoCompras += ((i.costo || 0) * i.cantidad); } });
-      });
-
-      document.getElementById('rep-val-ventas').innerText = `$${totalVentas.toFixed(2)}`;
-      document.getElementById('rep-val-compras').innerText = `$${totalCostoCompras.toFixed(2)}`;
-      document.getElementById('rep-val-ganancia').innerText = `$${(totalVentas - totalCostoCompras).toFixed(2)}`;
-    }
-
-    async function crearEmpleadoCajero() {
-      if (!esDuenoLocal()) return alert('Solo el dueño del local puede crear cajeros.');
-      const user = document.getElementById('emp-user').value.trim();
-      const pass = document.getElementById('emp-pass').value.trim();
-      if (!user || !pass) return alert('Completa los campos');
-
-      const nuevoEmpleado = { 
-        id: Date.now().toString(), 
-        user, 
-        pass, 
-        rol: 'Cajero', 
-        local_id: String(usuarioActual.localId) 
-      };
-
-      const { error } = await supabaseClient.from('usuarios').insert([nuevoEmpleado]);
-      if (error) return alert("Error al crear empleado: " + error.message);
-
-      dbUsuarios.push({
-        id: nuevoEmpleado.id,
-        user: nuevoEmpleado.user,
-        pass: nuevoEmpleado.pass,
-        rol: nuevoEmpleado.rol,
-        localId: nuevoEmpleado.local_id
-      });
-
-      document.getElementById('emp-user').value = '';
-      document.getElementById('emp-pass').value = '';
-      renderEmpleadosCajeros();
-      alert('Cuenta de cajero creada exitosamente');
-    }
-
-    function renderEmpleadosCajeros() {
-      const empleados = dbUsuarios.filter(u => String(u.localId || u.local_id) === String(usuarioActual.localId) && u.rol === 'Cajero');
-      document.getElementById('emp-tabla').innerHTML = empleados.map(u => `
-        <tr>
-          <td><b>${u.user}</b></td>
-          <td><span class="badge" style="background:#fef3c7; color:#b45309;">${u.rol}</span></td>
-          <td><button class="btn btn-danger btn-sm" onclick="eliminarUsuario('${u.id}')">Eliminar</button></td>
-        </tr>
-      `).join('') || `<tr><td colspan="3" style="text-align:center;">No tienes cajeros registrados</td></tr>`;
-    }
-
-    async function crearLocal() {
-      if (!esUsuarioMatriz()) return alert('Acceso denegado.');
-      
-      const nombre = document.getElementById('loc-nombre').value.trim();
-      const propietario = document.getElementById('loc-propietario').value.trim();
-      const ruc = document.getElementById('loc-ruc').value.trim();
-      const direccion = document.getElementById('loc-direccion').value.trim();
-      const obligadoContabilidad = document.getElementById('loc-contabilidad').value;
-
-      if (!nombre) return alert('Ingresa al menos el nombre del local');
-
-      const nuevoLocal = { 
-        id: 'LOC-' + Date.now().toString().slice(-4), 
-        nombre, 
-        propietario,
-        ruc,
-        direccion,
-        obligado_contabilidad: obligadoContabilidad
-      };
-
-      const { error } = await supabaseClient.from('locales').insert([nuevoLocal]);
-      if (error) return alert("Error al registrar local: " + error.message);
-
-      dbLocales.push({
-        id: nuevoLocal.id,
-        nombre: nuevoLocal.nombre,
-        propietario: nuevoLocal.propietario,
-        ruc: nuevoLocal.ruc,
-        direccion: nuevoLocal.direccion,
-        obligadoContabilidad: nuevoLocal.obligado_contabilidad
-      });
-
-      poblardropdowns();
-      renderLocales();
-
-      document.getElementById('loc-nombre').value = '';
-      document.getElementById('loc-propietario').value = '';
-      document.getElementById('loc-ruc').value = '';
-      document.getElementById('loc-direccion').value = '';
-      alert('Local registrado con éxito');
-    }
-
-    function renderLocales() {
-      document.getElementById('loc-tabla').innerHTML = dbLocales.map(l => `
-        <tr>
-          <td><b>${l.id}</b></td>
-          <td>${l.nombre}</td>
-          <td>${l.ruc || 'S/N'} - ${l.direccion || 'S/N'}</td>
-          <td>
-            ${esLocalMatriz(l.id, l.nombre) ? '<span class="badge">Matriz Protegida</span>' : `<button class="btn btn-danger btn-sm" onclick="eliminarLocal('${l.id}')">Eliminar</button>`}
-          </td>
-        </tr>
+    function renderClientes() {
+      document.getElementById('cli-tabla').innerHTML = dbClientes.map(c => `
+        <tr><td>${c.cedula || ''}</td><td>${c.nombre || ''} ${c.apellido || ''}</td><td>${c.correo || ''}</td></tr>
       `).join('');
     }
 
-    async function eliminarLocal(id) {
-      const localTarget = dbLocales.find(l => String(l.id) === String(id));
-      if (localTarget && esLocalMatriz(localTarget.id, localTarget.nombre)) {
-        return alert('La Matriz Principal está protegida y no se puede eliminar.');
+    function renderHistorial() {
+      document.getElementById('historial-tabla').innerHTML = dbVentas.map(v => `
+        <tr><td>${v.id}</td><td>${v.cliente_nombre || 'Consumidor Final'}</td><td>${v.metodo_pago || 'Efectivo'}</td><td>${new Date(v.fecha).toLocaleString()}</td><td>$${Number(v.total).toFixed(2)}</td></tr>
+      `).join('');
+    }
+
+    function abrirModalCobro() { document.getElementById('modal-cobro').style.display = 'flex'; }
+    function cerrarModalCobro() { document.getElementById('modal-cobro').style.display = 'none'; }
+    function calcularVuelto() {}
+    function cambiarMetodoPago() {}
+    function seleccionarClienteAutocomplete() {}
+    function abrirCamaraPOS() {}
+    function abrirCamaraInventario() {}
+    function cerrarCamara() {}
+
+    // Inicialización automática si ya hay sesión guardada
+    window.onload = async () => {
+      if (usuarioActual) {
+        await cargarDatosSupabase();
+        aplicarSesionActiva();
       }
-
-      if (!confirm("¿Eliminar este local?")) return;
-      await supabaseClient.from('locales').delete().eq('id', id);
-      dbLocales = dbLocales.filter(l => String(l.id) !== String(id));
-      poblardropdowns();
-      renderLocales();
-    }
-
-    async function crearUsuario() {
-      if (!esUsuarioMatriz()) return alert('Acceso denegado.');
-
-      const user = document.getElementById('usr-user').value.trim();
-      const pass = document.getElementById('usr-pass').value.trim();
-      const rol = document.getElementById('usr-rol').value;
-      const localId = document.getElementById('usr-local-select').value;
-
-      if (!user || !pass) return alert('Por favor completa todos los campos.');
-
-      const nuevoUsuarioSupabase = { 
-        id: Date.now().toString(), 
-        user, 
-        pass, 
-        rol, 
-        local_id: String(localId) 
-      };
-
-      const { error } = await supabaseClient.from('usuarios').insert([nuevoUsuarioSupabase]);
-      if (error) return alert("Error al crear usuario: " + error.message);
-
-      dbUsuarios.push({
-        id: nuevoUsuarioSupabase.id,
-        user: nuevoUsuarioSupabase.user,
-        pass: nuevoUsuarioSupabase.pass,
-        rol: nuevoUsuarioSupabase.rol,
-        localId: nuevoUsuarioSupabase.local_id
-      });
-
-      document.getElementById('usr-user').value = '';
-      document.getElementById('usr-pass').value = '';
-      renderUsuarios();
-      alert('Credencial creada exitosamente');
-    }
-
-    function renderUsuarios() {
-      document.getElementById('usr-tabla').innerHTML = dbUsuarios.map(u => {
-        const nomLoc = dbLocales.find(l => String(l.id) === String(u.localId))?.nombre || u.localId || 'N/A';
-        return `
-          <tr>
-            <td><b>${u.user}</b></td>
-            <td><span class="badge">${u.rol}</span></td>
-            <td>${nomLoc}</td>
-            <td><button class="btn btn-danger btn-sm" onclick="eliminarUsuario('${u.id}')">Eliminar</button></td>
-          </tr>
-        `;
-      }).join('');
-    }
-
-    async function eliminarUsuario(id) {
-      const usrTarget = dbUsuarios.find(u => String(u.id) === String(id));
-      if (usrTarget && usrTarget.user === usuarioActual.user) {
-        return alert('No puedes eliminar tu propio usuario actual.');
-      }
-
-      if (!confirm("¿Eliminar este usuario?")) return;
-      await supabaseClient.from('usuarios').delete().eq('id', id);
-      dbUsuarios = dbUsuarios.filter(u => String(u.id) !== String(id));
-      if (document.getElementById('vista-usuarios').classList.contains('active')) renderUsuarios();
-      if (document.getElementById('vista-personal').classList.contains('active')) renderEmpleadosCajeros();
-    }
-
-    function toggleModoSri() {
-      const check = document.getElementById('checkModoSri');
-      const icono = document.getElementById('iconoModoSeñal');
-      const texto = document.getElementById('textoModoSeñal');
-      const contenedor = document.getElementById('contenedorModoSri');
-
-      check.checked = !check.checked;
-
-      if (check.checked) {
-        icono.className = "fas fa-wifi text-success";
-        texto.className = "fw-bold text-success";
-        texto.textContent = "SRI ONLINE";
-        contenedor.style.borderColor = "#22c55e";
-        contenedor.style.background = "#dcfce7";
-      } else {
-        icono.className = "fas fa-wifi text-secondary";
-        texto.className = "fw-bold text-secondary";
-        texto.textContent = "LOCAL";
-        contenedor.style.borderColor = "#ced4da";
-        contenedor.style.background = "#e9ecef";
-      }
-    }
-
-    function abrirConfigFirma() {
-      document.getElementById('modal-firma-config').style.display = 'flex';
-    }
-
-    function cerrarConfigFirma() {
-      document.getElementById('modal-firma-config').style.display = 'none';
-    }
-
-    function guardarFirmaDigital() {
-      const fileInput = document.getElementById('input-archivo-p12');
-      const passInput = document.getElementById('input-firma-password');
-
-      if (!fileInput.files || fileInput.files.length === 0) {
-        return alert('Por favor selecciona un archivo de firma digital (.p12 o .pfx)');
-      }
-      if (!passInput.value.trim()) {
-        return alert('Por favor ingresa la contraseña de la firma digital');
-      }
-
-      alert('Configuración de firma guardada correctamente para este local.');
-      cerrarConfigFirma();
-    }
+    };
   </script>
 </body>
 </html>
