@@ -645,7 +645,7 @@
     let carritos = [{ id: 1, nombre: 'Principal 1', items: [] }];
     let carritoActivoId = 1;
     let html5QrCode = null;
-    let clienteVentaSeleccionado = { cedula: 'Consumidor Final', nombre: 'Consumidor Final' };
+    let clienteVentaSeleccionado = { cedula: '9999999999001', nombre: 'Consumidor Final' };
 
     async function registrarAuditoriaMerma(idFactura, productoNombre, cantidad, montoTotal, motivo) {
       try {
@@ -1173,7 +1173,6 @@
     async function procesarVenta(metodoPago) {
       const cart = obtenerCarritoActual();
       
-      // SOLUCIÓN: Extracción segura de la información del cliente del autocompletado
       const clienteNombre = clienteVentaSeleccionado.nombre ? `${clienteVentaSeleccionado.nombre} ${clienteVentaSeleccionado.apellido || ''}`.trim() : "Consumidor Final";
       const clienteCedula = clienteVentaSeleccionado.cedula || "9999999999001";
 
@@ -1961,4 +1960,3 @@
   </script>
 </body>
 </html>
-
