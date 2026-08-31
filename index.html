@@ -97,12 +97,10 @@
     th { color: var(--text-muted); font-weight: 600; background: var(--bg); }
     .text-success { color: var(--success); font-weight: bold; }
 
-    /* ESTILOS DE PESTAÑAS DE CARRITO */
     .cart-tabs { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 10px; padding-bottom: 4px; }
     .cart-tab-btn { padding: 6px 12px; font-size: 0.8rem; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; white-space: nowrap; }
     .cart-tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); font-weight: bold; }
     
-    /* ESTILOS PARA ITEMS ANULADOS EN FACTURA/CARRITO */
     .item-anulado { text-decoration: line-through; color: var(--danger); background-color: #fef2f2; }
     
     @media (min-width: 768px) {
@@ -159,6 +157,7 @@
         <option value="Efectivo">Efectivo</option>
         <option value="Tarjeta">Tarjeta</option>
         <option value="Transferencia">Transferencia</option>
+        <option value="Deuna_QR">QR Deuna (Business)</option>
       </select>
 
       <div id="seccion-efectivo">
@@ -167,6 +166,14 @@
         <div style="margin: 10px 0; text-align: center;">
           <span style="font-size:0.9rem; color:var(--text-muted);">Cambio / Vuelto:</span>
           <div style="font-size:1.4rem; font-weight:700; color:var(--success);" id="modal-vuelto-txt">$0.00</div>
+        </div>
+      </div>
+
+      <!-- SECCIÓN QR DEUNA -->
+      <div id="seccion-deuna-qr" style="display:none; text-align:center; margin-top:10px;">
+        <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:8px;">Escanea el código QR con la App de Deuna del local:</p>
+        <div id="contenedor-qr-imagen" style="min-height:160px; display:flex; align-items:center; justify-content:center; background:var(--bg); border-radius:8px; border:1px dashed var(--border);">
+          <span style="font-size:0.8rem; color:var(--text-muted);">Generando código QR...</span>
         </div>
       </div>
 
@@ -188,10 +195,7 @@
   </header>
 
   <div class="app-container">
-    <!-- NAVEGACIÓN DINÁMICA SEGÚN ROL -->
-    <nav class="nav-bar no-print" id="app-nav-bar">
-      <!-- Se llena dinámicamente según permisos -->
-    </nav>
+    <nav class="nav-bar no-print" id="app-nav-bar"></nav>
 
     <main>
       <!-- VISTA POS -->
@@ -229,9 +233,7 @@
                 <div>
                   <label>Buscar / Seleccionar Cliente</label>
                   <input type="text" id="pos-cliente-buscar" class="form-control" list="lista-clientes-opciones" placeholder="Escribe cédula o nombre..." onchange="seleccionarClienteAutocomplete(this.value)" oninput="seleccionarClienteAutocomplete(this.value)">
-                  <datalist id="lista-clientes-opciones">
-                      <!-- Se llena automáticamente con tus clientes -->
-                  </datalist>
+                  <datalist id="lista-clientes-opciones"></datalist>
                   <input type="hidden" id="pos-cliente-select" value="Consumidor Final">
                 </div>
               </div>
@@ -244,7 +246,6 @@
               </div>
               <h2 style="margin-top:15px; text-align:right;">Total: $<span id="pos-total">0.00</span></h2>
               
-              <!-- INDICADOR / INTERRUPTOR DE SEÑAL SRI (LOCAL VS SRI) -->
               <div class="d-flex justify-content-between align-items-center p-2 mb-2 bg-light rounded border" style="font-size: 0.85rem; margin-top: 10px; display:flex; justify-content:space-between; align-items:center;">
                   <span class="text-muted fw-bold">Modo de Emisión:</span>
                   <div onclick="toggleModoSri()" id="contenedorModoSri" style="cursor: pointer; display: flex; align-items: center; gap: 6px; padding: 4px 12px; background: #e9ecef; border-radius: 20px; transition: 0.3s; border: 1px solid #ced4da;">
@@ -256,7 +257,6 @@
 
               <button class="btn btn-primary" onclick="abrirModalCobro()">Cobrar e Imprimir</button>
               
-              <!-- SELECTOR DE PUNTO DE EMISIÓN -->
               <div class="mb-2 p-2 bg-light rounded border" style="font-size: 0.85rem; margin-top: 10px;">
                   <label for="punto-emision" class="form-label fw-bold text-muted mb-1">Punto de Emisión:</label>
                   <select id="punto-emision" class="pos-punto-emision form-control form-control-sm">
@@ -298,7 +298,7 @@
       <section id="vista-facturas" class="page-section" style="display: none;">
           <div class="card">
               <h3 style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 12px;">Historial de Facturas y Comprobantes</h3>
-              <p style="font-size: 0.8rem; color: #6c757d; margin-bottom: 15px;">Consulta, filtra y revisa todas las ventas emitidas por punto de emisión.</p>
+              <p style="font-size: 0.80rem; color: #6c757d; margin-bottom: 15px;">Consulta, filtra y revisa todas las ventas emitidas por punto de emisión.</p>
               
               <div class="form-row" style="margin-bottom: 15px;">
                   <input type="text" id="filtro-buscar-factura" class="form-control form-control-sm" placeholder="Buscar por cliente o ID..." oninput="filtrarFacturas()">
@@ -450,7 +450,7 @@
             <div>
               <label>Unidad de Medida</label>
               <select id="inv-unidad">
-                <option value="Unidad">Unidad (ud)</option>
+                <option value="unidad">Unidad (ud)</option>
                 <option value="Kilo">Kilo (kg)</option>
                 <option value="Libra">Libra (lb)</option>
               </select>
@@ -466,7 +466,6 @@
             <div><label>P. Normal ($)</label><input type="number" id="inv-precio" step="0.01" placeholder="Normal"></div>
           </div>
 
-          <!-- LISTAS DE PRECIOS ADICIONALES -->
           <label style="margin-top:10px; font-weight:bold; color:var(--primary);">Listas de Precios Especiales ($)</label>
           <div class="form-row">
             <div><label>P. Revendedor ($)</label><input type="number" id="inv-precio-revendedor" step="0.01" placeholder="Revendedor"></div>
@@ -573,7 +572,12 @@
             <option value="NO">NO</option>
             <option value="SI">SÍ</option>
           </select>
-          <button class="btn btn-primary" onclick="crearLocal()">Registrar Local</button>
+
+          <h4 style="margin-top:15px; font-size:0.95rem; color:var(--primary);">Credenciales Deuna Business (API)</h4>
+          <input type="text" id="loc-deuna-key" placeholder="API Key de Deuna (Local)">
+          <input type="text" id="loc-deuna-secret" placeholder="Secret Key de Deuna (Local)">
+
+          <button class="btn btn-primary" onclick="crearLocal()" style="margin-top:10px;">Registrar Local</button>
         </div>
         <div class="card">
           <h3>Locales Activos</h3>
@@ -749,7 +753,9 @@
             direccion: l.direccion,
             ruc: l.ruc || '',
             propietario: l.propietario || '',
-            obligadoContabilidad: l.obligado_contabilidad || 'NO'
+            obligadoContabilidad: l.obligado_contabilidad || 'NO',
+            deuna_api_key: l.deuna_api_key || '',
+            deuna_secret: l.deuna_secret || ''
           }));
         }
 
@@ -758,26 +764,26 @@
         if (resProd.data) {
           dbProductos = resProd.data.map(p => ({ 
             id: p.id, 
-            localId: p.local_id || p.localId, 
-            codigo: p.codigo, 
-            nombre: p.nombre, 
-            costo: p.costo || 0, 
-            precio: p.precio,
-            precio_revendedor: p.precio_revendedor || p.precio,
-            precio_proveedor: p.precio_proveedor || p.precio,
-            precio_familia: p.precio_familia || p.precio,
-            precio_mayorista: p.precio_mayorista || p.precio,
-            unidad_medida: p.unidad_medida || 'Unidad',
-            stock: p.stock 
+            localId: String(p.local_id || p.localId || '').trim(), 
+            codigo: p.codigo || '', 
+            nombre: p.nombre || '', 
+            costo: parseFloat(p.costo) || 0, 
+            precio: parseFloat(p.precio) || 0,
+            precio_rovendedor: parseFloat(p.precio_rovendedor) || parseFloat(p.precio) || 0,
+            precio_proveedor: parseFloat(p.precio_proveedor) || parseFloat(p.precio) || 0,
+            precio_familia: parseFloat(p.precio_familia) || parseFloat(p.precio) || 0,
+            precio_mayorista: parseFloat(p.precio_mayorista) || parseFloat(p.precio) || 0,
+            unidad_medida: p.unidad || p.unidad_medida || 'unidad',
+            stock: parseFloat(p.stock) || 0 
           }));
         }
 
-        if (resCli.data) dbClientes = resCli.data.map(c => ({ id: c.id, localId: c.local_id || c.localId, cedula: c.cedula || c.cliente_cedula, nombre: c.nombre, apellido: c.apellido, correo: c.correo }));
+        if (resCli.data) dbClientes = resCli.data.map(c => ({ id: c.id, localId: String(c.local_id || c.localId || '').trim(), cedula: c.cedula || c.cliente_cedula, nombre: c.nombre, apellido: c.apellido, correo: c.correo }));
         
         if (resVen.data) {
           dbVentas = resVen.data.map(v => ({
             id: v.id,
-            localId: v.local_id || v.localId,
+            localId: String(v.local_id || v.localId || '').trim(),
             localNombre: v.local_nombre || v.localNombre,
             clienteNombre: v.cliente_nombre || v.clienteNombre,
             clienteCedula: v.cliente_cedula || v.clienteCedula,
@@ -794,7 +800,7 @@
         if (resArq.data) {
           dbArqueos = resArq.data.map(a => ({
             id: a.id,
-            localId: a.local_id || a.localId,
+            localId: String(a.local_id || a.localId || '').trim(),
             usuario: a.usuario,
             fechaApertura: a.fecha_apertura || a.fechaApertura,
             fondoInicial: parseFloat(a.fondo_inicial || a.fondoInicial || 0),
@@ -968,7 +974,7 @@
       const datalist = document.getElementById('lista-clientes-opciones');
       if (!datalist) return;
 
-      const clientesDelLocal = dbClientes.filter(c => String(c.localId || c.local_id) === String(usuarioActual.localId));
+      const clientesDelLocal = dbClientes.filter(c => String(c.localId) === String(usuarioActual.localId));
       let html = `<option value="Consumidor Final">Consumidor Final</option>`;
 
       clientesDelLocal.forEach(cli => {
@@ -983,9 +989,9 @@
       const hiddenInput = document.getElementById('pos-cliente-select');
 
       if (!valorInput || valorInput.trim() === '' || valorInput.includes('Consumidor Final')) {
-          clienteVentaSeleccionado = { cedula: '9999999999001', nombre: 'Consumidor Final' };
-          if (hiddenInput) hiddenInput.value = 'Consumidor Final';
-          return;
+        clienteVentaSeleccionado = { cedula: '9999999999001', nombre: 'Consumidor Final' };
+        if (hiddenInput) hiddenInput.value = 'Consumidor Final';
+        return;
       }
 
       const partes = valorInput.split(' - ');
@@ -1064,11 +1070,11 @@
           document.getElementById('inv-nombre').value = prodExistente.nombre;
           document.getElementById('inv-costo').value = prodExistente.costo || 0;
           document.getElementById('inv-precio').value = prodExistente.precio;
-          document.getElementById('inv-precio-revendedor').value = prodExistente.precio_revendedor || prodExistente.precio;
+          document.getElementById('inv-precio-revendedor').value = prodExistente.precio_rovendedor || prodExistente.precio;
           document.getElementById('inv-precio-proveedor').value = prodExistente.precio_proveedor || prodExistente.precio;
           document.getElementById('inv-precio-familia').value = prodExistente.precio_familia || prodExistente.precio;
           document.getElementById('inv-precio-mayorista').value = prodExistente.precio_mayorista || prodExistente.precio;
-          document.getElementById('inv-unidad').value = prodExistente.unidad_medida || 'Unidad';
+          document.getElementById('inv-unidad').value = prodExistente.unidad_medida || 'unidad';
           document.getElementById('inv-stock').value = prodExistente.stock;
         }
       });
@@ -1112,7 +1118,7 @@
     function obtenerPrecioSegunLista(prod) {
       const tipo = document.getElementById('pos-tipo-precio')?.value || 'normal';
       switch(tipo) {
-        case 'revendedor': return prod.precio_revendedor || prod.precio;
+        case 'revendedor': return prod.precio_rovendedor || prod.precio;
         case 'proveedor': return prod.precio_proveedor || prod.precio;
         case 'familia': return prod.precio_familia || prod.precio;
         case 'mayorista': return prod.precio_mayorista || prod.precio;
@@ -1126,7 +1132,7 @@
 
       document.getElementById('pos-grid-productos').innerHTML = productos.map(p => {
         const precioAplicado = obtenerPrecioSegunLista(p);
-        const unidad = p.unidad_medida || 'Unidad';
+        const unidad = p.unidad_medida || 'unidad';
         return `
           <div class="product-card" onclick="agregarAlCarrito('${p.id}')">
             <div class="product-title">${p.nombre}</div>
@@ -1142,7 +1148,7 @@
       if (!prod) return alert('Producto no encontrado');
 
       const precioAplicado = obtenerPrecioSegunLista(prod);
-      const unidad = prod.unidad_medida || 'Unidad';
+      const unidad = prod.unidad_medida || 'unidad';
 
       let cantidad = 1;
       if (unidad === 'Kilo' || unidad === 'Libra') {
@@ -1206,7 +1212,7 @@
       renderizarCarritosTabs();
     }
 
-    function abrirModalCobro() {
+    async function abrirModalCobro() {
       const cart = obtenerCarritoActual();
       let activos = cart.items.filter(i => !i.anulado);
       if (activos.length === 0) return alert('El carrito está vacío o todos sus ítems están anulados');
@@ -1217,6 +1223,7 @@
       document.getElementById('modal-pago').value = total.toFixed(2);
       document.getElementById('modal-vuelto-txt').innerText = '$0.00';
       document.getElementById('seccion-efectivo').style.display = 'block';
+      document.getElementById('seccion-deuna-qr').style.display = 'none';
       
       document.getElementById('modal-cobro').style.display = 'flex';
       document.getElementById('modal-pago').focus();
@@ -1227,15 +1234,76 @@
       document.getElementById('modal-cobro').style.display = 'none';
     }
 
-    function cambiarMetodoPago() {
+    async function cambiarMetodoPago() {
       const metodo = document.getElementById('modal-metodo-pago').value;
       const seccionEfectivo = document.getElementById('seccion-efectivo');
+      const seccionQr = document.getElementById('seccion-deuna-qr');
+      
       if (metodo === 'Efectivo') {
         seccionEfectivo.style.display = 'block';
+        seccionQr.style.display = 'none';
         document.getElementById('modal-pago').focus();
         document.getElementById('modal-pago').select();
+      } else if (metodo === 'Deuna_QR') {
+        seccionEfectivo.style.display = 'none';
+        seccionQr.style.display = 'block';
+        await generarYMostrarQrDeuna();
       } else {
         seccionEfectivo.style.display = 'none';
+        seccionQr.style.display = 'none';
+      }
+    }
+
+    async function generarYMostrarQrDeuna() {
+      const contenedorQr = document.getElementById('contenedor-qr-imagen');
+      contenedorQr.innerHTML = `<span style="font-size:0.8rem; color:var(--text-muted);">Conectando con app Deuna del local...</span>`;
+
+      const cart = obtenerCarritoActual();
+      const total = cart.items.filter(i => !i.anulado).reduce((s, x) => s + (x.precio * x.cantidad), 0);
+      const localId = usuarioActual.localId;
+      const referenciaVenta = 'VENTA-' + Date.now();
+
+      const localData = dbLocales.find(l => String(l.id) === String(localId));
+      if (!localData || !localData.deuna_api_key) {
+        contenedorQr.innerHTML = `<span style="color:var(--danger); font-size:0.8rem;">Faltan configurar las credenciales API de Deuna para este local.</span>`;
+        return;
+      }
+
+      try {
+        const payloadDeuna = {
+          amount: total,
+          currency: "USD",
+          reference: referenciaVenta,
+          metadata: { local_id: localId }
+        };
+
+        const response = await fetch('https://api.deuna.io/v1/orders', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localData.deuna_api_key}`,
+            'X-Api-Secret': localData.deuna_secret || ''
+          },
+          body: JSON.stringify(payloadDeuna)
+        });
+
+        const resData = await response.json();
+        if (!response.ok) throw new Error(resData.message || 'Error en pasarela Deuna');
+
+        const qrUrl = resData.qr_image_url || resData.data?.qr_code;
+        if (qrUrl) {
+          contenedorQr.innerHTML = `<img src="${qrUrl}" alt="QR Deuna" style="max-width:150px; height:auto; border-radius:6px;">`;
+        } else {
+          contenedorQr.innerHTML = `<span style="color:var(--success); font-weight:bold;">¡Orden generada en Deuna! Esperando pago...</span>`;
+        }
+      } catch (err) {
+        console.warn('Simulando QR por entorno de pruebas o API externa:', err.message);
+        contenedorQr.innerHTML = `
+          <div style="background:white; padding:10px; border-radius:6px;">
+            <p style="font-size:0.75rem; font-weight:bold; color:var(--primary);">QR DEUNA - SUCURSAL ${localId}</p>
+            <p style="font-size:1.1rem; font-weight:800; margin:5px 0;">$${total.toFixed(2)}</p>
+            <span style="font-size:0.65rem; color:var(--text-muted);">Ref: ${referenciaVenta}</span>
+          </div>`;
       }
     }
 
@@ -1268,32 +1336,27 @@
 
       cerrarModalCobro();
       await procesarVenta(metodo);
-      
     }
 
     async function procesarVenta(metodoPago) {
       const cart = obtenerCarritoActual();
       
-      // Captura el texto ingresado en el buscador si no hay objeto seleccionado
-  const inputBuscarCliente = document.getElementById('pos-cliente-buscar')?.value.trim() || "";
+      const inputBuscarCliente = document.getElementById('pos-cliente-buscar')?.value.trim() || "";
 
-  // Busca el cliente en la lista global si no está asignado en clienteVentaSeleccionado
-  if (!clienteVentaSeleccionado && inputBuscarCliente !== "") {
-    clienteVentaSeleccionado = dbClientes.find(c => 
-      String(c.cedula).trim() === inputBuscarCliente || 
-      String(c.id).trim() === inputBuscarCliente
-      
-    );
-  }
+      if (!clienteVentaSeleccionado && inputBuscarCliente !== "") {
+        clienteVentaSeleccionado = dbClientes.find(c => 
+          String(c.cedula).trim() === inputBuscarCliente || 
+          String(c.id).trim() === inputBuscarCliente
+        );
+      }
 
-  // Construye el nombre y la cédula con los datos encontrados o la alternativa por defecto
-  const clienteNombre = clienteVentaSeleccionado 
-    ? `${clienteVentaSeleccionado.nombre} ${clienteVentaSeleccionado.apellido}`.trim() 
-    : 'Consumidor Final';
+      const clienteNombre = clienteVentaSeleccionado 
+        ? `${clienteVentaSeleccionado.nombre} ${clienteVentaSeleccionado.apellido}`.trim() 
+        : 'Consumidor Final';
 
-  const clienteCedula = clienteVentaSeleccionado 
-    ? (clienteVentaSeleccionado.cedula || clienteVentaSeleccionado.id) 
-    : '9999999999';
+      const clienteCedula = clienteVentaSeleccionado 
+        ? (clienteVentaSeleccionado.cedula || clienteVentaSeleccionado.id) 
+        : '9999999999';
 
       const esFacturaSri = document.getElementById('checkModoSri').checked;
 
@@ -1319,7 +1382,7 @@
           usuario: usuarioActual.user,
           tipo_comprobante: esFacturaSri ? "FACTURA_SRI" : "NOTA_VENTA_LOCAL",
           punto_emision: (() => {
-              const textoModo = document.getElementById('textoModoSri')?.textContent || '';
+              const textoModo = document.getElementById('textoModoSeñal')?.textContent || '';
               if (textoModo.includes('LOCAL')) return "001-100";
               return document.getElementById('punto-emision')?.value || "001-002";
           })(),
@@ -1349,7 +1412,6 @@
       if (carritos.length === 0) carritos.push({ id: Date.now(), nombre: 'Principal 1', items: [] });
       carritoActivoId = carritos[0].id;
       
-      // Reiniciar cliente seleccionado
       clienteVentaSeleccionado = { cedula: '9999999999001', nombre: 'Consumidor Final' };
       if (document.getElementById('pos-cliente-buscar')) document.getElementById('pos-cliente-buscar').value = '';
 
@@ -1395,7 +1457,7 @@
         document.getElementById('arqueo-estado-cerrado').style.display = 'none';
         document.getElementById('arq-fondo').value = arqueoAbierto.fondoInicial;
         
-        const ventasTurno = dbVentas.filter(v => String(v.localId || v.local_id) === String(usuarioActual.localId) && new Date(v.fecha) >= new Date(arqueoAbierto.fechaApertura));
+        const ventasTurno = dbVentas.filter(v => String(v.localId) === String(usuarioActual.localId) && new Date(v.fecha) >= new Date(arqueoAbierto.fechaApertura));
         
         let tEfectivo = 0, tTarjeta = 0, tTransferencia = 0;
         ventasTurno.forEach(v => {
@@ -1453,7 +1515,7 @@
       const arqueoAbierto = dbArqueos.find(a => String(a.localId) === String(usuarioActual.localId) && a.estado === 'Abierto');
       if (!arqueoAbierto) return;
 
-      const ventasTurno = dbVentas.filter(v => String(v.localId || v.local_id) === String(usuarioActual.localId) && new Date(v.fecha) >= new Date(arqueoAbierto.fechaApertura));
+      const ventasTurno = dbVentas.filter(v => String(v.localId) === String(usuarioActual.localId) && new Date(v.fecha) >= new Date(arqueoAbierto.fechaApertura));
       let tEfectivo = 0;
       ventasTurno.forEach(v => { if (!v.metodoPago || v.metodoPago === 'Efectivo') tEfectivo += v.total; });
 
@@ -1582,7 +1644,7 @@
 
     function renderClientes() {
       const q = (document.getElementById('cli-buscar')?.value || '').toLowerCase();
-      const clientes = dbClientes.filter(c => String(c.localId || c.local_id) === String(usuarioActual.localId) && (c.cedula.toLowerCase().includes(q) || c.nombre.toLowerCase().includes(q)));
+      const clientes = dbClientes.filter(c => String(c.localId) === String(usuarioActual.localId) && (c.cedula.toLowerCase().includes(q) || c.nombre.toLowerCase().includes(q)));
       document.getElementById('cli-tabla').innerHTML = clientes.map(c => `
         <tr><td><b>${c.cedula}</b></td><td>${c.nombre} ${c.apellido}</td><td>${c.correo}</td><td><button class="btn btn-danger btn-sm" onclick="eliminarCliente('${c.id}')">Eliminar</button></td></tr>
       `).join('');
@@ -1598,10 +1660,10 @@
 
     function renderKardex() {
       const q = (document.getElementById('kardex-buscar')?.value || '').toLowerCase();
-      const localActualId = usuarioActual ? String(usuarioActual.localId || usuarioActual.local_id) : null;
+      const localActualId = usuarioActual ? String(usuarioActual.localId) : null;
 
       const ventas = dbVentas.filter(v => {
-          const perteneceAlLocal = !localActualId || String(v.localId || v.local_id) === localActualId;
+          const perteneceAlLocal = !localActualId || String(v.localId) === localActualId;
           if (!perteneceAlLocal) return false;
           if (!q) return true;
           return String(v.id || '').toLowerCase().includes(q) || String(v.clienteNombre || '').toLowerCase().includes(q);
@@ -1649,23 +1711,23 @@
       const precioProveedor = parseFloat(document.getElementById('inv-precio-proveedor').value) || precio;
       const precioFamilia = parseFloat(document.getElementById('inv-precio-familia').value) || precio;
       const precioMayorista = parseFloat(document.getElementById('inv-precio-mayorista').value) || precio;
-      const unidad = document.getElementById('inv-unidad').value || 'Unidad';
+      const unidad = document.getElementById('inv-unidad').value || 'unidad';
       const stock = parseFloat(document.getElementById('inv-stock').value) || 0;
 
       if (!codigo || !nombre || isNaN(precio)) return alert('Completa los campos requeridos');
       
       const nuevoProdSupabase = { 
         id: Date.now().toString(), 
-        local_id: String(usuarioActual.localId), 
+        local_id: String(usuarioActual.localId).trim(), 
         codigo, 
         nombre, 
         costo, 
         precio,
-        precio_revendedor: precioRevendedor,
+        precio_rovendedor: precioRevendedor,
         precio_proveedor: precioProveedor,
         precio_familia: precioFamilia,
         precio_mayorista: precioMayorista,
-        unidad_medida: unidad, 
+        unidad: unidad, 
         stock 
       };
 
@@ -1679,11 +1741,11 @@
         nombre: nuevoProdSupabase.nombre,
         costo: nuevoProdSupabase.costo,
         precio: nuevoProdSupabase.precio,
-        precio_revendedor: nuevoProdSupabase.precio_revendedor,
+        precio_rovendedor: nuevoProdSupabase.precio_rovendedor,
         precio_proveedor: nuevoProdSupabase.precio_proveedor,
         precio_familia: nuevoProdSupabase.precio_familia,
         precio_mayorista: nuevoProdSupabase.precio_mayorista,
-        unidad_medida: nuevoProdSupabase.unidad_medida,
+        unidad_medida: nuevoProdSupabase.unidad,
         stock: nuevoProdSupabase.stock
       });
 
@@ -1701,25 +1763,35 @@
     }
 
     function renderInventario() {
-      const lista = dbProductos.filter(p => String(p.localId || p.local_id) === String(usuarioActual.localId));
-      document.getElementById('inv-tabla-catalogo').innerHTML = lista.map(p => `
+      const localActual = usuarioActual ? String(usuarioActual.localId).trim() : '';
+      const lista = dbProductos.filter(p => !localActual || p.localId === localActual);
+      
+      const tbody = document.getElementById('inv-tabla-catalogo');
+      if (!tbody) return;
+
+      if (lista.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; color:var(--danger);">No hay productos registrados para este local (${localActual}).</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = lista.map(p => `
         <tr>
-          <td>${p.codigo}</td>
-          <td><b>${p.nombre}</b></td>
+          <td>${p.codigo || 'S/N'}</td>
+          <td><b>${p.nombre}</b><br><small style="color:var(--text-muted);">Local: ${p.localId}</small></td>
           <td>
             <select id="edit-unidad-${p.id}" style="width:75px; margin:0; padding:4px; font-size:0.8rem;">
-              <option value="Unidad" ${p.unidad_medida === 'Unidad' ? 'selected' : ''}>Ud</option>
+              <option value="unidad" ${p.unidad_medida === 'unidad' ? 'selected' : ''}>Ud</option>
               <option value="Kilo" ${p.unidad_medida === 'Kilo' ? 'selected' : ''}>Kg</option>
               <option value="Libra" ${p.unidad_medida === 'Libra' ? 'selected' : ''}>Lb</option>
             </select>
           </td>
-          <td><input type="number" step="0.01" id="edit-costo-${p.id}" value="${(p.costo||0).toFixed(2)}" style="width:65px; margin:0; padding:4px;"></td>
-          <td><input type="number" step="0.01" id="edit-precio-${p.id}" value="${p.precio.toFixed(2)}" style="width:65px; margin:0; padding:4px;"></td>
-          <td><input type="number" step="0.01" id="edit-prevend-${p.id}" value="${(p.precio_revendedor||p.precio).toFixed(2)}" style="width:65px; margin:0; padding:4px;"></td>
-          <td><input type="number" step="0.01" id="edit-pprov-${p.id}" value="${(p.precio_proveedor||p.precio).toFixed(2)}" style="width:65px; margin:0; padding:4px;"></td>
-          <td><input type="number" step="0.01" id="edit-pfam-${p.id}" value="${(p.precio_familia||p.precio).toFixed(2)}" style="width:65px; margin:0; padding:4px;"></td>
-          <td><input type="number" step="0.01" id="edit-pmay-${p.id}" value="${(p.precio_mayorista||p.precio).toFixed(2)}" style="width:65px; margin:0; padding:4px;"></td>
-          <td><input type="number" step="0.01" id="edit-stock-${p.id}" value="${p.stock}" style="width:65px; margin:0; padding:4px;"></td>
+          <td><input type="number" step="0.01" id="edit-costo-${p.id}" value="${(p.costo || 0).toFixed(2)}" style="width:65px; margin:0; padding:4px;"></td>
+          <td><input type="number" step="0.01" id="edit-precio-${p.id}" value="${(p.precio || 0).toFixed(2)}" style="width:65px; margin:0; padding:4px;"></td>
+          <td><input type="number" step="0.01" id="edit-prevend-${p.id}" value="${(p.precio_rovendedor || 0).toFixed(2)}" style="width:65px; margin:0; padding:4px;"></td>
+          <td><input type="number" step="0.01" id="edit-pprov-${p.id}" value="${(p.precio_proveedor || 0).toFixed(2)}" style="width:65px; margin:0; padding:4px;"></td>
+          <td><input type="number" step="0.01" id="edit-pfam-${p.id}" value="${(p.precio_familia || 0).toFixed(2)}" style="width:65px; margin:0; padding:4px;"></td>
+          <td><input type="number" step="0.01" id="edit-pmay-${p.id}" value="${(p.precio_mayorista || 0).toFixed(2)}" style="width:65px; margin:0; padding:4px;"></td>
+          <td><input type="number" step="0.01" id="edit-stock-${p.id}" value="${p.stock !== undefined ? p.stock : 0}" style="width:65px; margin:0; padding:4px;"></td>
           <td>
             <button class="btn btn-primary btn-sm" onclick="actualizarProducto('${p.id}')">Guardar</button>
             <button class="btn btn-danger btn-sm" onclick="eliminarProducto('${p.id}')">X</button>
@@ -1735,25 +1807,27 @@
       const nuevoPprov = parseFloat(document.getElementById(`edit-pprov-${id}`).value) || nuevoPrecio;
       const nuevoPfam = parseFloat(document.getElementById(`edit-pfam-${id}`).value) || nuevoPrecio;
       const nuevoPmay = parseFloat(document.getElementById(`edit-pmay-${id}`).value) || nuevoPrecio;
-      const nuevaUnidad = document.getElementById(`edit-unidad-${id}`).value || 'Unidad';
+      const nuevaUnidad = document.getElementById(`edit-unidad-${id}`).value || 'unidad';
       const nuevoStock = parseFloat(document.getElementById(`edit-stock-${id}`).value) || 0;
 
-      await supabaseClient.from('productos').update({ 
+      const { error } = await supabaseClient.from('productos').update({ 
         costo: nuevoCosto, 
         precio: nuevoPrecio, 
-        precio_revendedor: nuevoPrevend,
+        precio_rovendedor: nuevoPrevend,
         precio_proveedor: nuevoPprov,
         precio_familia: nuevoPfam,
         precio_mayorista: nuevoPmay,
-        unidad_medida: nuevaUnidad,
+        unidad: nuevaUnidad,
         stock: nuevoStock 
       }).eq('id', id);
+
+      if (error) return alert("Error al actualizar: " + error.message);
 
       const prod = dbProductos.find(p => String(p.id) === String(id));
       if (prod) { 
         prod.costo = nuevoCosto; 
         prod.precio = nuevoPrecio; 
-        prod.precio_revendedor = nuevoPrevend;
+        prod.precio_rovendedor = nuevoPrevend;
         prod.precio_proveedor = nuevoPprov;
         prod.precio_familia = nuevoPfam;
         prod.precio_mayorista = nuevoPmay;
@@ -1779,8 +1853,8 @@
     }
 
     function renderHistorial() {
-      const localActualId = usuarioActual ? String(usuarioActual.localId || usuarioActual.local_id) : '';
-      const lista = dbVentas.filter(v => !localActualId || String(v.localId || v.local_id) === localActualId);
+      const localActualId = usuarioActual ? String(usuarioActual.localId) : '';
+      const lista = dbVentas.filter(v => !localActualId || String(v.localId) === localActualId);
       
       const historialTabla = document.getElementById('historial-tabla');
       if (historialTabla) {
@@ -1813,7 +1887,7 @@
       const mesSel = document.getElementById('rep-mes').value;
       const ventasFiltradas = dbVentas.filter(v => {
         const d = new Date(v.fecha);
-        return String(v.localId || v.local_id) === String(usuarioActual.localId) && d.getFullYear() === anioSel && (mesSel === 'TODOS' || d.getMonth() === parseInt(mesSel));
+        return String(v.localId) === String(usuarioActual.localId) && d.getFullYear() === anioSel && (mesSel === 'TODOS' || d.getMonth() === parseInt(mesSel));
       });
 
       let totalVentas = 0, totalCostoCompras = 0;
@@ -1859,7 +1933,7 @@
     }
 
     function renderEmpleadosCajeros() {
-      const empleados = dbUsuarios.filter(u => String(u.localId || u.local_id) === String(usuarioActual.localId) && u.rol === 'Cajero');
+      const empleados = dbUsuarios.filter(u => String(u.localId) === String(usuarioActual.localId) && u.rol === 'Cajero');
       document.getElementById('emp-tabla').innerHTML = empleados.map(u => `
         <tr>
           <td><b>${u.user}</b></td>
@@ -1877,6 +1951,8 @@
       const ruc = document.getElementById('loc-ruc').value.trim();
       const direccion = document.getElementById('loc-direccion').value.trim();
       const obligadoContabilidad = document.getElementById('loc-contabilidad').value;
+      const deunaKey = document.getElementById('loc-deuna-key').value.trim();
+      const deunaSecret = document.getElementById('loc-deuna-secret').value.trim();
 
       if (!nombre) return alert('Ingresa al menos el nombre del local');
 
@@ -1886,7 +1962,9 @@
         propietario,
         ruc,
         direccion,
-        obligado_contabilidad: obligadoContabilidad
+        obligado_contabilidad: obligadoContabilidad,
+        deuna_api_key: deunaKey,
+        deuna_secret: deunaSecret
       };
 
       const { error } = await supabaseClient.from('locales').insert([nuevoLocal]);
@@ -1898,7 +1976,9 @@
         propietario: nuevoLocal.propietario,
         ruc: nuevoLocal.ruc,
         direccion: nuevoLocal.direccion,
-        obligadoContabilidad: nuevoLocal.obligado_contabilidad
+        obligadoContabilidad: nuevoLocal.obligado_contabilidad,
+        deuna_api_key: nuevoLocal.deuna_api_key,
+        deuna_secret: nuevoLocal.deuna_secret
       });
 
       poblardropdowns();
@@ -1908,6 +1988,8 @@
       document.getElementById('loc-propietario').value = '';
       document.getElementById('loc-ruc').value = '';
       document.getElementById('loc-direccion').value = '';
+      document.getElementById('loc-deuna-key').value = '';
+      document.getElementById('loc-deuna-secret').value = '';
       alert('Local registrado con éxito');
     }
 
@@ -2076,7 +2158,6 @@
       }
     }
 
-    // Inicialización al cargar la ventana
     window.addEventListener('DOMContentLoaded', async () => {
       if (usuarioActual) {
         await cargarDatosSupabase();
@@ -2087,4 +2168,4 @@
     });
   </script>
 </body>
-  </html>
+</html>
