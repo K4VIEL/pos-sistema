@@ -45,6 +45,12 @@ app.post('/api/emitir-factura', async (req, res) => {
             return res.status(404).json({ success: false, error: "No se encontró la venta especificada." });
         }
 
+        // Normalizar la clave de acceso (compatible con claveAcceso o clave_acceso)
+        const claveAccesoFinal = ventaInfo.claveAcceso || ventaInfo.clave_acceso;
+        if (!claveAccesoFinal) {
+            return res.status(400).json({ success: false, error: "La venta no cuenta con una clave de acceso válida." });
+        }
+
         console.log(`[SRI] Procesando y firmando factura para: ${localInfo.nombre_comercial || localInfo.nombre || 'Local'}`);
 
         // 3. Formatear la fecha para el XML (DDMMAAAA)
@@ -62,7 +68,7 @@ app.post('/api/emitir-factura', async (req, res) => {
         <razonSocial>${localInfo.razon_social || localInfo.nombre || "Mi Empresa"}</razonSocial>
         <nombreComercial>${localInfo.nombre_comercial || localInfo.nombre || "Mi Tienda"}</nombreComercial>
         <ruc>${localInfo.ruc || "9999999999001"}</ruc>
-        <claveAcceso>${ventaInfo.claveAcceso}</claveAcceso>
+        <claveAcceso>${claveAccesoFinal}</claveAcceso>
         <codDoc>01</codDoc>
         <estab>${localInfo.codigo_establecimiento || "001"}</estab>
         <ptoEmi>${localInfo.punto_emision || "001"}</ptoEmi>
@@ -151,7 +157,7 @@ app.post('/api/emitir-factura', async (req, res) => {
         return res.json({
             success: true,
             mensaje: `Factura generada y firmada digitalmente con éxito para ${localInfo.nombre_comercial || localInfo.nombre}`,
-            claveAcceso: ventaInfo.claveAcceso,
+            claveAcceso: claveAccesoFinal,
             xmlGenerado: xmlContent
         });
 
