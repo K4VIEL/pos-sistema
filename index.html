@@ -523,16 +523,48 @@
       <section id="vista-reportes" class="page-section">
         <div class="card">
           <h3>Reporte de Desempeño</h3>
-          <div class="form-row">
-            <div><label>Año</label><select id="rep-anio" onchange="generarReporte()"></select></div>
-            <div>
-              <label>Mes</label>
-              <select id="rep-mes" onchange="generarReporte()">
-                <option value="TODOS">Todos (Anual)</option>
-                <option value="0">Enero</option><option value="1">Febrero</option><option value="2">Marzo</option><option value="3">Abril</option><option value="4">Mayo</option><option value="5">Junio</option><option value="6">Julio</option><option value="7">Agosto</option><option value="8">Septiembre</option><option value="9">Octubre</option><option value="10">Noviembre</option><option value="11">Diciembre</option>
-              </select>
-            </div>
+          
+          <!-- Selector de Modo de Filtro (Mes/Día/Rango) -->
+          <div class="filter-tabs" style="margin-bottom: 15px; display: flex; gap: 6px;">
+              <button class="filter-tab active" onclick="cambiarModoFiltro('mes', this)" style="flex: 1; padding: 8px; border: none; border-radius: 6px; background: var(--primary); color: white; font-weight: bold; cursor: pointer;">Mes/Año</button>
+              <button class="filter-tab" onclick="cambiarModoFiltro('dia', this)" style="flex: 1; padding: 8px; border: none; border-radius: 6px; background: #e0e0e0; color: #333; font-weight: bold; cursor: pointer;">Día Exacto</button>
+              <button class="filter-tab" onclick="cambiarModoFiltro('rango', this)" style="flex: 1; padding: 8px; border: none; border-radius: 6px; background: #e0e0e0; color: #333; font-weight: bold; cursor: pointer;">Rango</button>
           </div>
+
+          <!-- Contenedor 1: Mes / Año -->
+          <div id="filtro-mes-container" class="filtro-grupo">
+              <div class="form-row">
+                  <div><label>Año</label><select id="rep-anio" class="form-control" onchange="generarReporte()"></select></div>
+                  <div>
+                    <label>Mes</label>
+                    <select id="rep-mes" class="form-control" onchange="generarReporte()">
+                      <option value="TODOS">Todos (Anual)</option>
+                      <option value="0">Enero</option><option value="1">Febrero</option><option value="2">Marzo</option><option value="3">Abril</option><option value="4">Mayo</option><option value="5">Junio</option><option value="6">Julio</option><option value="7">Agosto</option><option value="8">Septiembre</option><option value="9">Octubre</option><option value="10">Noviembre</option><option value="11">Diciembre</option>
+                    </select>
+                  </div>
+              </div>
+          </div>
+
+          <!-- Contenedor 2: Día Exacto -->
+          <div id="filtro-dia-container" class="filtro-grupo" style="display: none;">
+              <label>Seleccionar Día</label>
+              <input type="date" id="rep-input-dia" class="form-control" onchange="generarReporte()">
+          </div>
+
+          <!-- Contenedor 3: Rango de Fechas -->
+          <div id="filtro-rango-container" class="filtro-grupo" style="display: none; gap: 10px;">
+              <div class="form-row">
+                  <div>
+                      <label>Desde</label>
+                      <input type="date" id="rep-input-inicio" class="form-control" onchange="generarReporte()">
+                  </div>
+                  <div>
+                      <label>Hasta</label>
+                      <input type="date" id="rep-input-fin" class="form-control" onchange="generarReporte()">
+                  </div>
+              </div>
+          </div>
+
           <div class="kpi-grid">
             <div class="kpi-card"><label>Ventas Totales</label><div class="kpi-val text-success" id="rep-val-ventas">$0.00</div></div>
             <div class="kpi-card"><label>Costo de Compras</label><div class="kpi-val" style="color:var(--danger);" id="rep-val-compras">$0.00</div></div>
@@ -702,6 +734,8 @@
     let carritoActivoId = 1;
     let html5QrCode = null;
     let clienteVentaSeleccionado = { cedula: '9999999999001', nombre: 'Consumidor Final' };
+
+    let modoFiltroReporte = 'mes'; // Variable global para controlar el filtro de reportes
 
     async function registrarAuditoriaMerma(idFactura, productoNombre, cantidad, montoTotal, motivo) {
       try {
@@ -1996,12 +2030,48 @@
       generarReporte();
     }
 
+    function cambiarModoFiltro(modo, elementoBtn) {
+        modoFiltroReporte = modo;
+        
+        // Cambiar clases visuales de los botones de pestañas
+        document.querySelectorAll('#vista-reportes .filter-tab').forEach(btn => {
+            btn.style.background = '#e0e0e0';
+            btn.style.color = '#333';
+        });
+        elementoBtn.style.background = 'var(--primary)';
+        elementoBtn.style.color = '#fff';
+
+        // Mostrar u ocultar contenedores correspondientes
+        document.getElementById('filtro-mes-container').style.display = (modo === 'mes') ? 'block' : 'none';
+        document.getElementById('filtro-dia-container').style.display = (modo === 'dia') ? 'block' : 'none';
+        document.getElementById('filtro-rango-container').style.display = (modo === 'rango') ? 'flex' : 'none';
+
+        generarReporte();
+    }
+
     function generarReporte() {
-      const anioSel = parseInt(document.getElementById('rep-anio').value);
-      const mesSel = document.getElementById('rep-mes').value;
       const ventasFiltradas = dbVentas.filter(v => {
+        if (String(v.localId) !== String(usuarioActual.localId)) return false;
         const d = new Date(v.fecha);
-        return String(v.localId) === String(usuarioActual.localId) && d.getFullYear() === anioSel && (mesSel === 'TODOS' || d.getMonth() === parseInt(mesSel));
+        if (isNaN(d.getTime())) return false;
+
+        if (modoFiltroReporte === 'mes') {
+          const anioSel = parseInt(document.getElementById('rep-anio').value);
+          const mesSel = document.getElementById('rep-mes').value;
+          return d.getFullYear() === anioSel && (mesSel === 'TODOS' || d.getMonth() === parseInt(mesSel));
+        } else if (modoFiltroReporte === 'dia') {
+          const diaSel = document.getElementById('rep-input-dia').value;
+          if (!diaSel) return false;
+          const fechaVentaStr = d.toISOString().split('T')[0];
+          return fechaVentaStr === diaSel;
+        } else if (modoFiltroReporte === 'rango') {
+          const inicioStr = document.getElementById('rep-input-inicio').value;
+          const finStr = document.getElementById('rep-input-fin').value;
+          if (!inicioStr || !finStr) return false;
+          const fechaVentaStr = d.toISOString().split('T')[0];
+          return fechaVentaStr >= inicioStr && fechaVentaStr <= finStr;
+        }
+        return true;
       });
 
       let totalVentas = 0, totalCostoCompras = 0;
@@ -2200,21 +2270,26 @@
       const icono = document.getElementById('iconoModoSeñal');
       const texto = document.getElementById('textoModoSeñal');
       const contenedor = document.getElementById('contenedorModoSri');
+      const selectPunto = document.getElementById('punto-emision'); // Referencia al punto de emisión
 
       check.checked = !check.checked;
 
       if (check.checked) {
+        // Modo SRI ONLINE activado -> Se fija automáticamente en la Caja Secundaria (001-002)
         icono.className = "fas fa-wifi text-success";
         texto.className = "fw-bold text-success";
         texto.textContent = "SRI ONLINE";
         contenedor.style.borderColor = "#22c55e";
         contenedor.style.background = "#dcfce7";
+        if (selectPunto) selectPunto.value = "001-002";
       } else {
+        // Modo LOCAL activado -> Se fija automáticamente en la Caja Principal (001-100)
         icono.className = "fas fa-wifi text-secondary";
         texto.className = "fw-bold text-secondary";
         texto.textContent = "LOCAL";
         contenedor.style.borderColor = "#ced4da";
         contenedor.style.background = "#e9ecef";
+        if (selectPunto) selectPunto.value = "001-100";
       }
     }
 
@@ -2291,3 +2366,4 @@
   </script>
 </body>
 </html>
+
