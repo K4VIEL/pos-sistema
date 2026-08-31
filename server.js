@@ -19,7 +19,6 @@ app.post('/api/emitir-factura', async (req, res) => {
             return res.status(400).json({ success: false, message: "Faltan datos: ventaId o localId son requeridos." });
         }
 
-        // 1. Obtener la información del local desde Supabase
         const { data: localInfo, error: errorLocal } = await supabase
             .from('locales')
             .select('*')
@@ -34,7 +33,6 @@ app.post('/api/emitir-factura', async (req, res) => {
             return res.json({ success: false, message: "Este local no tiene configurada una firma electrónica o contraseña." });
         }
 
-        // 2. Obtener los detalles de la venta desde Supabase
         const { data: ventaInfo, error: errorVenta } = await supabase
             .from('ventas')
             .select('*')
@@ -50,30 +48,31 @@ app.post('/api/emitir-factura', async (req, res) => {
             return res.json({ success: false, message: "La venta no cuenta con una clave de acceso válida." });
         }
 
-        console.log(`[SRI] Procesando factura para: ${localInfo.nombre || 'Local'}`);
-
-        // 3. Descargar el archivo .p12 desde Supabase Storage
+        // Limpiar la ruta del archivo por si contiene URLs completas de Supabase
         let rutaFirma = localInfo.firma_p12_url.trim();
-        // Si por error guardaron la URL completa, extraemos solo la ruta interna del bucket
         if (rutaFirma.includes('/storage/v1/object/public/firmas/')) {
             rutaFirma = rutaFirma.split('/storage/v1/object/public/firmas/')[1];
         }
+        // Remover barras iniciales si las hubiera
+        rutaFirma = rutaFirma.replace(/^\/+/, '');
+
+        console.log(`[SRI] Descargando firma desde bucket 'firmas' con ruta: '${rutaFirma}'`);
 
         const { data: fileData, error: storageError } = await supabase.storage
             .from('firmas')
             .download(rutaFirma);
 
         if (storageError || !fileData) {
-            throw new Error("No se pudo descargar el archivo de firma desde Supabase Storage: " + (storageError?.message || 'Archivo vacio'));
+            return res.json({ success: false, message: "Error al descargar la firma de Supabase: " + (storageError?.message || 'Archivo no encontrado') });
         }
 
-        // Convertir Blob a Buffer de Node.js de forma segura
         const arrayBuffer = await fileData.arrayBuffer();
         const p12Buffer = Buffer.from(arrayBuffer);
 
-        // Validar que el archivo comience con la cabecera PKCS#12 binaria (30 82 o formato ASN.1)
-        if (p12Buffer.length < 10) {
-            throw new Error("El archivo de firma descargado está vacío o corrupto.");
+        // Validar si el archivo descargado es HTML (error de ruta) en lugar de binario
+        const contenidoTexto = p12Buffer.toString('utf8', 0, 50);
+        if (contenidoTexto.includes('<!DOCTYPE html>') || contenidoTexto.includes('{"statusCode":404')) {
+            return res.json({ success: false, message: `El archivo en Supabase Storage ('${rutaFirma}') no existe o la ruta es incorrecta (se descargó un error HTML/404).` });
         }
 
         const p12Base64 = p12Buffer.toString('base64');
@@ -84,7 +83,7 @@ app.post('/api/emitir-factura', async (req, res) => {
         try {
             p12AsPkcs12 = forge.pkcs12.pkcs12FromAsn1(p12Der, localInfo.firma_password);
         } catch (err) {
-            throw new Error("Contraseña de firma incorrecta o archivo .p12 inválido: " + err.message);
+            return res.json({ success: false, message: "Contraseña de la firma incorrecta o archivo .p12 dañado: " + err.message });
         }
 
         let privateKey = null;
@@ -99,7 +98,7 @@ app.post('/api/emitir-factura', async (req, res) => {
         }
 
         if (!privateKey || !certificate) {
-            throw new Error("No se pudo extraer la llave privada del certificado .p12.");
+            return res.json({ success: false, message: "No se pudo extraer la llave privada del certificado .p12." });
         }
 
         console.log("[Firma Digital] Certificado validado y listo.");
