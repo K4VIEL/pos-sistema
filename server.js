@@ -1,3 +1,14 @@
+const { createClient } = require('@supabase/supabase-js');
+const express = require('express');
+const forge = require('node-forge');
+
+const app = express();
+app.use(express.json());
+
+const SUPABASE_URL = 'https://ycwuzqjwmzhynhjawnqd.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inljd3V6cWp3bXpoeW5oamF3bnFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcxNzUyNjQsImV4cCI6MjEwMjc1MTI2NH0.AuU9Us6BdYDTy2np4iJY9ltCFicVbIUtQ4D7FNDgIfM';
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
 // Ruta para procesar la factura, consultar datos en Supabase y firmarla
 app.post('/api/emitir-factura', async (req, res) => {
     try {
@@ -7,11 +18,11 @@ app.post('/api/emitir-factura', async (req, res) => {
             return res.status(400).json({ success: false, error: "Faltan datos: ventaId o localId son requeridos." });
         }
 
-        // 1. Obtener la información del local desde Supabase (Asegúrate que 'id' coincida con tu columna en Supabase)
+        // 1. Obtener la información del local desde Supabase
         const { data: localInfo, error: errorLocal } = await supabase
             .from('locales')
             .select('*')
-            .eq('id', localId) // Cambia 'id' por 'local_id' si tu columna en la base de datos se llama así
+            .eq('id', localId)
             .single();
 
         if (errorLocal || !localInfo) {
@@ -101,8 +112,22 @@ app.post('/api/emitir-factura', async (req, res) => {
     </detalles>
 </factura>`;
 
-        // 5. Procesar la firma digital usando node-forge con los datos de Supabase
-        const p12Binary = forge.util.decode64(localInfo.firma_p12_url);
+        // 5. Descargar el archivo binario .p12 desde Supabase Storage usando la ruta almacenada
+        const { data: fileData, error: storageError } = await supabase.storage
+            .from('firmas')
+            .download(localInfo.firma_p12_url);
+
+        if (storageError) {
+            throw new Error("No se pudo descargar el archivo de firma desde Supabase Storage: " + storageError.message);
+        }
+
+        // Convertir el archivo descargado a Buffer y luego a Base64 para node-forge
+        const arrayBuffer = await fileData.arrayBuffer();
+        const p12Buffer = Buffer.from(arrayBuffer);
+        const p12Base64 = p12Buffer.toString('base64');
+
+        // Procesar la firma digital usando node-forge
+        const p12Binary = forge.util.decode64(p12Base64);
         const p12Der = forge.util.createBuffer(p12Binary);
         const p12AsPkcs12 = forge.pkcs12.pkcs12FromAsn1(p12Der, localInfo.firma_password);
 
@@ -121,7 +146,7 @@ app.post('/api/emitir-factura', async (req, res) => {
             throw new Error("No se pudo descifrar la llave privada o certificado. Verifica la contraseña de la firma.");
         }
 
-        console.log("[Firma Digital] Llave privada y certificado leídos y validados con éxito desde Supabase.");
+        console.log("[Firma Digital] Llave privada y certificado leídos y validados con éxito desde Supabase Storage.");
 
         return res.json({
             success: true,
@@ -134,4 +159,9 @@ app.post('/api/emitir-factura', async (req, res) => {
         console.error('Error al emitir y firmar factura:', error);
         return res.status(500).json({ success: false, error: error.message });
     }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Servidor corriendo en el puerto ${PORT}`);
 });
