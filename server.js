@@ -1,8 +1,10 @@
 const { createClient } = require('@supabase/supabase-js');
 const express = require('express');
+const cors = require('cors');
 const forge = require('node-forge');
 
 const app = express();
+app.use(cors());
 app.use(express.json());
 
 const SUPABASE_URL = 'https://ycwuzqjwmzhynhjawnqd.supabase.co';
@@ -167,7 +169,7 @@ app.post('/api/emitir-factura', async (req, res) => {
     }
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
     console.log(`Servidor corriendo en el puerto ${PORT}`);
 });
