@@ -631,9 +631,9 @@
     </div>
     
     <div style="margin-top: 8px; border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 5px 0; line-height: 1.3;">
-        <p style="margin: 2px 0; font-weight: bold;">Factura #: <span id="fac-id"></span></p>
+        <p style="margin: 2px 0; font-weight: bold;">Comprobante #: <span id="fac-id"></span></p>
         <p style="margin: 2px 0; font-size: 11px;">Fecha Emisión: <span id="fac-fecha"></span></p>
-        <p style="margin: 2px 0; font-size: 10px;">Nro. de autorización:<br><span id="fac-autorizacion" style="word-break: break-all; font-size: 9px;">AUTORIZADO</span></p>
+        <p style="margin: 2px 0; font-size: 10px;" id="contenedor-etiqueta-aut">Nro. de autorización:<br><span id="fac-autorizacion" style="word-break: break-all; font-size: 9px;"></span></p>
     </div>
 
     <div style="margin-top: 5px; line-height: 1.3; font-size: 11px;">
@@ -672,7 +672,7 @@
 
     <div style="text-align: center; margin-top: 10px; font-size: 10px;">
         <p style="margin: 2px 0;">Gracias por su compra</p>
-        <p style="margin: 2px 0;">Documento electrónico autorizado</p>
+        <p style="margin: 2px 0;" id="fac-leyenda-doc">Documento electrónico autorizado</p>
     </div>
 
     <div class="no-print" style="margin-top: 15px; text-align: center;">
@@ -1372,6 +1372,7 @@
 
       const ventaIdGenerado = 'FAC-' + Date.now().toString().slice(-5);
       let claveAccesoGenerada = '';
+      let tipoComprobanteFinal = esFacturaSri ? "FACTURA_SRI" : "NOTA_VENTA_LOCAL";
 
       if (esFacturaSri) {
         try {
@@ -1383,22 +1384,17 @@
           const resultadoSri = await response.json();
           if (resultadoSri.success && resultadoSri.claveAcceso) {
             claveAccesoGenerada = resultadoSri.claveAcceso;
+          } else {
+            alert('Error en SRI: ' + (resultadoSri.message || 'No se pudo autorizar'));
+            return;
           }
         } catch (e) {
           console.warn('No se pudo conectar con el backend de firma SRI:', e);
+          alert('No se pudo conectar con el servidor de facturación electrónica del SRI.');
+          return;
         }
-      }
-
-      if (!claveAccesoGenerada) {
-        const localInfo = dbLocales.find(l => String(l.id) === String(usuarioActual.localId)) || {};
-        const rucLocal = localInfo.ruc || "1792967629001";
-        const puntoEmisionStr = (() => {
-          const textoModo = document.getElementById('textoModoSeñal')?.textContent || '';
-          if (textoModo.includes('LOCAL')) return "001100";
-          const pEmisionSelect = document.getElementById('punto-emision')?.value || "001-002";
-          return pEmisionSelect.replace('-', '');
-        })();
-        claveAccesoGenerada = "3108202601" + rucLocal + "1" + puntoEmisionStr + ventaIdGenerado.replace(/\D/g, '').padStart(9, '0') + "123456781";
+      } else {
+        claveAccesoGenerada = "NOTA-INTERNA-" + ventaIdGenerado;
       }
 
       const ventaSupabase = {
@@ -1412,7 +1408,7 @@
           items: [...cart.items],
           total: cart.items.filter(i => !i.anulado).reduce((s, x) => s + (x.precio * x.cantidad), 0),
           usuario: usuarioActual.user,
-          tipo_comprobante: esFacturaSri ? "FACTURA_SRI" : "NOTA_VENTA_LOCAL",
+          tipo_comprobante: tipoComprobanteFinal,
           punto_emision: (() => {
               const textoModo = document.getElementById('textoModoSeñal')?.textContent || '';
               if (textoModo.includes('LOCAL')) return "001-100";
@@ -1468,17 +1464,20 @@
       document.getElementById('fac-cedula').innerText = v.cliente_cedula || v.clienteCedula || "9999999999001";
       document.getElementById('fac-metodo').innerText = v.metodo_pago || v.metodoPago || 'Efectivo';
       
-      let claveFinal = v.claveAcceso || v.clave_acceso;
-      if (!claveFinal || !/^\d{40,50}$/.test(claveFinal)) {
-        const rucLocal = localInfo.ruc || "1792967629001";
-        const puntoEmisionStr = (v.punto_emision || "001-100").replace('-', '');
-        const idNumerico = (String(v.id) || "").replace(/\D/g, '').padStart(9, '0') || "000000001";
-        claveFinal = "3108202601" + rucLocal + "1" + puntoEmisionStr + idNumerico + "123456781";
-      }
+      const tipoComprobante = v.tipo_comprobante || v.tipoComprobante || '';
+      const claveFinal = v.claveAcceso || v.clave_acceso || '';
       
+      const contenedorEtiquetaAut = document.getElementById('contenedor-etiqueta-aut');
       const elAutorizacion = document.getElementById('fac-autorizacion');
-      if (elAutorizacion) {
+      const leyendaDoc = document.getElementById('fac-leyenda-doc');
+
+      if (tipoComprobante === 'FACTURA_SRI') {
+        contenedorEtiquetaAut.style.display = 'block';
         elAutorizacion.innerText = claveFinal;
+        leyendaDoc.innerText = 'Documento electrónico autorizado';
+      } else {
+        contenedorEtiquetaAut.style.display = 'none';
+        leyendaDoc.innerText = 'Nota de Venta Interna (No autorizada SRI)';
       }
 
       document.getElementById('fac-items').innerHTML = (v.items || []).map(i => `
