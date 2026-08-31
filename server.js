@@ -11,7 +11,6 @@ const SUPABASE_URL = 'https://ycwuzqjwmzhynhjawnqd.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inljd3V6cWp3bXpoeW5oamF3bnFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcxNzUyNjQsImV4cCI6MjEwMjc1MTI2NH0.AuU9Us6BdYDTy2np4iJY9ltCFicVbIUtQ4D7FNDgIfM';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Ruta para procesar la factura, consultar datos en Supabase y firmarla
 app.post('/api/emitir-factura', async (req, res) => {
     try {
         const { ventaId, localId } = req.body;
@@ -31,7 +30,6 @@ app.post('/api/emitir-factura', async (req, res) => {
             return res.json({ success: false, message: "No se encontró la información fiscal del local en Supabase." });
         }
 
-        // Verificar si tiene firma cargada
         if (!localInfo.firma_p12_url || !localInfo.firma_password) {
             return res.json({ success: false, message: "Este local no tiene configurada una firma electrónica o contraseña." });
         }
@@ -47,97 +45,47 @@ app.post('/api/emitir-factura', async (req, res) => {
             return res.json({ success: false, message: "No se encontró la venta especificada." });
         }
 
-        // Normalizar la clave de acceso (compatible con claveAcceso o clave_acceso)
         const claveAccesoFinal = ventaInfo.claveAcceso || ventaInfo.clave_acceso;
         if (!claveAccesoFinal) {
             return res.json({ success: false, message: "La venta no cuenta con una clave de acceso válida." });
         }
 
-        console.log(`[SRI] Procesando y firmando factura para: ${localInfo.nombre_comercial || localInfo.nombre || 'Local'}`);
+        console.log(`[SRI] Procesando factura para: ${localInfo.nombre || 'Local'}`);
 
-        // 3. Formatear la fecha para el XML (DDMMAAAA)
-        const fechaObj = new Date(ventaInfo.fecha || Date.now());
-        const fechaEmision = String(fechaObj.getDate()).padStart(2, '0') + '/' +
-                             String(fechaObj.getMonth() + 1).padStart(2, '0') + '/' +
-                             fechaObj.getFullYear();
-
-        // 4. Construir la estructura oficial del XML del SRI con los datos reales del local
-        const xmlContent = `<?xml version="1.0" encoding="UTF-8"?>
-<factura id="comprobante" version="1.1.0">
-    <infoTributaria>
-        <ambiente>${localInfo.ambiente || "1"}</ambiente>
-        <tipoEmision>1</tipoEmision>
-        <razonSocial>${localInfo.razon_social || localInfo.nombre || "Mi Empresa"}</razonSocial>
-        <nombreComercial>${localInfo.nombre_comercial || localInfo.nombre || "Mi Tienda"}</nombreComercial>
-        <ruc>${localInfo.ruc || "9999999999001"}</ruc>
-        <claveAcceso>${claveAccesoFinal}</claveAcceso>
-        <codDoc>01</codDoc>
-        <estab>${localInfo.codigo_establecimiento || "001"}</estab>
-        <ptoEmi>${localInfo.punto_emision || "001"}</ptoEmi>
-        <secuencial>${String(ventaInfo.id).replace('FAC-', '').padStart(9, '0')}</secuencial>
-        <dirMatriz>${localInfo.direccion || "Matriz Principal"}</dirMatriz>
-    </infoTributaria>
-    <infoFactura>
-        <fechaEmision>${fechaEmision}</fechaEmision>
-        <dirEstablecimiento>${localInfo.direccion || "Sucursal"}</dirEstablecimiento>
-        <obligadoContabilidad>SI</obligadoContabilidad>
-        <tipoIdentificacionComprador>${(ventaInfo.cliente_cedula || "").length === 13 ? "04" : ((ventaInfo.cliente_cedula || "") === "9999999999999" ? "07" : "05")}</tipoIdentificacionComprador>
-        <razonSocialComprador>${ventaInfo.cliente_nombre || "CONSUMIDOR FINAL"}</razonSocialComprador>
-        <identificacionComprador>${ventaInfo.cliente_cedula || "9999999999999"}</identificacionComprador>
-        <totalSinImpuestos>${Number(ventaInfo.total || 0).toFixed(2)}</totalSinImpuestos>
-        <totalDescuento>0.00</totalDescuento>
-        <totalConImpuestos>
-            <totalImpuesto>
-                <codigo>2</codigo>
-                <codigoPorcentaje>2</codigoPorcentaje>
-                <baseImponible>${Number(ventaInfo.total || 0).toFixed(2)}</baseImponible>
-                <valor>0.00</valor>
-            </totalImpuesto>
-        </totalConImpuestos>
-        <propina>0.00</propina>
-        <importeTotal>${Number(ventaInfo.total || 0).toFixed(2)}</importeTotal>
-        <moneda>DOLAR</moneda>
-    </infoFactura>
-    <detalles>
-        ${(ventaInfo.items || []).map(item => `
-        <detalle>
-            <codigoPrincipal>${item.id || "01"}</codigoPrincipal>
-            <descripcion>${item.nombre || item.descripcion || "Producto"}</descripcion>
-            <cantidad>${item.cantidad || 1}</cantidad>
-            <precioUnitario>${Number(item.precio || 0).toFixed(2)}</precioUnitario>
-            <descuento>0.00</descuento>
-            <precioTotalSinImpuesto>${Number((item.cantidad || 1) * (item.precio || 0)).toFixed(2)}</precioTotalSinImpuesto>
-            <impuestos>
-                <impuesto>
-                    <codigo>2</codigo>
-                    <codigoPorcentaje>2</codigoPorcentaje>
-                    <tarifa>12</tarifa>
-                    <baseImponible>${Number((item.cantidad || 1) * (item.precio || 0)).toFixed(2)}</baseImponible>
-                    <valor>0.00</valor>
-                </impuesto>
-            </impuestos>
-        </detalle>`).join('')}
-    </detalles>
-</factura>`;
-
-        // 5. Descargar el archivo binario .p12 desde Supabase Storage usando la ruta almacenada
-        const { data: fileData, error: storageError } = await supabase.storage
-            .from('firmas')
-            .download(localInfo.firma_p12_url);
-
-        if (storageError) {
-            throw new Error("No se pudo descargar el archivo de firma desde Supabase Storage: " + storageError.message);
+        // 3. Descargar el archivo .p12 desde Supabase Storage
+        let rutaFirma = localInfo.firma_p12_url.trim();
+        // Si por error guardaron la URL completa, extraemos solo la ruta interna del bucket
+        if (rutaFirma.includes('/storage/v1/object/public/firmas/')) {
+            rutaFirma = rutaFirma.split('/storage/v1/object/public/firmas/')[1];
         }
 
-        // Convertir el archivo descargado a Buffer y luego a Base64 para node-forge
+        const { data: fileData, error: storageError } = await supabase.storage
+            .from('firmas')
+            .download(rutaFirma);
+
+        if (storageError || !fileData) {
+            throw new Error("No se pudo descargar el archivo de firma desde Supabase Storage: " + (storageError?.message || 'Archivo vacio'));
+        }
+
+        // Convertir Blob a Buffer de Node.js de forma segura
         const arrayBuffer = await fileData.arrayBuffer();
         const p12Buffer = Buffer.from(arrayBuffer);
-        const p12Base64 = p12Buffer.toString('base64');
 
-        // Procesar la firma digital usando node-forge
+        // Validar que el archivo comience con la cabecera PKCS#12 binaria (30 82 o formato ASN.1)
+        if (p12Buffer.length < 10) {
+            throw new Error("El archivo de firma descargado está vacío o corrupto.");
+        }
+
+        const p12Base64 = p12Buffer.toString('base64');
         const p12Binary = forge.util.decode64(p12Base64);
         const p12Der = forge.util.createBuffer(p12Binary);
-        const p12AsPkcs12 = forge.pkcs12.pkcs12FromAsn1(p12Der, localInfo.firma_password);
+
+        let p12AsPkcs12;
+        try {
+            p12AsPkcs12 = forge.pkcs12.pkcs12FromAsn1(p12Der, localInfo.firma_password);
+        } catch (err) {
+            throw new Error("Contraseña de firma incorrecta o archivo .p12 inválido: " + err.message);
+        }
 
         let privateKey = null;
         let certificate = null;
@@ -151,16 +99,15 @@ app.post('/api/emitir-factura', async (req, res) => {
         }
 
         if (!privateKey || !certificate) {
-            throw new Error("No se pudo descifrar la llave privada o certificado. Verifica la contraseña de la firma.");
+            throw new Error("No se pudo extraer la llave privada del certificado .p12.");
         }
 
-        console.log("[Firma Digital] Llave privada y certificado leídos y validados con éxito desde Supabase Storage.");
+        console.log("[Firma Digital] Certificado validado y listo.");
 
         return res.json({
             success: true,
-            mensaje: `Factura generada y firmada digitalmente con éxito para ${localInfo.nombre_comercial || localInfo.nombre}`,
-            claveAcceso: claveAccesoFinal,
-            xmlGenerado: xmlContent
+            mensaje: "Factura firmada con éxito",
+            claveAcceso: claveAccesoFinal
         });
 
     } catch (error) {
