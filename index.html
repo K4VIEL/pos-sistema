@@ -793,6 +793,7 @@
             total: v.total,
             usuario: v.usuario || '',
             tipo_comprobante: v.tipo_comprobante || '',
+            estado_sri: v.estado_sri || '',
             punto_emision: v.punto_emision || '',
             claveAcceso: v.clave_acceso || v.claveAcceso || ''
           }));
@@ -1372,27 +1373,16 @@
 
       const ventaIdGenerado = 'FAC-' + Date.now().toString().slice(-5);
       let claveAccesoGenerada = '';
-      let tipoComprobanteFinal = esFacturaSri ? "FACTURA_SRI" : "NOTA_VENTA_LOCAL";
+      let tipoComprobanteFinal = "NOTA_VENTA_LOCAL";
+      let estadoSriFinal = "LOCAL";
 
       if (esFacturaSri) {
-        try {
-          const response = await fetch('https://pos-sistema-y075.onrender.com/api/emitir-factura', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ventaId: ventaIdGenerado, localId: usuarioActual.localId })
-          });
-          const resultadoSri = await response.json();
-          if (resultadoSri.success && resultadoSri.claveAcceso) {
-            claveAccesoGenerada = resultadoSri.claveAcceso;
-          } else {
-            alert('Error en SRI: ' + (resultadoSri.message || 'No se pudo autorizar'));
-            return;
-          }
-        } catch (e) {
-          console.warn('No se pudo conectar con el backend de firma SRI:', e);
-          alert('No se pudo conectar con el servidor de facturación electrónica del SRI.');
-          return;
-        }
+        tipoComprobanteFinal = "FACTURA_PENDIENTE_SRI";
+        estadoSriFinal = "PENDIENTE";
+        const localInfo = dbLocales.find(l => String(l.id) === String(usuarioActual.localId)) || {};
+        const rucLocal = localInfo.ruc || "1792967629001";
+        const puntoEmisionStr = (document.getElementById('punto-emision')?.value || "001-100").replace('-', '');
+        claveAccesoGenerada = "3108202601" + rucLocal + "1" + puntoEmisionStr + ventaIdGenerado.replace(/\D/g, '').padStart(9, '0') + "123456781";
       } else {
         claveAccesoGenerada = "NOTA-INTERNA-" + ventaIdGenerado;
       }
@@ -1409,11 +1399,8 @@
           total: cart.items.filter(i => !i.anulado).reduce((s, x) => s + (x.precio * x.cantidad), 0),
           usuario: usuarioActual.user,
           tipo_comprobante: tipoComprobanteFinal,
-          punto_emision: (() => {
-              const textoModo = document.getElementById('textoModoSeñal')?.textContent || '';
-              if (textoModo.includes('LOCAL')) return "001-100";
-              return document.getElementById('punto-emision')?.value || "001-002";
-          })(),
+          estado_sri: estadoSriFinal,
+          punto_emision: document.getElementById('punto-emision')?.value || "001-100",
           clave_acceso: claveAccesoGenerada
       };
           
@@ -1432,6 +1419,7 @@
           total: ventaSupabase.total,
           usuario: ventaSupabase.usuario,
           tipo_comprobante: ventaSupabase.tipo_comprobante,
+          estado_sri: ventaSupabase.estado_sri,
           punto_emision: ventaSupabase.punto_emision,
           claveAcceso: ventaSupabase.clave_acceso
       });
@@ -1446,6 +1434,40 @@
       if (document.getElementById('pos-cliente-buscar')) document.getElementById('pos-cliente-buscar').value = '';
 
       renderizarCarritosTabs();
+    }
+
+    async function reenviarAlSri(ventaId) {
+      const venta = dbVentas.find(v => v.id === ventaId);
+      if (!venta) return;
+
+      alert('Conectando con Render para enviar al SRI...');
+      try {
+        const response = await fetch('https://pos-sistema-y075.onrender.com/api/emitir-factura', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ventaId: venta.id, localId: venta.localId })
+        });
+        const resultadoSri = await response.json();
+        
+        if (resultadoSri.success) {
+          venta.tipo_comprobante = "FACTURA_SRI";
+          venta.estado_sri = "AUTORIZADO";
+          if (resultadoSri.claveAcceso) venta.claveAcceso = resultadoSri.claveAcceso;
+          
+          await supabaseClient.from('ventas').update({ 
+            tipo_comprobante: "FACTURA_SRI", 
+            estado_sri: "AUTORIZADO",
+            clave_acceso: venta.claveAcceso 
+          }).eq('id', venta.id);
+
+          alert('¡Factura enviada y autorizada con éxito por el SRI!');
+          filtrarFacturas();
+        } else {
+          alert('El SRI rechazó la factura: ' + (resultadoSri.message || 'Revisar datos'));
+        }
+      } catch (e) {
+        alert('No se pudo conectar con el servidor. Intenta de nuevo en unos segundos.');
+      }
     }
 
     function mostrarFactura(v) {
@@ -1471,10 +1493,10 @@
       const elAutorizacion = document.getElementById('fac-autorizacion');
       const leyendaDoc = document.getElementById('fac-leyenda-doc');
 
-      if (tipoComprobante === 'FACTURA_SRI') {
+      if (tipoComprobante === 'FACTURA_SRI' || tipoComprobante === 'FACTURA_PENDIENTE_SRI') {
         contenedorEtiquetaAut.style.display = 'block';
         elAutorizacion.innerText = claveFinal;
-        leyendaDoc.innerText = 'Documento electrónico autorizado';
+        leyendaDoc.innerText = tipoComprobante === 'FACTURA_PENDIENTE_SRI' ? 'Pendiente de envío al SRI' : 'Documento electrónico autorizado';
       } else {
         contenedorEtiquetaAut.style.display = 'none';
         leyendaDoc.innerText = 'Nota de Venta Interna (No autorizada SRI)';
@@ -2195,10 +2217,18 @@
             <td>${v.clienteNombre || v.cliente || 'Consumidor Final'}</td>
             <td>${new Date(v.fecha).toLocaleString()}</td>
             <td>${v.punto_emision || '001-100'}</td>
-            <td><span class="badge">${v.tipo_comprobante || 'NOTA_VENTA_LOCAL'}</span></td>
+            <td>
+              <span class="badge">${v.tipo_comprobante || 'NOTA_VENTA_LOCAL'}</span>
+              ${v.tipo_comprobante === 'FACTURA_PENDIENTE_SRI' ? '<br><small style="color:var(--warning); font-weight:bold;">[PENDIENTE SRI]</small>' : ''}
+            </td>
             <td><b>$${Number(v.total).toFixed(2)}</b></td>
             <td>${v.metodoPago || 'Efectivo'}</td>
-            <td><button class="btn btn-primary btn-sm" onclick='mostrarFactura(${JSON.stringify(v)})'>Ver / Imprimir</button></td>
+            <td>
+              <button class="btn btn-primary btn-sm" onclick='mostrarFactura(${JSON.stringify(v)})'>Ver / Imprimir</button>
+              ${v.tipo_comprobante === 'FACTURA_PENDIENTE_SRI' 
+                ? `<button class="btn btn-warning btn-sm" onclick="reenviarAlSri('${v.id}')" style="margin-top:4px;">📤 Enviar al SRI</button>` 
+                : ''}
+            </td>
           </tr>
         `).join('') || `<tr><td colspan="8" style="text-align:center;">No se encontraron facturas emitidas.</td></tr>`;
       }
