@@ -17,7 +17,7 @@ app.post('/api/emitir-factura', async (req, res) => {
         const { ventaId, localId } = req.body;
 
         if (!ventaId || !localId) {
-            return res.status(400).json({ success: false, error: "Faltan datos: ventaId o localId son requeridos." });
+            return res.status(400).json({ success: false, message: "Faltan datos: ventaId o localId son requeridos." });
         }
 
         // 1. Obtener la información del local desde Supabase
@@ -28,12 +28,12 @@ app.post('/api/emitir-factura', async (req, res) => {
             .single();
 
         if (errorLocal || !localInfo) {
-            return res.status(404).json({ success: false, error: "No se encontró la información fiscal del local en Supabase." });
+            return res.json({ success: false, message: "No se encontró la información fiscal del local en Supabase." });
         }
 
         // Verificar si tiene firma cargada
         if (!localInfo.firma_p12_url || !localInfo.firma_password) {
-            return res.status(400).json({ success: false, error: "Este local no tiene configurada una firma electrónica o contraseña." });
+            return res.json({ success: false, message: "Este local no tiene configurada una firma electrónica o contraseña." });
         }
 
         // 2. Obtener los detalles de la venta desde Supabase
@@ -44,13 +44,13 @@ app.post('/api/emitir-factura', async (req, res) => {
             .single();
 
         if (errorVenta || !ventaInfo) {
-            return res.status(404).json({ success: false, error: "No se encontró la venta especificada." });
+            return res.json({ success: false, message: "No se encontró la venta especificada." });
         }
 
         // Normalizar la clave de acceso (compatible con claveAcceso o clave_acceso)
         const claveAccesoFinal = ventaInfo.claveAcceso || ventaInfo.clave_acceso;
         if (!claveAccesoFinal) {
-            return res.status(400).json({ success: false, error: "La venta no cuenta con una clave de acceso válida." });
+            return res.json({ success: false, message: "La venta no cuenta con una clave de acceso válida." });
         }
 
         console.log(`[SRI] Procesando y firmando factura para: ${localInfo.nombre_comercial || localInfo.nombre || 'Local'}`);
@@ -165,7 +165,7 @@ app.post('/api/emitir-factura', async (req, res) => {
 
     } catch (error) {
         console.error('Error al emitir y firmar factura:', error);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.json({ success: false, message: error.message });
     }
 });
 
