@@ -648,10 +648,10 @@
           <button class="btn btn-primary" onclick="crearLocal()" style="margin-top:10px;">Registrar Local</button>
         </div>
         <div class="card">
-          <h3>Locales Activos y Control de Suscripciones</h3>
+          <h3>Locales Activos y Suscripción por Fechas</h3>
           <div class="table-responsive">
             <table>
-              <thead><tr><th>ID</th><th>Nombre</th><th>RUC / Dir</th><th>Estado Suscripción</th><th>Acciones Matriz</th></tr></thead>
+              <thead><tr><th>ID</th><th>Nombre</th><th>RUC / Dir</th><th>Vencimiento Suscripción</th><th>Acciones Matriz</th></tr></thead>
               <tbody id="loc-tabla"></tbody>
             </table>
           </div>
@@ -826,7 +826,7 @@
             obligadoContabilidad: l.obligado_contabilidad || 'NO',
             deuna_api_key: l.deuna_api_key || '',
             deuna_secret: l.deuna_secret || '',
-            suscripcionActiva: l.suscripcion_activa !== false, // Por defecto activo
+            suscripcionActiva: l.suscripcion_activa !== false,
             fechaVencimiento: l.fecha_vencimiento || null
           }));
         }
@@ -908,12 +908,17 @@
       let user = dbUsuarios.find(x => x.user === u && x.pass === p);
 
       if (user) {
-        // VALIDAR ESTADO DE SUSCRIPCIÓN DEL LOCAL ASIGNADO
         const localAsignado = dbLocales.find(l => String(l.id) === String(user.localId));
-        if (localAsignado && localAsignado.suscripcionActiva === false) {
-          document.getElementById('login-error').innerText = 'La suscripción de este local está pausada o vencida. Contacte al administrador.';
-          document.getElementById('login-error').style.display = 'block';
-          return;
+        
+        if (localAsignado) {
+          const hoy = new Date().toISOString().split('T')[0];
+          const vencidoPorFecha = localAsignado.fechaVencimiento && localAsignado.fechaVencimiento < hoy;
+          
+          if (localAsignado.suscripcionActiva === false || vencidoPorFecha) {
+            document.getElementById('login-error').innerText = 'La suscripción de este local ha expirado o está pausada.';
+            document.getElementById('login-error').style.display = 'block';
+            return;
+          }
         }
 
         usuarioActual = user;
@@ -932,11 +937,13 @@
       
       const loc = dbLocales.find(l => String(l.id) === String(usuarioActual.localId));
       
-      // DOBLE VALIDACIÓN EN CASO DE CAMBIO EN VIVO
-      if (loc && loc.suscripcionActiva === false && !esUsuarioMatriz()) {
-        alert('Acceso denegado: La suscripción de este local ha sido pausada.');
-        cerrarSesion();
-        return;
+      if (loc && !esUsuarioMatriz()) {
+        const hoy = new Date().toISOString().split('T')[0];
+        if (loc.suscripcionActiva === false || (loc.fechaVencimiento && loc.fechaVencimiento < hoy)) {
+          alert('Acceso denegado: La suscripción de este local ha vencido.');
+          cerrarSesion();
+          return;
+        }
       }
 
       document.getElementById('session-local').innerText = loc ? loc.nombre : 'Mi Tienda';
@@ -2287,6 +2294,11 @@
 
       if (!nombre) return alert('Ingresa al menos el nombre del local');
 
+      // Por defecto damos 30 días de suscripción al crear
+      const fechaDef = new Date();
+      fechaDef.setDate(fechaDef.getDate() + 30);
+      const fechaVencDefault = fechaDef.toISOString().split('T')[0];
+
       const nuevoLocal = { 
         id: 'LOC-' + Date.now().toString().slice(-4), 
         nombre, 
@@ -2296,7 +2308,8 @@
         obligado_contabilidad: obligadoContabilidad,
         deuna_api_key: deunaKey,
         deuna_secret: deunaSecret,
-        suscripcion_activa: true
+        suscripcion_activa: true,
+        fecha_vencimiento: fechaVencDefault
       };
 
       const { error } = await supabaseClient.from('locales').insert([nuevoLocal]);
@@ -2311,7 +2324,8 @@
         obligadoContabilidad: nuevoLocal.obligado_contabilidad,
         deuna_api_key: nuevoLocal.deuna_api_key,
         deuna_secret: nuevoLocal.deuna_secret,
-        suscripcionActiva: true
+        suscripcionActiva: true,
+        fechaVencimiento: fechaVencDefault
       });
 
       poblardropdowns();
@@ -2330,22 +2344,28 @@
       const tabla = document.getElementById('loc-tabla');
       if (!tabla) return;
 
+      const hoy = new Date().toISOString().split('T')[0];
+
       tabla.innerHTML = dbLocales.map(l => {
-        const activo = l.suscripcionActiva !== false;
+        const vencido = l.fechaVencimiento && l.fechaVencimiento < hoy;
+        const activo = l.suscripcionActiva !== false && !vencido;
+        
         return `
           <tr>
             <td><b>${l.id}</b></td>
             <td>${l.nombre}</td>
             <td>${l.ruc || 'S/N'} - ${l.direccion || 'S/N'}</td>
             <td>
-              <span class="badge" style="background: ${activo ? '#dcfce7' : '#fee2e2'}; color: ${activo ? '#166534' : '#991b1b'};">
-                ${activo ? 'ACTIVO' : 'PAUSADO / VENCIDO'}
+              <input type="date" id="input-venc-${l.id}" value="${l.fechaVencimiento || ''}" style="width:140px; margin:0; padding:6px; font-size:0.85rem;" onchange="actualizarFechaVencimiento('${l.id}')">
+              <br>
+              <span class="badge" style="margin-top:4px; display:inline-block; background: ${activo ? '#dcfce7' : '#fee2e2'}; color: ${activo ? '#166534' : '#991b1b'};">
+                ${activo ? 'VIGENTE' : 'VENCIDO / PAUSADO'}
               </span>
             </td>
             <td>
               ${esLocalMatriz(l.id, l.nombre) ? '<span class="badge">Matriz Protegida</span>' : `
-                <button class="btn btn-sm ${activo ? 'btn-danger' : 'btn-success'}" onclick="toggleSuscripcionLocal('${l.id}', ${!activo})">
-                  ${activo ? 'Pausar Cuenta' : 'Activar Cuenta'}
+                <button class="btn btn-sm ${l.suscripcionActiva !== false ? 'btn-danger' : 'btn-success'}" onclick="toggleSuscripcionLocal('${l.id}', ${l.suscripcionActiva === false})">
+                  ${l.suscripcionActiva !== false ? 'Pausar' : 'Activar'}
                 </button>
                 <button class="btn btn-danger btn-sm" onclick="eliminarLocal('${l.id}')">Eliminar</button>
               `}
@@ -2355,6 +2375,26 @@
       }).join('');
     }
 
+    async function actualizarFechaVencimiento(localId) {
+      const nuevaFecha = document.getElementById(`input-venc-${localId}`).value;
+      if (!nuevaFecha) return;
+
+      const { error } = await supabaseClient
+        .from('locales')
+        .update({ fecha_vencimiento: nuevaFecha })
+        .eq('id', localId);
+
+      if (error) {
+        return alert("Error al actualizar la fecha: " + error.message);
+      }
+
+      const localObj = dbLocales.find(l => String(l.id) === String(localId));
+      if (localObj) localObj.fechaVencimiento = nuevaFecha;
+
+      renderLocales();
+      alert('Fecha de vencimiento actualizada correctamente.');
+    }
+
     async function toggleSuscripcionLocal(localId, nuevoEstado) {
       const { error } = await supabaseClient
         .from('locales')
@@ -2362,14 +2402,13 @@
         .eq('id', localId);
 
       if (error) {
-        return alert("Error al actualizar estado de suscripción: " + error.message);
+        return alert("Error al actualizar estado: " + error.message);
       }
 
       const localObj = dbLocales.find(l => String(l.id) === String(localId));
       if (localObj) localObj.suscripcionActiva = nuevoEstado;
 
       renderLocales();
-      alert(`La suscripción del local ha sido ${nuevoEstado ? 'activada' : 'pausada'} con éxito.`);
     }
 
     async function eliminarLocal(id) {
