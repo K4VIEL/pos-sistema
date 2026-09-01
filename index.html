@@ -393,7 +393,7 @@
         </div>
       </section>
 
-      <!-- VISTA CONTABILIDAD Y CAJA (NUEVA) -->
+      <!-- VISTA CONTABILIDAD Y CAJA -->
       <section id="vista-contabilidad" class="page-section">
         <div class="card">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
@@ -562,14 +562,12 @@
         <div class="card">
           <h3>Reporte de Desempeño</h3>
           
-          <!-- Selector de Modo de Filtro (Mes/Día/Rango) -->
           <div class="filter-tabs" style="margin-bottom: 15px; display: flex; gap: 6px;">
               <button class="filter-tab active" onclick="cambiarModoFiltro('mes', this)" style="flex: 1; padding: 8px; border: none; border-radius: 6px; background: var(--primary); color: white; font-weight: bold; cursor: pointer;">Mes/Año</button>
               <button class="filter-tab" onclick="cambiarModoFiltro('dia', this)" style="flex: 1; padding: 8px; border: none; border-radius: 6px; background: #e0e0e0; color: #333; font-weight: bold; cursor: pointer;">Día Exacto</button>
               <button class="filter-tab" onclick="cambiarModoFiltro('rango', this)" style="flex: 1; padding: 8px; border: none; border-radius: 6px; background: #e0e0e0; color: #333; font-weight: bold; cursor: pointer;">Rango</button>
           </div>
 
-          <!-- Contenedor 1: Mes / Año -->
           <div id="filtro-mes-container" class="filtro-grupo">
               <div class="form-row">
                   <div><label>Año</label><select id="rep-anio" class="form-control" onchange="generarReporte()"></select></div>
@@ -583,13 +581,11 @@
               </div>
           </div>
 
-          <!-- Contenedor 2: Día Exacto -->
           <div id="filtro-dia-container" class="filtro-grupo" style="display: none;">
               <label>Seleccionar Día</label>
               <input type="date" id="rep-input-dia" class="form-control" onchange="generarReporte()">
           </div>
 
-          <!-- Contenedor 3: Rango de Fechas -->
           <div id="filtro-rango-container" class="filtro-grupo" style="display: none; gap: 10px;">
               <div class="form-row">
                   <div>
@@ -652,10 +648,10 @@
           <button class="btn btn-primary" onclick="crearLocal()" style="margin-top:10px;">Registrar Local</button>
         </div>
         <div class="card">
-          <h3>Locales Activos</h3>
+          <h3>Locales Activos y Control de Suscripciones</h3>
           <div class="table-responsive">
             <table>
-              <thead><tr><th>ID</th><th>Nombre</th><th>RUC / Dir</th><th>Acciones</th></tr></thead>
+              <thead><tr><th>ID</th><th>Nombre</th><th>RUC / Dir</th><th>Estado Suscripción</th><th>Acciones Matriz</th></tr></thead>
               <tbody id="loc-tabla"></tbody>
             </table>
           </div>
@@ -829,7 +825,9 @@
             propietario: l.propietario || '',
             obligadoContabilidad: l.obligado_contabilidad || 'NO',
             deuna_api_key: l.deuna_api_key || '',
-            deuna_secret: l.deuna_secret || ''
+            deuna_secret: l.deuna_secret || '',
+            suscripcionActiva: l.suscripcion_activa !== false, // Por defecto activo
+            fechaVencimiento: l.fecha_vencimiento || null
           }));
         }
 
@@ -910,10 +908,19 @@
       let user = dbUsuarios.find(x => x.user === u && x.pass === p);
 
       if (user) {
+        // VALIDAR ESTADO DE SUSCRIPCIÓN DEL LOCAL ASIGNADO
+        const localAsignado = dbLocales.find(l => String(l.id) === String(user.localId));
+        if (localAsignado && localAsignado.suscripcionActiva === false) {
+          document.getElementById('login-error').innerText = 'La suscripción de este local está pausada o vencida. Contacte al administrador.';
+          document.getElementById('login-error').style.display = 'block';
+          return;
+        }
+
         usuarioActual = user;
         localStorage.setItem('usuarioActual', JSON.stringify(user));
         aplicarSesionActiva();
       } else {
+        document.getElementById('login-error').innerText = 'Usuario o contraseña incorrectos';
         document.getElementById('login-error').style.display = 'block';
       }
     }
@@ -923,8 +930,16 @@
       document.getElementById('login-screen').style.setProperty('display', 'none', 'important');
       document.getElementById('session-user').innerText = usuarioActual.user;
       
-      const loc = dbLocales.find(l => String(l.id) === String(usuarioActual.localId))?.nombre || 'Mi Tienda';
-      document.getElementById('session-local').innerText = loc;
+      const loc = dbLocales.find(l => String(l.id) === String(usuarioActual.localId));
+      
+      // DOBLE VALIDACIÓN EN CASO DE CAMBIO EN VIVO
+      if (loc && loc.suscripcionActiva === false && !esUsuarioMatriz()) {
+        alert('Acceso denegado: La suscripción de este local ha sido pausada.');
+        cerrarSesion();
+        return;
+      }
+
+      document.getElementById('session-local').innerText = loc ? loc.nombre : 'Mi Tienda';
 
       construirMenuNavegacion();
       poblardropdowns();
@@ -1755,7 +1770,6 @@
       `).join('');
     }
 
-    // NUEVAS FUNCIONES DE CONTABILIDAD Y EXPORTACIÓN A EXCEL (.CSV)
     function renderContabilidadFlujo() {
       const localId = usuarioActual ? String(usuarioActual.localId) : '';
       const ventasLocal = dbVentas.filter(v => String(v.localId) === localId);
@@ -1773,7 +1787,6 @@
       document.getElementById('contab-val-salidas').innerText = `$${totalSalidas.toFixed(2)}`;
       document.getElementById('contab-val-neto').innerText = `$${flujoNeto.toFixed(2)}`;
 
-      // Construir libro diario automático (Asientos automáticos por venta)
       let htmlDiario = '';
       ventasLocal.forEach(v => {
         const fechaFmt = new Date(v.fecha).toLocaleString();
@@ -2282,7 +2295,8 @@
         direccion,
         obligado_contabilidad: obligadoContabilidad,
         deuna_api_key: deunaKey,
-        deuna_secret: deunaSecret
+        deuna_secret: deunaSecret,
+        suscripcion_activa: true
       };
 
       const { error } = await supabaseClient.from('locales').insert([nuevoLocal]);
@@ -2296,7 +2310,8 @@
         direccion: nuevoLocal.direccion,
         obligadoContabilidad: nuevoLocal.obligado_contabilidad,
         deuna_api_key: nuevoLocal.deuna_api_key,
-        deuna_secret: nuevoLocal.deuna_secret
+        deuna_secret: nuevoLocal.deuna_secret,
+        suscripcionActiva: true
       });
 
       poblardropdowns();
@@ -2312,16 +2327,49 @@
     }
 
     function renderLocales() {
-      document.getElementById('loc-tabla').innerHTML = dbLocales.map(l => `
-        <tr>
-          <td><b>${l.id}</b></td>
-          <td>${l.nombre}</td>
-          <td>${l.ruc || 'S/N'} - ${l.direccion || 'S/N'}</td>
-          <td>
-            ${esLocalMatriz(l.id, l.nombre) ? '<span class="badge">Matriz Protegida</span>' : `<button class="btn btn-danger btn-sm" onclick="eliminarLocal('${l.id}')">Eliminar</button>`}
-          </td>
-        </tr>
-      `).join('');
+      const tabla = document.getElementById('loc-tabla');
+      if (!tabla) return;
+
+      tabla.innerHTML = dbLocales.map(l => {
+        const activo = l.suscripcionActiva !== false;
+        return `
+          <tr>
+            <td><b>${l.id}</b></td>
+            <td>${l.nombre}</td>
+            <td>${l.ruc || 'S/N'} - ${l.direccion || 'S/N'}</td>
+            <td>
+              <span class="badge" style="background: ${activo ? '#dcfce7' : '#fee2e2'}; color: ${activo ? '#166534' : '#991b1b'};">
+                ${activo ? 'ACTIVO' : 'PAUSADO / VENCIDO'}
+              </span>
+            </td>
+            <td>
+              ${esLocalMatriz(l.id, l.nombre) ? '<span class="badge">Matriz Protegida</span>' : `
+                <button class="btn btn-sm ${activo ? 'btn-danger' : 'btn-success'}" onclick="toggleSuscripcionLocal('${l.id}', ${!activo})">
+                  ${activo ? 'Pausar Cuenta' : 'Activar Cuenta'}
+                </button>
+                <button class="btn btn-danger btn-sm" onclick="eliminarLocal('${l.id}')">Eliminar</button>
+              `}
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function toggleSuscripcionLocal(localId, nuevoEstado) {
+      const { error } = await supabaseClient
+        .from('locales')
+        .update({ suscripcion_activa: nuevoEstado })
+        .eq('id', localId);
+
+      if (error) {
+        return alert("Error al actualizar estado de suscripción: " + error.message);
+      }
+
+      const localObj = dbLocales.find(l => String(l.id) === String(localId));
+      if (localObj) localObj.suscripcionActiva = nuevoEstado;
+
+      renderLocales();
+      alert(`La suscripción del local ha sido ${nuevoEstado ? 'activada' : 'pausada'} con éxito.`);
     }
 
     async function eliminarLocal(id) {
@@ -2498,3 +2546,4 @@
   </script>
 </body>
 </html>
+
