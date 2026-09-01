@@ -70,7 +70,6 @@
     input:focus, select:focus { border-color: var(--primary); }
     
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
 
     .btn { font-weight: 600; border: none; cursor: pointer; transition: background 0.2s; display: inline-flex; justify-content: center; align-items: center; gap: 8px; margin-top: 8px; }
     .btn-primary { background: var(--primary); color: white; }
@@ -394,6 +393,39 @@
         </div>
       </section>
 
+      <!-- VISTA CONTABILIDAD Y CAJA (NUEVA) -->
+      <section id="vista-contabilidad" class="page-section">
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h3 style="margin: 0;">Flujo de Caja y Asientos Automáticos</h3>
+            <button class="btn btn-success btn-sm" onclick="exportarContabilidadExcel()">📥 Exportar a Excel</button>
+          </div>
+          <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:15px;">Resumen de entradas de efectivo, ingresos por método de pago y registro cronológico de asientos generados al facturar.</p>
+
+          <div class="kpi-grid" style="margin-bottom: 20px;">
+            <div class="kpi-card"><label>Ingresos Totales (Entradas)</label><div class="kpi-val text-success" id="contab-val-ingresos">$0.00</div></div>
+            <div class="kpi-card"><label>Salidas / Mermas</label><div class="kpi-val" style="color:var(--danger);" id="contab-val-salidas">$0.00</div></div>
+            <div class="kpi-card"><label>Flujo Neto</label><div class="kpi-val" style="color:var(--primary);" id="contab-val-neto">$0.00</div></div>
+          </div>
+
+          <h4 style="margin-bottom: 8px; font-size: 1rem;">Libro Diario / Asientos Automáticos</h4>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Comprobante / ID</th>
+                  <th>Detalle / Concepto Asiento</th>
+                  <th>Debe (Ingreso)</th>
+                  <th>Haber</th>
+                </tr>
+              </thead>
+              <tbody id="contab-tabla-diario"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
       <!-- VISTA KARDEX -->
       <section id="vista-kardex" class="page-section">
         <div class="card">
@@ -482,7 +514,10 @@
         </div>
 
         <div class="card">
-          <h3>Inventario de tu Tienda</h3>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h3 style="margin: 0;">Inventario de tu Tienda</h3>
+            <button class="btn btn-success btn-sm" onclick="exportarInventarioExcel()">📥 Exportar a Excel</button>
+          </div>
           <div class="table-responsive">
             <table>
               <thead>
@@ -509,7 +544,10 @@
       <!-- VISTA HISTORIAL -->
       <section id="vista-historial" class="page-section">
         <div class="card">
-          <h3>Historial de Ventas</h3>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h3 style="margin: 0;">Historial de Ventas</h3>
+            <button class="btn btn-success btn-sm" onclick="exportarHistorialExcel()">📥 Exportar a Excel</button>
+          </div>
           <div class="table-responsive">
             <table>
               <thead><tr><th>Ticket</th><th>Sucursal</th><th>Cliente</th><th>Método</th><th>Fecha</th><th>Total</th><th></th></tr></thead>
@@ -735,7 +773,7 @@
     let html5QrCode = null;
     let clienteVentaSeleccionado = { cedula: '9999999999001', nombre: 'Consumidor Final' };
 
-    let modoFiltroReporte = 'mes'; // Variable global para controlar el filtro de reportes
+    let modoFiltroReporte = 'mes';
 
     async function registrarAuditoriaMerma(idFactura, productoNombre, cantidad, montoTotal, motivo) {
       try {
@@ -920,6 +958,10 @@
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
                 <span>Firma Digital</span>
             </button>
+            <button class="nav-btn" id="btn-nav-contabilidad" onclick="cambiarVista('contabilidad')">
+                <svg viewBox="0 0 24 24"><path d="M3 3v18h18V3H3zm16 16H5V5h14v14zM7 10h2v7H7zm4-3h2v10h-2zm4 5h2v5h-2z"></path></svg>
+                <span>Contabilidad</span>
+            </button>
             <button class="nav-btn" id="btn-nav-kardex" onclick="cambiarVista('kardex')">
                 <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2h14c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"></path></svg>
                 <span>Kardex</span>
@@ -972,7 +1014,7 @@
 
     async function cambiarVista(vista) {
       const esCajero = usuarioActual && (usuarioActual.rol === 'Cajero' || usuarioActual.rol === 'Encargado');
-      if (esCajero && (vista === 'kardex' || vista === 'inventario' || vista === 'historial' || vista === 'reportes' || vista === 'personal' || vista === 'locales' || vista === 'usuarios')) {
+      if (esCajero && (vista === 'contabilidad' || vista === 'kardex' || vista === 'inventario' || vista === 'historial' || vista === 'reportes' || vista === 'personal' || vista === 'locales' || vista === 'usuarios')) {
         return alert('Acceso denegado. Tu cuenta de Cajero solo permite procesar ventas, abrir/cerrar caja y registrar clientes.');
       }
 
@@ -990,6 +1032,7 @@
 
       if (vista === 'pos') renderizarCarritosTabs();
       if (vista === 'arqueo') await prepararVistaArqueo();
+      if (vista === 'contabilidad') renderContabilidadFlujo();
       if (vista === 'kardex') renderKardex();
       if (vista === 'clientes') renderClientes();
       if (vista === 'facturas') cargarFacturas();
@@ -1712,6 +1755,99 @@
       `).join('');
     }
 
+    // NUEVAS FUNCIONES DE CONTABILIDAD Y EXPORTACIÓN A EXCEL (.CSV)
+    function renderContabilidadFlujo() {
+      const localId = usuarioActual ? String(usuarioActual.localId) : '';
+      const ventasLocal = dbVentas.filter(v => String(v.localId) === localId);
+      const mermasLocal = dbMermas || [];
+
+      let totalIngresos = 0;
+      ventasLocal.forEach(v => { totalIngresos += Number(v.total || 0); });
+
+      let totalSalidas = 0;
+      mermasLocal.forEach(m => { totalSalidas += Number(m.montoTotal || 0); });
+
+      let flujoNeto = totalIngresos - totalSalidas;
+
+      document.getElementById('contab-val-ingresos').innerText = `$${totalIngresos.toFixed(2)}`;
+      document.getElementById('contab-val-salidas').innerText = `$${totalSalidas.toFixed(2)}`;
+      document.getElementById('contab-val-neto').innerText = `$${flujoNeto.toFixed(2)}`;
+
+      // Construir libro diario automático (Asientos automáticos por venta)
+      let htmlDiario = '';
+      ventasLocal.forEach(v => {
+        const fechaFmt = new Date(v.fecha).toLocaleString();
+        htmlDiario += `
+          <tr>
+            <td>${fechaFmt}</td>
+            <td><b>${v.id}</b></td>
+            <td>Ingreso por Venta (${v.metodoPago || 'Efectivo'}) - Cliente: ${v.clienteNombre || 'Consumidor Final'}</td>
+            <td class="text-success">+$${Number(v.total).toFixed(2)}</td>
+            <td>$0.00</td>
+          </tr>
+        `;
+      });
+
+      mermasLocal.forEach(m => {
+        const fechaFmt = new Date(m.fechaHora).toLocaleString();
+        htmlDiario += `
+          <tr style="background-color: #fef2f2;">
+            <td>${fechaFmt}</td>
+            <td><span style="color:var(--danger); font-weight:bold;">[MERMA]</span> ${m.idFactura}</td>
+            <td>Salida de inventario / Anulación: ${m.motivo} (${m.productoName || m.productoNombre})</td>
+            <td>$0.00</td>
+            <td style="color:var(--danger);">+$${Number(m.montoTotal || 0).toFixed(2)}</td>
+          </tr>
+        `;
+      });
+
+      document.getElementById('contab-tabla-diario').innerHTML = htmlDiario || `<tr><td colspan="5" style="text-align:center;">No hay movimientos contables registrados</td></tr>`;
+    }
+
+    function descargarCSV(nombreArchivo, filas) {
+      let csvContent = "data:text/csv;charset=utf-8,\uFEFF" + filas.map(e => e.join(",")).join("\n");
+      let encodedUri = encodeURI(csvContent);
+      let link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", nombreArchivo);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function exportarContabilidadExcel() {
+      const localId = usuarioActual ? String(usuarioActual.localId) : '';
+      const ventasLocal = dbVentas.filter(v => String(v.localId) === localId);
+      
+      let filas = [["Fecha", "ID Comprobante", "Concepto", "Metodo Pago", "Total Ingreso"]];
+      ventasLocal.forEach(v => {
+        filas.push([`"${new Date(v.fecha).toLocaleString()}"`, `"${v.id}"`, `"Venta de Mercancia"`, `"${v.metodoPago}"`, v.total]);
+      });
+      descargarCSV("Flujo_Caja_BlackDiamond.csv", filas);
+    }
+
+    function exportarInventarioExcel() {
+      const localId = usuarioActual ? String(usuarioActual.localId).trim() : '';
+      const productosLocal = dbProductos.filter(p => !localId || p.localId === localId);
+
+      let filas = [["Codigo", "Producto", "Unidad", "Costo", "Precio Normal", "Stock"]];
+      productosLocal.forEach(p => {
+        filas.push([`"${p.codigo}"`, `"${p.nombre}"`, `"${p.unidad_medida}"`, p.costo, p.precio, p.stock]);
+      });
+      descargarCSV("Inventario_BlackDiamond.csv", filas);
+    }
+
+    function exportarHistorialExcel() {
+      const localId = usuarioActual ? String(usuarioActual.localId) : '';
+      const ventasLocal = dbVentas.filter(v => String(v.localId) === localId);
+
+      let filas = [["Ticket", "Sucursal", "Cliente", "Metodo Pago", "Fecha", "Total"]];
+      ventasLocal.forEach(v => {
+        filas.push([`"${v.id}"`, `"${v.localNombre}"`, `"${v.clienteNombre}"`, `"${v.metodoPago}"`, `"${new Date(v.fecha).toLocaleString()}"`, v.total]);
+      });
+      descargarCSV("Historial_Ventas_BlackDiamond.csv", filas);
+    }
+
     async function consultarSRI() {
       const cedulaInput = document.getElementById('cli-cedula').value.trim();
       if (!cedulaInput) return alert('Por favor ingresa un número de cédula o RUC.');
@@ -2033,7 +2169,6 @@
     function cambiarModoFiltro(modo, elementoBtn) {
         modoFiltroReporte = modo;
         
-        // Cambiar clases visuales de los botones de pestañas
         document.querySelectorAll('#vista-reportes .filter-tab').forEach(btn => {
             btn.style.background = '#e0e0e0';
             btn.style.color = '#333';
@@ -2041,7 +2176,6 @@
         elementoBtn.style.background = 'var(--primary)';
         elementoBtn.style.color = '#fff';
 
-        // Mostrar u ocultar contenedores correspondientes
         document.getElementById('filtro-mes-container').style.display = (modo === 'mes') ? 'block' : 'none';
         document.getElementById('filtro-dia-container').style.display = (modo === 'dia') ? 'block' : 'none';
         document.getElementById('filtro-rango-container').style.display = (modo === 'rango') ? 'flex' : 'none';
@@ -2270,12 +2404,11 @@
       const icono = document.getElementById('iconoModoSeñal');
       const texto = document.getElementById('textoModoSeñal');
       const contenedor = document.getElementById('contenedorModoSri');
-      const selectPunto = document.getElementById('punto-emision'); // Referencia al punto de emisión
+      const selectPunto = document.getElementById('punto-emision');
 
       check.checked = !check.checked;
 
       if (check.checked) {
-        // Modo SRI ONLINE activado -> Se fija automáticamente en la Caja Secundaria (001-002)
         icono.className = "fas fa-wifi text-success";
         texto.className = "fw-bold text-success";
         texto.textContent = "SRI ONLINE";
@@ -2283,7 +2416,6 @@
         contenedor.style.background = "#dcfce7";
         if (selectPunto) selectPunto.value = "001-002";
       } else {
-        // Modo LOCAL activado -> Se fija automáticamente en la Caja Principal (001-100)
         icono.className = "fas fa-wifi text-secondary";
         texto.className = "fw-bold text-secondary";
         texto.textContent = "LOCAL";
@@ -2366,4 +2498,3 @@
   </script>
 </body>
 </html>
-
