@@ -20,21 +20,22 @@
       --success: #22c55e;
       --warning: #f59e0b;
       
-      /* Colores para la barra inferior según el tema */
+      /* Colores para la barra inferior (Modo Oscuro) */
       --nav-bg-dark: #121214;
       --nav-border-dark: rgba(255, 255, 255, 0.08);
       --nav-color-dark: #71717a;
       --nav-active-dark: #ef4444;
 
+      /* Colores para la barra inferior (Modo Claro - Azul Original) */
       --nav-bg-light: #ffffff;
       --nav-border-light: #cbd5e1;
       --nav-color-light: #64748b;
-      --nav-active-light: #ef4444;
+      --nav-active-light: #2563eb; 
     }
 
     [data-theme="light"] {
-      --primary: #ef4444;
-      --primary-hover: #dc2626;
+      --primary: #2563eb;       /* Azul original restaurado para el modo claro */
+      --primary-hover: #1d4ed8;
       --bg: #f8fafc;
       --card-bg: #ffffff;
       --text: #0f172a;
@@ -102,7 +103,6 @@
     }
     .nav-bar::-webkit-scrollbar { display: none; }
 
-    /* Cambio automático de colores de la barra según el tema claro/oscuro */
     [data-theme="light"] .nav-bar {
       background: var(--nav-bg-light);
       border: 1px solid var(--nav-border-light);
@@ -134,7 +134,7 @@
     .nav-btn svg { width: 20px; height: 20px; fill: currentColor; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
     .nav-btn span { transition: opacity 0.3s ease; }
 
-    /* LÍNEA INFERIOR ROJA CONTINUA */
+    /* LÍNEA INFERIOR CONTINUA */
     .nav-bar::before {
       content: '';
       position: absolute;
@@ -142,13 +142,17 @@
       left: 20px;
       right: 20px;
       height: 3px;
-      background: #ef4444;
+      background: var(--nav-active-dark);
       border-radius: 2px;
       z-index: 1;
       pointer-events: none;
     }
 
-    /* ESTILO ACTIVO CON LA CURVA (BUMP) */
+    [data-theme="light"] .nav-bar::before {
+      background: var(--nav-active-light);
+    }
+
+    /* ESTILO ACTIVO Y CURVA */
     .nav-btn.active { 
       color: var(--nav-active-dark); 
       font-weight: 700; 
@@ -162,7 +166,6 @@
       transform: translateY(-10px);
     }
 
-    /* BURBUJA O CURVA SUPERIOR SOBRE EL ICONO ACTIVO */
     .nav-btn.active::after {
       content: '';
       position: absolute;
@@ -172,7 +175,7 @@
       width: 42px;
       height: 42px;
       background: var(--nav-bg-dark);
-      border: 3px solid #ef4444;
+      border: 3px solid var(--nav-active-dark);
       border-radius: 50%;
       z-index: 2;
       box-shadow: 0 -4px 10px rgba(239, 68, 68, 0.3);
@@ -180,7 +183,8 @@
 
     [data-theme="light"] .nav-btn.active::after {
       background: var(--nav-bg-light);
-      box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.08);
+      border: 3px solid var(--nav-active-light);
+      box-shadow: 0 -4px 10px rgba(37, 99, 235, 0.2);
     }
 
     .nav-btn.active svg {
@@ -257,7 +261,7 @@
     
     .item-anulado { text-decoration: line-through; color: var(--danger); background-color: var(--bg); }
     
-    /* MODO ESCRITORIO: Barra lateral fija original */
+    /* MODO ESCRITORIO: Barra lateral fija */
     @media (min-width: 768px) {
       body { padding-bottom: 20px; }
       .app-container { flex-direction: row; }
