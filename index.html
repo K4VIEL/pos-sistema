@@ -9,7 +9,7 @@
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <style>
     :root {
-      --primary: #ef4444; /* Cambiado a rojo para hacer juego con la barra */
+      --primary: #ef4444; 
       --primary-hover: #dc2626;
       --bg: #0f172a;
       --card-bg: #1e293b;
@@ -66,7 +66,7 @@
     .user-badge { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; }
     .badge { background: var(--border); color: var(--primary); padding: 4px 10px; border-radius: 20px; font-weight: 600; }
 
-    /* BARRA DE NAVEGACIÓN ESTILO LÍQUIDO NEGRO/ROJO (MÓVIL Y ESCRITORIO) */
+    /* BARRA DE NAVEGACIÓN FLOTANTE (ESTILO OSCURO/ROJO CON SCROLL HABILITADO) */
     .nav-bar { 
       background: #121214; 
       border: 1px solid rgba(255, 255, 255, 0.08);
@@ -77,33 +77,39 @@
       width: 94%;
       max-width: 650px;
       display: flex; 
-      justify-content: space-between; 
+      justify-content: flex-start; 
       align-items: center;
       padding: 0 10px; 
       height: 70px;
       z-index: 1000; 
       border-radius: 40px;
       box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+      overflow-x: auto;
+      overflow-y: hidden;
+      scrollbar-width: none; /* Ocultar scroll en Firefox */
+      -ms-overflow-style: none; /* Ocultar scroll en IE/Edge */
     }
+    .nav-bar::-webkit-scrollbar { display: none; } /* Ocultar scroll en Chrome/Safari */
 
     .nav-btn { 
       border: none; 
       background: none; 
       color: #71717a; 
-      font-size: 0.75rem; 
+      font-size: 0.7rem; 
       display: flex; 
       flex-direction: column; 
       align-items: center; 
       justify-content: center;
-      gap: 4px; 
+      gap: 3px; 
       cursor: pointer; 
-      flex: 1; 
+      flex: 0 0 72px; /* Ancho fijo por botón para permitir desplazamiento horizontal fluido */
       height: 100%;
       position: relative;
       transition: color 0.3s ease;
+      white-space: nowrap;
     }
 
-    .nav-btn svg { width: 22px; height: 22px; fill: currentColor; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    .nav-btn svg { width: 20px; height: 20px; fill: currentColor; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
     .nav-btn span { transition: opacity 0.3s ease; }
 
     /* LÍNEA INFERIOR ROJA CONTINUA */
@@ -117,6 +123,7 @@
       background: #ef4444;
       border-radius: 2px;
       z-index: 1;
+      pointer-events: none;
     }
 
     /* ESTILO ACTIVO CON LA CURVA (BUMP) */
@@ -133,11 +140,11 @@
     .nav-btn.active::after {
       content: '';
       position: absolute;
-      top: -12px;
+      top: -10px;
       left: 50%;
       transform: translateX(-50%);
-      width: 44px;
-      height: 44px;
+      width: 42px;
+      height: 42px;
       background: #121214;
       border: 3px solid #ef4444;
       border-radius: 50%;
@@ -145,7 +152,6 @@
       box-shadow: 0 -4px 10px rgba(239, 68, 68, 0.3);
     }
 
-    /* Asegurar que el icono quede por encima de la burbuja curva */
     .nav-btn.active svg {
       position: relative;
       z-index: 3;
@@ -220,19 +226,43 @@
     
     .item-anulado { text-decoration: line-through; color: var(--danger); background-color: var(--bg); }
     
-    /* ADAPTACIÓN MODO ESCRITORIO: Mantiene la barra flotante elegante centrada abajo o flotando lateralmente según prefieras, adaptada para que siempre se vea completa */
+    /* MODO ESCRITORIO: Barra lateral fija como lo tenías originalmente */
     @media (min-width: 768px) {
-      body { padding-bottom: 100px; }
-      .app-container { flex-direction: column; }
+      body { padding-bottom: 20px; }
+      .app-container { flex-direction: row; }
       .nav-bar { 
-        position: fixed; 
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 700px;
-        height: 75px;
+        position: static; 
+        flex-direction: column; 
+        width: 220px; 
+        border-top: none; 
+        border-right: 1px solid var(--border); 
+        padding: 20px 10px; 
+        justify-content: flex-start; 
+        gap: 6px; 
+        height: calc(100vh - 57px); 
+        overflow-y: auto; 
+        border-radius: 0;
+        box-shadow: none;
+        transform: none;
+        left: auto;
+        bottom: auto;
       }
-      main { padding-bottom: 30px; }
+      .nav-bar::before { display: none; }
+      .nav-btn { 
+        flex-direction: row; 
+        font-size: 0.9rem; 
+        padding: 10px 14px; 
+        border-radius: 8px; 
+        justify-content: flex-start; 
+        gap: 12px; 
+        flex: none; 
+        width: 100%;
+        height: auto;
+      }
+      .nav-btn.active { transform: none; box-shadow: none; }
+      .nav-btn.active::after { display: none; }
+      .nav-btn.active svg { transform: none; }
+      main { padding-bottom: 20px; }
       .grid-pos { grid-template-columns: 1.6fr 1fr; }
     }
 
@@ -320,6 +350,8 @@
   </header>
 
   <div class="app-container">
+    <nav class="nav-bar no-print" id="app-nav-bar"></nav>
+
     <main>
       <!-- VISTA POS -->
       <section id="vista-pos" class="page-section active">
@@ -807,9 +839,6 @@
         </div>
       </section>
     </main>
-
-    <!-- BARRA DE NAVEGACIÓN INFERIOR FLOTANTE (ESTILO OSCURO / CURVA ROJA) -->
-    <nav class="nav-bar no-print" id="app-nav-bar"></nav>
   </div>
 
   <!-- COMPROBANTE DE IMPRESIÓN -->
