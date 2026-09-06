@@ -9,8 +9,21 @@
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <style>
     :root {
-      --primary: #2563eb;
-      --primary-hover: #1d4ed8;
+      --primary: #ef4444; /* Cambiado a rojo para hacer juego con la barra */
+      --primary-hover: #dc2626;
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: #334155;
+      --danger: #ef4444;
+      --success: #22c55e;
+      --warning: #f59e0b;
+    }
+
+    [data-theme="light"] {
+      --primary: #ef4444;
+      --primary-hover: #dc2626;
       --bg: #f8fafc;
       --card-bg: #ffffff;
       --text: #0f172a;
@@ -21,21 +34,8 @@
       --warning: #f59e0b;
     }
 
-    [data-theme="dark"] {
-      --primary: #3b82f6;
-      --primary-hover: #2563eb;
-      --bg: #0f172a;
-      --card-bg: #1e293b;
-      --text: #f8fafc;
-      --text-muted: #94a3b8;
-      --border: #334155;
-      --danger: #f87171;
-      --success: #4ade80;
-      --warning: #fbbf24;
-    }
-
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; transition: background-color 0.2s, color 0.2s, border-color 0.2s; }
-    body { background-color: var(--bg); color: var(--text); display: flex; flex-direction: column; min-height: 100vh; padding-bottom: 90px; }
+    body { background-color: var(--bg); color: var(--text); display: flex; flex-direction: column; min-height: 100vh; padding-bottom: 95px; }
 
     /* LOGIN MODAL */
     #login-screen { position: fixed; inset: 0; background: #0f172a; z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; }
@@ -46,7 +46,7 @@
     .modal-overlay { 
       position: fixed !important; 
       inset: 0 !important; 
-      background: rgba(15, 23, 42, 0.6) !important; 
+      background: rgba(15, 23, 42, 0.7) !important; 
       z-index: 10000 !important; 
       display: none; 
       align-items: flex-start !important;
@@ -66,52 +66,90 @@
     .user-badge { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; }
     .badge { background: var(--border); color: var(--primary); padding: 4px 10px; border-radius: 20px; font-weight: 600; }
 
-    /* BARRA DE NAVEGACIÓN FLOTANTE (ESTILO PÍLLORA MODERNA) */
+    /* BARRA DE NAVEGACIÓN ESTILO LÍQUIDO NEGRO/ROJO (MÓVIL Y ESCRITORIO) */
     .nav-bar { 
-      background: var(--card-bg); 
-      border: 1px solid var(--border);
+      background: #121214; 
+      border: 1px solid rgba(255, 255, 255, 0.08);
       position: fixed; 
       bottom: 15px; 
       left: 50%;
       transform: translateX(-50%);
-      width: 92%;
-      max-width: 700px;
+      width: 94%;
+      max-width: 650px;
       display: flex; 
-      justify-content: space-around; 
-      padding: 8px 10px; 
+      justify-content: space-between; 
+      align-items: center;
+      padding: 0 10px; 
+      height: 70px;
       z-index: 1000; 
-      overflow-x: auto; 
-      border-radius: 35px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-      backdrop-filter: blur(10px);
+      border-radius: 40px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.4);
     }
 
     .nav-btn { 
       border: none; 
       background: none; 
-      color: var(--text-muted); 
-      font-size: 0.7rem; 
+      color: #71717a; 
+      font-size: 0.75rem; 
       display: flex; 
       flex-direction: column; 
       align-items: center; 
-      gap: 3px; 
+      justify-content: center;
+      gap: 4px; 
       cursor: pointer; 
       flex: 1; 
-      min-width: 55px;
-      padding: 8px 4px;
-      border-radius: 20px;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      height: 100%;
+      position: relative;
+      transition: color 0.3s ease;
     }
 
+    .nav-btn svg { width: 22px; height: 22px; fill: currentColor; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    .nav-btn span { transition: opacity 0.3s ease; }
+
+    /* LÍNEA INFERIOR ROJA CONTINUA */
+    .nav-bar::before {
+      content: '';
+      position: absolute;
+      bottom: 8px;
+      left: 20px;
+      right: 20px;
+      height: 3px;
+      background: #ef4444;
+      border-radius: 2px;
+      z-index: 1;
+    }
+
+    /* ESTILO ACTIVO CON LA CURVA (BUMP) */
     .nav-btn.active { 
-      background: var(--primary); 
-      color: #ffffff; 
+      color: #ef4444; 
       font-weight: 700; 
-      transform: translateY(-3px);
-      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
     }
 
-    .nav-btn svg { width: 20px; height: 20px; fill: currentColor; }
+    .nav-btn.active svg {
+      transform: translateY(-10px);
+    }
+
+    /* BURBUJA O CURVA SUPERIOR ROJA SOBRE EL ICONO ACTIVO */
+    .nav-btn.active::after {
+      content: '';
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 44px;
+      height: 44px;
+      background: #121214;
+      border: 3px solid #ef4444;
+      border-radius: 50%;
+      z-index: 2;
+      box-shadow: 0 -4px 10px rgba(239, 68, 68, 0.3);
+    }
+
+    /* Asegurar que el icono quede por encima de la burbuja curva */
+    .nav-btn.active svg {
+      position: relative;
+      z-index: 3;
+    }
 
     /* CONTENIDO PRINCIPAL */
     main { flex: 1; padding: 16px; padding-bottom: 30px; max-width: 1200px; margin: 0 auto; width: 100%; }
@@ -127,7 +165,7 @@
     
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
-    /* BOTONES CON ANIMACIÓN MEJORADA */
+    /* BOTONES CON ANIMACIÓN */
     .btn { 
       font-weight: 600; 
       border: none; 
@@ -182,38 +220,19 @@
     
     .item-anulado { text-decoration: line-through; color: var(--danger); background-color: var(--bg); }
     
+    /* ADAPTACIÓN MODO ESCRITORIO: Mantiene la barra flotante elegante centrada abajo o flotando lateralmente según prefieras, adaptada para que siempre se vea completa */
     @media (min-width: 768px) {
-      body { padding-bottom: 20px; }
-      .app-container { flex-direction: row; }
+      body { padding-bottom: 100px; }
+      .app-container { flex-direction: column; }
       .nav-bar { 
-        position: static; 
-        flex-direction: column; 
-        width: 220px; 
-        border-top: none; 
-        border-right: 1px solid var(--border); 
-        padding: 20px 10px; 
-        justify-content: flex-start; 
-        gap: 6px; 
-        height: calc(100vh - 57px); 
-        overflow-y: auto; 
-        border-radius: 0;
-        box-shadow: none;
-        transform: none;
-        left: auto;
-        bottom: auto;
+        position: fixed; 
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 700px;
+        height: 75px;
       }
-      .nav-btn { 
-        flex-direction: row; 
-        font-size: 0.9rem; 
-        padding: 10px 14px; 
-        border-radius: 8px; 
-        justify-content: flex-start; 
-        gap: 12px; 
-        flex: none; 
-        min-width: auto; 
-      }
-      .nav-btn.active { transform: none; box-shadow: none; }
-      main { padding-bottom: 20px; }
+      main { padding-bottom: 30px; }
       .grid-pos { grid-template-columns: 1.6fr 1fr; }
     }
 
@@ -225,7 +244,7 @@
     }
   </style>
 </head>
-<body data-theme="light">
+<body data-theme="dark">
 
   <!-- LOGIN -->
   <div id="login-screen">
@@ -301,8 +320,6 @@
   </header>
 
   <div class="app-container">
-    <nav class="nav-bar no-print" id="app-nav-bar"></nav>
-
     <main>
       <!-- VISTA POS -->
       <section id="vista-pos" class="page-section active">
@@ -790,6 +807,9 @@
         </div>
       </section>
     </main>
+
+    <!-- BARRA DE NAVEGACIÓN INFERIOR FLOTANTE (ESTILO OSCURO / CURVA ROJA) -->
+    <nav class="nav-bar no-print" id="app-nav-bar"></nav>
   </div>
 
   <!-- COMPROBANTE DE IMPRESIÓN -->
@@ -879,7 +899,7 @@
 
     // GESTIÓN DE TEMA / INTERFAZ
     function inicializarTema() {
-      const temaGuardado = localStorage.getItem('pos_theme') || 'light';
+      const temaGuardado = localStorage.getItem('pos_theme') || 'dark';
       document.body.setAttribute('data-theme', temaGuardado);
       const btnTema = document.getElementById('btn-tema');
       if (btnTema) btnTema.innerText = temaGuardado === 'dark' ? '☀️' : '🌙';
