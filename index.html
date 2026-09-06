@@ -19,6 +19,17 @@
       --danger: #ef4444;
       --success: #22c55e;
       --warning: #f59e0b;
+      
+      /* Colores para la barra inferior según el tema */
+      --nav-bg-dark: #121214;
+      --nav-border-dark: rgba(255, 255, 255, 0.08);
+      --nav-color-dark: #71717a;
+      --nav-active-dark: #ef4444;
+
+      --nav-bg-light: #ffffff;
+      --nav-border-light: #cbd5e1;
+      --nav-color-light: #64748b;
+      --nav-active-light: #ef4444;
     }
 
     [data-theme="light"] {
@@ -66,10 +77,10 @@
     .user-badge { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; }
     .badge { background: var(--border); color: var(--primary); padding: 4px 10px; border-radius: 20px; font-weight: 600; }
 
-    /* BARRA DE NAVEGACIÓN FLOTANTE (ESTILO OSCURO/ROJO CON SCROLL HABILITADO) */
+    /* BARRA DE NAVEGACIÓN FLOTANTE (DINÁMICA SEGÚN TEMA) */
     .nav-bar { 
-      background: #121214; 
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: var(--nav-bg-dark); 
+      border: 1px solid var(--nav-border-dark);
       position: fixed; 
       bottom: 15px; 
       left: 50%;
@@ -86,15 +97,22 @@
       box-shadow: 0 15px 35px rgba(0,0,0,0.4);
       overflow-x: auto;
       overflow-y: hidden;
-      scrollbar-width: none; /* Ocultar scroll en Firefox */
-      -ms-overflow-style: none; /* Ocultar scroll en IE/Edge */
+      scrollbar-width: none;
+      -ms-overflow-style: none;
     }
-    .nav-bar::-webkit-scrollbar { display: none; } /* Ocultar scroll en Chrome/Safari */
+    .nav-bar::-webkit-scrollbar { display: none; }
+
+    /* Cambio automático de colores de la barra según el tema claro/oscuro */
+    [data-theme="light"] .nav-bar {
+      background: var(--nav-bg-light);
+      border: 1px solid var(--nav-border-light);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
 
     .nav-btn { 
       border: none; 
       background: none; 
-      color: #71717a; 
+      color: var(--nav-color-dark); 
       font-size: 0.7rem; 
       display: flex; 
       flex-direction: column; 
@@ -102,11 +120,15 @@
       justify-content: center;
       gap: 3px; 
       cursor: pointer; 
-      flex: 0 0 72px; /* Ancho fijo por botón para permitir desplazamiento horizontal fluido */
+      flex: 0 0 72px; 
       height: 100%;
       position: relative;
       transition: color 0.3s ease;
       white-space: nowrap;
+    }
+
+    [data-theme="light"] .nav-btn {
+      color: var(--nav-color-light);
     }
 
     .nav-btn svg { width: 20px; height: 20px; fill: currentColor; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -128,15 +150,19 @@
 
     /* ESTILO ACTIVO CON LA CURVA (BUMP) */
     .nav-btn.active { 
-      color: #ef4444; 
+      color: var(--nav-active-dark); 
       font-weight: 700; 
+    }
+
+    [data-theme="light"] .nav-btn.active {
+      color: var(--nav-active-light);
     }
 
     .nav-btn.active svg {
       transform: translateY(-10px);
     }
 
-    /* BURBUJA O CURVA SUPERIOR ROJA SOBRE EL ICONO ACTIVO */
+    /* BURBUJA O CURVA SUPERIOR SOBRE EL ICONO ACTIVO */
     .nav-btn.active::after {
       content: '';
       position: absolute;
@@ -145,11 +171,16 @@
       transform: translateX(-50%);
       width: 42px;
       height: 42px;
-      background: #121214;
+      background: var(--nav-bg-dark);
       border: 3px solid #ef4444;
       border-radius: 50%;
       z-index: 2;
       box-shadow: 0 -4px 10px rgba(239, 68, 68, 0.3);
+    }
+
+    [data-theme="light"] .nav-btn.active::after {
+      background: var(--nav-bg-light);
+      box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.08);
     }
 
     .nav-btn.active svg {
@@ -226,7 +257,7 @@
     
     .item-anulado { text-decoration: line-through; color: var(--danger); background-color: var(--bg); }
     
-    /* MODO ESCRITORIO: Barra lateral fija como lo tenías originalmente */
+    /* MODO ESCRITORIO: Barra lateral fija original */
     @media (min-width: 768px) {
       body { padding-bottom: 20px; }
       .app-container { flex-direction: row; }
