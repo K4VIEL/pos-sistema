@@ -35,7 +35,7 @@
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; transition: background-color 0.2s, color 0.2s, border-color 0.2s; }
-    body { background-color: var(--bg); color: var(--text); display: flex; flex-direction: column; min-height: 100vh; }
+    body { background-color: var(--bg); color: var(--text); display: flex; flex-direction: column; min-height: 100vh; padding-bottom: 90px; }
 
     /* LOGIN MODAL */
     #login-screen { position: fixed; inset: 0; background: #0f172a; z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; }
@@ -66,14 +66,55 @@
     .user-badge { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; }
     .badge { background: var(--border); color: var(--primary); padding: 4px 10px; border-radius: 20px; font-weight: 600; }
 
-    /* NAV NATIVA */
-    .nav-bar { background: var(--card-bg); border-top: 1px solid var(--border); position: fixed; bottom: 0; left: 0; right: 0; display: flex; justify-content: space-around; padding: 8px 0; z-index: 1000; overflow-x: auto; }
-    .nav-btn { border: none; background: none; color: var(--text-muted); font-size: 0.75rem; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; flex: 1; min-width: 60px; }
-    .nav-btn.active { color: var(--primary); font-weight: 700; }
-    .nav-btn svg { width: 22px; height: 22px; fill: currentColor; }
+    /* BARRA DE NAVEGACIÓN FLOTANTE (ESTILO PÍLLORA MODERNA) */
+    .nav-bar { 
+      background: var(--card-bg); 
+      border: 1px solid var(--border);
+      position: fixed; 
+      bottom: 15px; 
+      left: 50%;
+      transform: translateX(-50%);
+      width: 92%;
+      max-width: 700px;
+      display: flex; 
+      justify-content: space-around; 
+      padding: 8px 10px; 
+      z-index: 1000; 
+      overflow-x: auto; 
+      border-radius: 35px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      backdrop-filter: blur(10px);
+    }
+
+    .nav-btn { 
+      border: none; 
+      background: none; 
+      color: var(--text-muted); 
+      font-size: 0.7rem; 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      gap: 3px; 
+      cursor: pointer; 
+      flex: 1; 
+      min-width: 55px;
+      padding: 8px 4px;
+      border-radius: 20px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .nav-btn.active { 
+      background: var(--primary); 
+      color: #ffffff; 
+      font-weight: 700; 
+      transform: translateY(-3px);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }
+
+    .nav-btn svg { width: 20px; height: 20px; fill: currentColor; }
 
     /* CONTENIDO PRINCIPAL */
-    main { flex: 1; padding: 16px; padding-bottom: 80px; max-width: 1200px; margin: 0 auto; width: 100%; }
+    main { flex: 1; padding: 16px; padding-bottom: 30px; max-width: 1200px; margin: 0 auto; width: 100%; }
     .page-section { display: none; }
     .page-section.active { display: block !important; }
 
@@ -86,7 +127,29 @@
     
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
-    .btn { font-weight: 600; border: none; cursor: pointer; transition: background 0.2s; display: inline-flex; justify-content: center; align-items: center; gap: 8px; margin-top: 8px; }
+    /* BOTONES CON ANIMACIÓN MEJORADA */
+    .btn { 
+      font-weight: 600; 
+      border: none; 
+      cursor: pointer; 
+      transform: translateY(0);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); 
+      display: inline-flex; 
+      justify-content: center; 
+      align-items: center; 
+      gap: 8px; 
+      margin-top: 8px; 
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+    }
+    .btn:active {
+      transform: translateY(1px) scale(0.98);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
     .btn-primary { background: var(--primary); color: white; }
     .btn-primary:active { background: var(--primary-hover); }
     .btn-danger { background: var(--danger); color: white; }
@@ -99,8 +162,9 @@
     .kpi-card .kpi-val { font-size: 1.4rem; font-weight: 800; margin-top: 4px; }
 
     .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; max-height: 400px; overflow-y: auto; }
-    .product-card { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px; text-align: center; cursor: pointer; }
-    .product-card:active { border-color: var(--primary); background: var(--border); }
+    .product-card { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px; text-align: center; cursor: pointer; transition: transform 0.2s; }
+    .product-card:hover { transform: translateY(-2px); border-color: var(--primary); }
+    .product-card:active { transform: scale(0.96); }
     .product-title { font-weight: 600; font-size: 0.85rem; margin-bottom: 4px; color: var(--text); }
     .product-price { color: var(--primary); font-weight: 700; font-size: 0.95rem; }
     .product-stock { font-size: 0.75rem; color: var(--text-muted); }
@@ -119,10 +183,36 @@
     .item-anulado { text-decoration: line-through; color: var(--danger); background-color: var(--bg); }
     
     @media (min-width: 768px) {
+      body { padding-bottom: 20px; }
       .app-container { flex-direction: row; }
-      .nav-bar { position: static; flex-direction: column; width: 220px; border-top: none; border-right: 1px solid var(--border); padding: 20px 10px; justify-content: flex-start; gap: 8px; height: calc(100vh - 57px); overflow-y: auto; }
-      .nav-btn { flex-direction: row; font-size: 0.9rem; padding: 10px 14px; border-radius: 8px; justify-content: flex-start; gap: 12px; flex: none; min-width: auto; }
-      .nav-btn.active { background: var(--bg); }
+      .nav-bar { 
+        position: static; 
+        flex-direction: column; 
+        width: 220px; 
+        border-top: none; 
+        border-right: 1px solid var(--border); 
+        padding: 20px 10px; 
+        justify-content: flex-start; 
+        gap: 6px; 
+        height: calc(100vh - 57px); 
+        overflow-y: auto; 
+        border-radius: 0;
+        box-shadow: none;
+        transform: none;
+        left: auto;
+        bottom: auto;
+      }
+      .nav-btn { 
+        flex-direction: row; 
+        font-size: 0.9rem; 
+        padding: 10px 14px; 
+        border-radius: 8px; 
+        justify-content: flex-start; 
+        gap: 12px; 
+        flex: none; 
+        min-width: auto; 
+      }
+      .nav-btn.active { transform: none; box-shadow: none; }
       main { padding-bottom: 20px; }
       .grid-pos { grid-template-columns: 1.6fr 1fr; }
     }
@@ -1011,11 +1101,11 @@
         html += `
             <button class="nav-btn" onclick="abrirConfigFirma()">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                <span>Firma Digital</span>
+                <span>Firma</span>
             </button>
             <button class="nav-btn" id="btn-nav-contabilidad" onclick="cambiarVista('contabilidad')">
                 <svg viewBox="0 0 24 24"><path d="M3 3v18h18V3H3zm16 16H5V5h14v14zM7 10h2v7H7zm4-3h2v10h-2zm4 5h2v5h-2z"></path></svg>
-                <span>Contabilidad</span>
+                <span>Contable</span>
             </button>
             <button class="nav-btn" id="btn-nav-kardex" onclick="cambiarVista('kardex')">
                 <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2h14c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"></path></svg>
