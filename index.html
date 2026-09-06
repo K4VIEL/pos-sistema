@@ -394,7 +394,7 @@
           <div>
             <div class="card">
               <div style="display:flex; gap:8px; margin-bottom:8px;">
-                <input type="text" id="pos-buscar" placeholder="🔍 Buscar por nombre o código..." oninput="renderProductosPOS()" style="margin:0;">
+                <input type="text" id="pos-buscar" placeholder="🔍 Buscar por nombre o código (Enter para escanear)..." oninput="renderProductosPOS()" onkeydown="detectarCodigoEnter(event)" style="margin:0;">
                 <button class="btn btn-primary btn-sm" onclick="abrirCamaraPOS()" style="margin:0; white-space:nowrap;">📷 Escanear</button>
               </div>
               <div class="product-grid" id="pos-grid-productos"></div>
@@ -1379,7 +1379,12 @@
 
     function abrirCamaraPOS() {
       abrirCamara(function(decodedText) {
-        agregarPorCodigoBarras(decodedText);
+        const prod = dbProductos.find(p => String(p.localId) === String(usuarioActual.localId) && p.codigo.trim() === decodedText.trim());
+        if (prod) {
+          agregarAlCarrito(prod.id);
+        } else {
+          alert('Producto no encontrado con código: ' + decodedText);
+        }
       });
     }
 
@@ -1428,6 +1433,29 @@
         });
       } else {
         document.getElementById('modal-camara').style.display = 'none';
+      }
+    }
+
+    // Detectar pistola lectora USB / Teclado al presionar Enter en PC
+    function detectarCodigoEnter(event) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        const input = document.getElementById('pos-buscar');
+        const codigoOTexto = input.value.trim();
+        if (!codigoOTexto) return;
+
+        const prod = dbProductos.find(p => 
+          String(p.localId) === String(usuarioActual.localId) && 
+          (p.codigo.trim().toLowerCase() === codigoOTexto.toLowerCase() || p.nombre.toLowerCase().includes(codigoOTexto.toLowerCase()))
+        );
+
+        if (prod) {
+          agregarAlCarrito(prod.id);
+          input.value = ''; // Limpiar buscador para el siguiente escaneo
+          renderProductosPOS();
+        } else {
+          alert('No se encontró ningún producto con: ' + codigoOTexto);
+        }
       }
     }
 
