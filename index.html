@@ -939,6 +939,13 @@
     </div>
   </div>
 
+  <style>
+    /* Forzar texto negro dentro del ticket independiente del modo oscuro o claro */
+    #factura-impresion, #factura-impresion *:not(.btn) {
+      color: #000 !important;
+    }
+  </style>
+
   <script>
     const SUPABASE_URL = 'https://ycwuzqjwmzhynhjawnqd.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inljd3V6cWp3bXpoeW5oamF3bnFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcxNzUyNjQsImV4cCI6MjEwMjc1MTI2NH0.AuU9Us6BdYDTy2np4iJY9ltCFicVbIUtQ4D7FNDgIfM';
@@ -1834,7 +1841,9 @@
 
       document.getElementById('fac-id').innerText = v.id;
       document.getElementById('fac-fecha').innerText = new Date(v.fecha).toLocaleString();
-      document.getElementById('fac-cliente').innerText = v.cliente_nombre || v.clienteNombre || "CONSUMIDOR FINAL";
+      
+      const nombreClienteLimpio = (v.cliente_nombre || v.clienteNombre || "Consumidor Final").replace(' undefined', '');
+      document.getElementById('fac-cliente').innerText = nombreClienteLimpio;
       document.getElementById('fac-cedula').innerText = v.cliente_cedula || v.clienteCedula || "9999999999001";
       document.getElementById('fac-metodo').innerText = v.metodo_pago || v.metodoPago || 'Efectivo';
       
