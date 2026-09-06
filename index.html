@@ -940,8 +940,13 @@
   </div>
 
   <style>
-    /* Forzar texto negro dentro del ticket independiente del modo oscuro o claro */
+    /* Forzar texto negro y fondo claro dentro del ticket independiente del modo oscuro o claro */
     #factura-impresion, #factura-impresion *:not(.btn) {
+      color: #000 !important;
+    }
+
+    #factura-impresion th {
+      background-color: #f1f5f9 !important;
       color: #000 !important;
     }
   </style>
