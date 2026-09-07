@@ -3,39 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>POS Multi-Local Centralizado Pro + Tienda Web</title>
+  <title>Tienda Online - Pedidos a Domicilio</title>
   <!-- LIBRERÍAS EXTERNAS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <style>
     :root {
-      --primary: #ef4444; 
-      --primary-hover: #dc2626;
-      --bg: #0f172a;
-      --card-bg: #1e293b;
-      --text: #f8fafc;
-      --text-muted: #94a3b8;
-      --border: #334155;
-      --danger: #ef4444;
-      --success: #22c55e;
-      --warning: #f59e0b;
-      
-      /* Colores para la barra inferior (Modo Oscuro) */
-      --nav-bg-dark: #121214;
-      --nav-border-dark: rgba(255, 255, 255, 0.08);
-      --nav-color-dark: #71717a;
-      --nav-active-dark: #ef4444;
-
-      /* Colores para la barra inferior (Modo Claro - Azul Original) */
-      --nav-bg-light: #ffffff;
-      --nav-border-light: #cbd5e1;
-      --nav-color-light: #64748b;
-      --nav-active-light: #2563eb; 
-    }
-
-    [data-theme="light"] {
-      --primary: #2563eb;       
+      --primary: #2563eb; 
       --primary-hover: #1d4ed8;
       --bg: #f8fafc;
       --card-bg: #ffffff;
@@ -45,6 +20,26 @@
       --danger: #ef4444;
       --success: #22c55e;
       --warning: #f59e0b;
+      
+      --nav-bg-dark: #121214;
+      --nav-border-dark: rgba(255, 255, 255, 0.08);
+      --nav-color-dark: #71717a;
+      --nav-active-dark: #ef4444;
+
+      --nav-bg-light: #ffffff;
+      --nav-border-light: #cbd5e1;
+      --nav-color-light: #64748b;
+      --nav-active-light: #2563eb; 
+    }
+
+    [data-theme="dark"] {
+      --primary: #ef4444; 
+      --primary-hover: #dc2626;
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: #334155;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; transition: background-color 0.2s, color 0.2s, border-color 0.2s; }
@@ -79,7 +74,7 @@
     .user-badge { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; }
     .badge { background: var(--border); color: var(--primary); padding: 4px 10px; border-radius: 20px; font-weight: 600; }
 
-    /* BARRA DE NAVEGACIÓN FLOTANTE */
+    /* BARRA DE NAVEGACIÓN FLOTANTE POS */
     .nav-bar { 
       background: var(--nav-bg-dark); 
       border: 1px solid var(--nav-border-dark);
@@ -150,31 +145,7 @@
 
     .nav-btn.active { color: var(--nav-active-dark); font-weight: 700; }
     [data-theme="light"] .nav-btn.active { color: var(--nav-active-light); }
-
     .nav-btn.active svg { transform: translateY(-10px); }
-
-    .nav-btn.active::after {
-      content: '';
-      position: absolute;
-      top: -10px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 42px;
-      height: 42px;
-      background: var(--nav-bg-dark);
-      border: 3px solid var(--nav-active-dark);
-      border-radius: 50%;
-      z-index: 2;
-      box-shadow: 0 -4px 10px rgba(239, 68, 68, 0.3);
-    }
-
-    [data-theme="light"] .nav-btn.active::after {
-      background: var(--nav-bg-light);
-      border: 3px solid var(--nav-active-light);
-      box-shadow: 0 -4px 10px rgba(37, 99, 235, 0.2);
-    }
-
-    .nav-btn.active svg { position: relative; z-index: 3; }
 
     main { flex: 1; padding: 16px; padding-bottom: 30px; max-width: 1200px; margin: 0 auto; width: 100%; }
     .page-section { display: none; }
@@ -235,49 +206,80 @@
     
     .item-anulado { text-decoration: line-through; color: var(--danger); background-color: var(--bg); }
 
-    /* ESTILOS PARA LA VISTA TIENDA PUBLICA WEB */
-    #vista-tienda-online { position: fixed; inset: 0; background: var(--bg); z-index: 20000; overflow-y: auto; display: none; padding: 20px; }
-    .store-header { display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 15px 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; }
-    .store-products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
-    .store-item-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 15px; display: flex; flex-direction: column; justify-content: space-between; }
+    /* =========================================================
+       NUEVO DISEÑO PROFESIONAL PARA LA TIENDA PÚBLICA WEB
+       ========================================================= */
+    #vista-tienda-online { 
+      position: fixed; 
+      inset: 0; 
+      background: #f1f5f9; 
+      z-index: 20000; 
+      overflow-y: auto; 
+      display: none; 
+      padding: 0; 
+    }
     
-    @media (min-width: 768px) {
-      body { padding-bottom: 20px; }
-      .app-container { flex-direction: row; }
-      .nav-bar { 
-        position: static; 
-        flex-direction: column; 
-        width: 220px; 
-        border-top: none; 
-        border-right: 1px solid var(--border); 
-        padding: 20px 10px; 
-        justify-content: flex-start; 
-        gap: 6px; 
-        height: calc(100vh - 57px); 
-        overflow-y: auto; 
-        border-radius: 0;
-        box-shadow: none;
-        transform: none;
-        left: auto;
-        bottom: auto;
-      }
-      .nav-bar::before { display: none; }
-      .nav-btn { 
-        flex-direction: row; 
-        font-size: 0.9rem; 
-        padding: 10px 14px; 
-        border-radius: 8px; 
-        justify-content: flex-start; 
-        gap: 12px; 
-        flex: none; 
-        width: 100%;
-        height: auto;
-      }
-      .nav-btn.active { transform: none; box-shadow: none; }
-      .nav-btn.active::after { display: none; }
-      .nav-btn.active svg { transform: none; }
-      main { padding-bottom: 20px; }
-      .grid-pos { grid-template-columns: 1.6fr 1fr; }
+    .store-hero-banner {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      color: #ffffff;
+      padding: 40px 20px;
+      text-align: center;
+      border-bottom: 4px solid var(--primary);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+
+    .store-main-container {
+      max-width: 1100px;
+      margin: -25px auto 40px auto;
+      padding: 0 20px;
+    }
+
+    .store-top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #ffffff;
+      padding: 16px 24px;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
+      margin-bottom: 25px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .store-products-grid { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); 
+      gap: 20px; 
+    }
+
+    .store-item-card { 
+      background: #ffffff; 
+      border: 1px solid #e2e8f0; 
+      border-radius: 16px; 
+      padding: 20px; 
+      display: flex; 
+      flex-direction: column; 
+      justify-content: space-between; 
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .store-item-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      border-color: #cbd5e1;
+    }
+
+    .store-item-badge {
+      background: #eff6ff;
+      color: #2563eb;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+      display: inline-block;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
     @media print {
@@ -290,47 +292,60 @@
 </head>
 <body data-theme="dark">
 
-  <!-- VISTA PÚBLICA DE TIENDA ONLINE PARA CLIENTES A DOMICILIO -->
+  <!-- VISTA PÚBLICA DE TIENDA ONLINE PARA CLIENTES A DOMICILIO (DISEÑO REDISEÑADO) -->
   <div id="vista-tienda-online">
-    <div style="max-width: 1000px; margin: 0 auto;">
-      <div class="store-header">
+    <!-- Banner superior llamativo -->
+    <div class="store-hero-banner">
+      <h1 id="store-title" style="font-size: 2rem; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.5px;">Tienda Online</h1>
+      <p id="store-subtitle" style="font-size: 1rem; color: #94a3b8; max-width: 600px; margin: 0 auto;">Explora nuestro catálogo y haz tu pedido a domicilio de forma rápida y segura.</p>
+    </div>
+
+    <div class="store-main-container">
+      <!-- Barra flotante de acciones del cliente -->
+      <div class="store-top-bar">
         <div>
-          <h2 id="store-title" style="color:var(--primary); font-size: 1.4rem;">Tienda Online</h2>
-          <p id="store-subtitle" style="font-size: 0.85rem; color: var(--text-muted);">Realiza tu pedido a domicilio en línea</p>
+          <span style="font-size: 0.85rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Catálogo Activo</span>
+          <p style="font-size: 0.95px; color: #0f172a; font-weight: 600;" id="store-status-text">Abierto para pedidos</p>
         </div>
-        <div>
-          <button class="btn btn-primary btn-sm" onclick="abrirCarritoWebModal()">🛒 Ver Mi Pedido (<span id="store-cart-count">0</span>)</button>
-          <button class="btn btn-danger btn-sm" onclick="cerrarTiendaOnlineWeb()">Volver al POS</button>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <button class="btn btn-primary btn-sm" style="padding: 10px 18px; border-radius: 30px; font-weight: 700; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);" onclick="abrirCarritoWebModal()">🛒 Ver Mi Pedido (<span id="store-cart-count">0</span>)</button>
+          <button class="btn btn-danger btn-sm" style="padding: 10px 14px; border-radius: 30px; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1;" onclick="cerrarTiendaOnlineWeb()">Salir al POS</button>
         </div>
       </div>
 
+      <!-- Cuadrícula de productos de alta gama -->
       <div class="store-products-grid" id="store-grid-catalogo"></div>
     </div>
 
     <!-- MODAL CARRITO DE PEDIDO WEB -->
     <div id="modal-carrito-web" class="modal-overlay">
-      <div class="modal-box" style="padding: 24px; border-radius: 12px; max-width: 450px; width: 100%;">
-        <h3>Confirmar Pedido a Domicilio</h3>
-        <div class="table-responsive" style="max-height: 200px; margin: 10px 0;">
+      <div class="modal-box" style="padding: 30px; border-radius: 20px; max-width: 500px; width: 100%; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);">
+        <h3 style="font-size: 1.3rem; margin-bottom: 5px; color: #0f172a;">Resumen de tu Pedido</h3>
+        <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 15px;">Completa tus datos para coordinar el envío a domicilio.</p>
+        
+        <div class="table-responsive" style="max-height: 220px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 12px; padding: 5px;">
           <table>
-            <thead><tr><th>Prod</th><th>Cant</th><th>Subtotal</th></tr></thead>
+            <thead><tr><th>Producto</th><th>Cant</th><th>Subtotal</th></tr></thead>
             <tbody id="store-tabla-carrito-modal"></tbody>
           </table>
         </div>
-        <h3 style="text-align: right; margin-bottom: 10px;">Total a Pagar: $<span id="store-modal-total">0.00</span></h3>
+        <div style="background: #f8fafc; padding: 12px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin: 15px 0;">
+          <span style="font-weight: 600; color: #64748b;">Total a Pagar:</span>
+          <span style="font-size: 1.5rem; font-weight: 800; color: var(--primary);">$<span id="store-modal-total">0.00</span></span>
+        </div>
         
-        <label>Nombre y Apellido *</label>
-        <input type="text" id="web-cli-nombre" placeholder="Ej: María López">
-        <label>Cédula o RUC *</label>
-        <input type="text" id="web-cli-cedula" placeholder="Ej: 0912345678">
-        <label>Dirección exacta de Entrega a Domicilio *</label>
-        <textarea id="web-cli-direccion" placeholder="Calle, número de casa, referencias..."></textarea>
-        <label>Teléfono de Contacto *</label>
-        <input type="text" id="web-cli-telefono" placeholder="Ej: 0991234567">
+        <label style="color:#334155;">Nombre y Apellido *</label>
+        <input type="text" id="web-cli-nombre" placeholder="Ej: María López" style="border-radius: 10px; border: 1px solid #cbd5e1; padding: 10px 14px;">
+        <label style="color:#334155;">Cédula o RUC *</label>
+        <input type="text" id="web-cli-cedula" placeholder="Ej: 0912345678" style="border-radius: 10px; border: 1px solid #cbd5e1; padding: 10px 14px;">
+        <label style="color:#334155;">Dirección exacta de Entrega a Domicilio *</label>
+        <textarea id="web-cli-direccion" placeholder="Calle, número de casa, referencias..." style="border-radius: 10px; border: 1px solid #cbd5e1; padding: 10px 14px; height: 75px; resize: none;"></textarea>
+        <label style="color:#334155;">Teléfono de Contacto *</label>
+        <input type="text" id="web-cli-telefono" placeholder="Ej: 0991234567" style="border-radius: 10px; border: 1px solid #cbd5e1; padding: 10px 14px;">
 
-        <div style="display: flex; gap: 10px; margin-top: 15px;">
-          <button class="btn btn-danger" style="flex:1; margin:0;" onclick="cerrarCarritoWebModal()">Cancelar</button>
-          <button class="btn btn-success" style="flex:1; margin:0;" onclick="enviarPedidoWebCliente()">Enviar Pedido</button>
+        <div style="display: flex; gap: 12px; margin-top: 20px;">
+          <button class="btn btn-danger" style="flex:1; margin:0; border-radius: 12px; background: #f1f5f9; color: #475569;" onclick="cerrarCarritoWebModal()">Seguir Comprando</button>
+          <button class="btn btn-success" style="flex:1; margin:0; border-radius: 12px; background: #2563eb; color: #fff;" onclick="enviarPedidoWebCliente()">Confirmar Pedido</button>
         </div>
       </div>
     </div>
@@ -1606,7 +1621,7 @@
     async function abrirModalCobro() {
       const cart = obtenerCarritoActual();
       let activos = cart.items.filter(i => !i.anulado);
-      if (activos.length === 0) return alert('El carrito está vacío o todos seus ítems están anulados');
+      if (activos.length === 0) return alert('El carrito está vacío o todos sus ítems están anulados');
       
       let total = activos.reduce((s, x) => s + (x.precio * x.cantidad), 0);
       document.getElementById('modal-total-txt').innerText = `$${total.toFixed(2)}`;
@@ -2564,7 +2579,7 @@
       }
     }
 
-    // --- LÓGICA DE LA TIENDA PÚBLICA WEB PARA CLIENTES A DOMICILIO ---
+    // --- LÓGICA DE LA TIENDA PÚBLICA WEB REDISEÑADA ---
     async function inicializarTiendaWebPublica(localIdUrl) {
       localTiendaIdActual = localIdUrl;
       await cargarDatosSupabase();
@@ -2575,8 +2590,9 @@
         return;
       }
 
-      document.getElementById('store-title').innerText = `Tienda Oficial: ${localObj.nombre}`;
-      document.getElementById('store-subtitle').innerText = `Envíos a domicilio directos de ${localObj.direccion || 'nuestro local'}`;
+      document.getElementById('store-title').innerText = `${localObj.nombre}`;
+      document.getElementById('store-subtitle').innerText = `Pedidos a domicilio directos de ${localObj.direccion || 'nuestro local autorizado'}`;
+      document.getElementById('store-status-text').innerText = localObj.direccion ? `📍 ${localObj.direccion}` : 'Abierto para pedidos';
       document.getElementById('vista-tienda-online').style.display = 'block';
 
       renderCatalogoTiendaWeb();
@@ -2587,18 +2603,23 @@
       const grid = document.getElementById('store-grid-catalogo');
 
       if (productosWeb.length === 0) {
-        grid.innerHTML = `<p style="grid-column: 1/-1; text-align:center; color:var(--text-muted);">No hay productos disponibles en este momento en la tienda online.</p>`;
+        grid.innerHTML = `<p style="grid-column: 1/-1; text-align:center; color:#64748b; padding: 40px 0;">No hay productos disponibles en este momento en la tienda online.</p>`;
         return;
       }
 
       grid.innerHTML = productosWeb.map(p => `
         <div class="store-item-card">
           <div>
-            <h4 class="product-title" style="font-size:1rem; margin-bottom:6px;">${p.nombre}</h4>
-            <div class="product-price" style="font-size:1.1rem; margin-bottom:4px;">$${p.precio.toFixed(2)}</div>
-            <div class="product-stock">Stock disponible: ${p.stock} ${p.unidad_medida}</div>
+            <span class="store-item-badge">${p.unidad_medida || 'Unidad'}</span>
+            <h4 style="font-size:1.05rem; font-weight:700; color:#0f172a; margin-bottom:8px; line-height: 1.4;">${p.nombre}</h4>
+            <div style="font-size: 0.8rem; color: #64748b; margin-bottom: 12px;">Stock: <span style="font-weight:600; color:${p.stock > 0 ? '#10b981' : '#ef4444'};">${p.stock} disponibles</span></div>
           </div>
-          <button class="btn btn-primary btn-sm" style="margin-top:10px;" onclick="agregarAlCarritoWeb('${p.id}')">Agregar al Pedido</button>
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+              <span style="color:var(--primary); font-weight:800; font-size:1.25rem;">$${p.precio.toFixed(2)}</span>
+            </div>
+            <button class="btn btn-primary btn-sm" style="width:100%; margin-top:12px; padding: 10px; border-radius: 10px; font-weight: 600;" onclick="agregarAlCarritoWeb('${p.id}')">Agregar al Pedido</button>
+          </div>
         </div>
       `).join('');
     }
@@ -2614,16 +2635,25 @@
         carritoTiendaWeb.push({ id: prod.id, nombre: prod.nombre, precio: prod.precio, costo: prod.costo, cantidad: 1, unidad: prod.unidad_medida });
       }
       document.getElementById('store-cart-count').innerText = carritoTiendaWeb.reduce((s, x) => s + x.cantidad, 0);
-      alert(`Agregado: ${prod.nombre}`);
+      
+      // Feedback visual rápido
+      const btn = event.target;
+      const textoOrig = btn.innerText;
+      btn.innerText = '✓ Añadido';
+      btn.style.background = '#22c55e';
+      setTimeout(() => {
+        btn.innerText = textoOrig;
+        btn.style.background = '';
+      }, 800);
     }
 
     function abrirCarritoWebModal() {
-      if (carritoTiendaWeb.length === 0) return alert('Tu pedido está vacío');
+      if (carritoTiendaWeb.length === 0) return alert('Tu pedido está vacío. Selecciona al menos un producto.');
       let total = carritoTiendaWeb.reduce((s, x) => s + (x.precio * x.cantidad), 0);
       document.getElementById('store-modal-total').innerText = total.toFixed(2);
       
       document.getElementById('store-tabla-carrito-modal').innerHTML = carritoTiendaWeb.map(i => `
-        <tr><td>${i.nombre}</td><td>${i.cantidad}</td><td>$${(i.precio * i.cantidad).toFixed(2)}</td></tr>
+        <tr><td><b>${i.nombre}</b></td><td>${i.cantidad}</td><td>$${(i.precio * i.cantidad).toFixed(2)}</td></tr>
       `).join('');
 
       document.getElementById('modal-carrito-web').style.display = 'flex';
@@ -2634,7 +2664,7 @@
     }
 
     function cerrarTiendaOnlineWeb() {
-      window.location.href = window.location.pathname; // Limpia el parámetro ?tienda=
+      window.location.href = window.location.pathname; 
     }
 
     async function enviarPedidoWebCliente() {
@@ -2644,7 +2674,7 @@
       const telefono = document.getElementById('web-cli-telefono').value.trim();
 
       if (!nombre || !cedula || !direccion || !telefono) {
-        return alert('Por favor llena todos los datos para el envío a domicilio.');
+        return alert('Por favor llena todos los datos obligatorios para el envío a domicilio.');
       }
 
       let total = carritoTiendaWeb.reduce((s, x) => s + (x.precio * x.cantidad), 0);
@@ -2668,10 +2698,11 @@
       const { error } = await supabaseClient.from('ventas').insert([nuevoPedidoSupabase]);
       if (error) return alert('Error al enviar el pedido: ' + error.message);
 
-      alert(`¡Pedido enviado con éxito!\nTu código de pedido es: ${pedidoId}\nTe contactaremos y entregaremos en tu domicilio pronto.`);
+      alert(`¡Pedido enviado con éxito!\n\nTu código de pedido es: ${pedidoId}\nTe contactaremos en breve para la entrega en tu domicilio.`);
       carritoTiendaWeb = [];
       cerrarCarritoWebModal();
       document.getElementById('store-cart-count').innerText = '0';
+      renderCatalogoTiendaWeb();
     }
 
     function prepararVistaReportes() {
@@ -3080,7 +3111,7 @@
       const tiendaLocalId = params.get('tienda');
 
       if (tiendaLocalId) {
-        // Carga la interfaz pública web del cliente
+        // Carga la interfaz pública web del cliente rediseñada
         await inicializarTiendaWebPublica(tiendaLocalId);
       } else {
         // Carga el POS interno normal de administración
