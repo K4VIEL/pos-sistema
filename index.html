@@ -1606,7 +1606,7 @@
     async function abrirModalCobro() {
       const cart = obtenerCarritoActual();
       let activos = cart.items.filter(i => !i.anulado);
-      if (activos.length === 0) return alert('El carrito está vacío o todos sus ítems están anulados');
+      if (activos.length === 0) return alert('El carrito está vacío o todos seus ítems están anulados');
       
       let total = activos.reduce((s, x) => s + (x.precio * x.cantidad), 0);
       document.getElementById('modal-total-txt').innerText = `$${total.toFixed(2)}`;
