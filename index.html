@@ -2723,10 +2723,18 @@
             <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
               <span style="color:var(--primary); font-weight:800; font-size:1.25rem;">$${p.precio.toFixed(2)}</span>
             </div>
-            <button class="btn btn-primary btn-sm" style="width:100%; margin-top:12px; padding: 10px; border-radius: 10px; font-weight: 600;" onclick="agregarAlCarritoWeb('${p.id}', this)">Agregar al Pedido</button>
+            <button class="btn btn-primary btn-sm btn-add-cart" data-id="${p.id}" style="width:100%; margin-top:12px; padding: 10px; border-radius: 10px; font-weight: 600;">Agregar al Pedido</button>
           </div>
         </div>
       `).join('');
+
+      // Enlace seguro de eventos para evitar fallos en móviles
+      document.querySelectorAll('.btn-add-cart').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const prodId = e.currentTarget.getAttribute('data-id');
+          agregarAlCarritoWeb(prodId, e.currentTarget);
+        });
+      });
     }
 
     function agregarAlCarritoWeb(id, btnElem) {
