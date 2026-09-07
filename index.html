@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>POS Multi-Local Centralizado Pro</title>
+  <title>POS Multi-Local Centralizado Pro + Tienda Web</title>
   <!-- LIBRERÍAS EXTERNAS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -184,8 +184,8 @@
     .grid-pos { display: grid; grid-template-columns: 1fr; gap: 16px; }
 
     label { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); display: block; margin-top: 8px; }
-    input, select, button { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text); font-size: 1rem; margin-top: 4px; margin-bottom: 8px; outline: none; }
-    input:focus, select:focus { border-color: var(--primary); }
+    input, select, button, textarea { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text); font-size: 1rem; margin-top: 4px; margin-bottom: 8px; outline: none; }
+    input:focus, select:focus, textarea:focus { border-color: var(--primary); }
     
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
@@ -234,6 +234,12 @@
     .cart-tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); font-weight: bold; }
     
     .item-anulado { text-decoration: line-through; color: var(--danger); background-color: var(--bg); }
+
+    /* ESTILOS PARA LA VISTA TIENDA PUBLICA WEB */
+    #vista-tienda-online { position: fixed; inset: 0; background: var(--bg); z-index: 20000; overflow-y: auto; display: none; padding: 20px; }
+    .store-header { display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 15px 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; }
+    .store-products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
+    .store-item-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 15px; display: flex; flex-direction: column; justify-content: space-between; }
     
     @media (min-width: 768px) {
       body { padding-bottom: 20px; }
@@ -283,6 +289,52 @@
   </style>
 </head>
 <body data-theme="dark">
+
+  <!-- VISTA PÚBLICA DE TIENDA ONLINE PARA CLIENTES A DOMICILIO -->
+  <div id="vista-tienda-online">
+    <div style="max-width: 1000px; margin: 0 auto;">
+      <div class="store-header">
+        <div>
+          <h2 id="store-title" style="color:var(--primary); font-size: 1.4rem;">Tienda Online</h2>
+          <p id="store-subtitle" style="font-size: 0.85rem; color: var(--text-muted);">Realiza tu pedido a domicilio en línea</p>
+        </div>
+        <div>
+          <button class="btn btn-primary btn-sm" onclick="abrirCarritoWebModal()">🛒 Ver Mi Pedido (<span id="store-cart-count">0</span>)</button>
+          <button class="btn btn-danger btn-sm" onclick="cerrarTiendaOnlineWeb()">Volver al POS</button>
+        </div>
+      </div>
+
+      <div class="store-products-grid" id="store-grid-catalogo"></div>
+    </div>
+
+    <!-- MODAL CARRITO DE PEDIDO WEB -->
+    <div id="modal-carrito-web" class="modal-overlay">
+      <div class="modal-box" style="padding: 24px; border-radius: 12px; max-width: 450px; width: 100%;">
+        <h3>Confirmar Pedido a Domicilio</h3>
+        <div class="table-responsive" style="max-height: 200px; margin: 10px 0;">
+          <table>
+            <thead><tr><th>Prod</th><th>Cant</th><th>Subtotal</th></tr></thead>
+            <tbody id="store-tabla-carrito-modal"></tbody>
+          </table>
+        </div>
+        <h3 style="text-align: right; margin-bottom: 10px;">Total a Pagar: $<span id="store-modal-total">0.00</span></h3>
+        
+        <label>Nombre y Apellido *</label>
+        <input type="text" id="web-cli-nombre" placeholder="Ej: María López">
+        <label>Cédula o RUC *</label>
+        <input type="text" id="web-cli-cedula" placeholder="Ej: 0912345678">
+        <label>Dirección exacta de Entrega a Domicilio *</label>
+        <textarea id="web-cli-direccion" placeholder="Calle, número de casa, referencias..."></textarea>
+        <label>Teléfono de Contacto *</label>
+        <input type="text" id="web-cli-telefono" placeholder="Ej: 0991234567">
+
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+          <button class="btn btn-danger" style="flex:1; margin:0;" onclick="cerrarCarritoWebModal()">Cancelar</button>
+          <button class="btn btn-success" style="flex:1; margin:0;" onclick="enviarPedidoWebCliente()">Enviar Pedido</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- LOGIN -->
   <div id="login-screen">
@@ -636,11 +688,20 @@
       <section id="vista-inventario" class="page-section">
         <div class="card">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-            <h3 style="margin: 0;">Gestión de Producto</h3>
+            <h3 style="margin: 0;">Gestión de Producto y Tienda Online</h3>
             <div>
               <input type="file" id="input-excel-inventario" accept=".xlsx, .xls" style="display: none;" onchange="importarInventarioExcelNativo(event)">
               <button class="btn btn-success btn-sm" onclick="document.getElementById('input-excel-inventario').click()">📁 Importar Inventario (Excel)</button>
             </div>
+          </div>
+
+          <!-- SECCIÓN LINK DE TIENDA ONLINE POR SUCURSAL -->
+          <div style="background:var(--bg); padding: 10px; border-radius: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <span style="font-size: 0.85rem; font-weight: bold; color: var(--primary);">Link de Tienda Online de este Local:</span><br>
+              <a id="link-tienda-local" href="#" target="_blank" style="font-size: 0.8rem; color: var(--text); word-break: break-all;">Cargando...</a>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="copiarLinkTienda()">📋 Copiar Link</button>
           </div>
 
           <div class="form-row">
@@ -680,6 +741,12 @@
             <div><label>P. Mayorista ($)</label><input type="number" id="inv-precio-mayorista" step="0.01" placeholder="Mayorista"></div>
           </div>
 
+          <!-- CHECKBOX DE VISIBILIDAD WEB -->
+          <div style="margin-top: 10px; display: flex; align-items: center; gap: 8px;">
+            <input type="checkbox" id="inv-visible-web" style="width: 20px; height: 20px; margin:0;">
+            <label for="inv-visible-web" style="margin:0; cursor:pointer; color:var(--text); font-weight:bold;">Visible en la Tienda Online del Local para Pedidos</label>
+          </div>
+
           <button class="btn btn-primary" onclick="guardarProducto()" style="margin-top:15px;">Guardar Producto</button>
         </div>
 
@@ -702,6 +769,7 @@
                   <th>P. Fam.</th>
                   <th>P. May.</th>
                   <th>Stock</th>
+                  <th>Visible Web</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
@@ -715,12 +783,12 @@
       <section id="vista-historial" class="page-section">
         <div class="card">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-            <h3 style="margin: 0;">Historial de Ventas</h3>
+            <h3 style="margin: 0;">Historial de Ventas y Pedidos Online</h3>
             <button class="btn btn-success btn-sm" onclick="exportarHistorialExcel()">📥 Exportar a Excel</button>
           </div>
           <div class="table-responsive">
             <table>
-              <thead><tr><th>Ticket</th><th>Sucursal</th><th>Cliente</th><th>Método</th><th>Fecha</th><th>Total</th><th></th></tr></thead>
+              <thead><tr><th>Ticket</th><th>Sucursal</th><th>Cliente / Tipo</th><th>Método</th><th>Fecha</th><th>Total</th><th></th></tr></thead>
               <tbody id="historial-tabla"></tbody>
             </table>
           </div>
@@ -946,6 +1014,10 @@
 
     let modoFiltroReporte = 'mes';
 
+    // Variables para la Tienda Online Pública
+    let carritoTiendaWeb = [];
+    let localTiendaIdActual = null;
+
     function inicializarTema() {
       const temaGuardado = localStorage.getItem('pos_theme') || 'dark';
       document.body.setAttribute('data-theme', temaGuardado);
@@ -1038,7 +1110,8 @@
             precio_familia: parseFloat(p.precio_familia) || parseFloat(p.precio) || 0,
             precio_mayorista: parseFloat(p.precio_mayorista) || parseFloat(p.precio) || 0,
             unidad_medida: p.unidad || p.unidad_medida || 'unidad',
-            stock: parseFloat(p.stock) || 0 
+            stock: parseFloat(p.stock) || 0,
+            visibleWeb: p.visible_web === true
           }));
         }
 
@@ -1377,6 +1450,7 @@
           document.getElementById('inv-precio-mayorista').value = prodExistente.precio_mayorista || prodExistente.precio;
           document.getElementById('inv-unidad').value = prodExistente.unidad_medida || 'unidad';
           document.getElementById('inv-stock').value = prodExistente.stock;
+          document.getElementById('inv-visible-web').checked = prodExistente.visibleWeb || false;
         }
       });
     }
@@ -2086,7 +2160,6 @@
       descargarCSV("Historial_Ventas_BlackDiamond.csv", filas);
     }
 
-    // FUNCIÓN PARA IMPORTAR INVENTARIO DESDE EXCEL DIRECTO (.xlsx / .xls)
     async function importarInventarioExcelNativo(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -2123,7 +2196,8 @@
               precio_familia: precio,
               precio_mayorista: precio,
               unidad: unidad,
-              stock: stock
+              stock: stock,
+              visible_web: true
             };
 
             const { error } = await supabaseClient.from('productos').insert([nuevoProd]);
@@ -2140,7 +2214,8 @@
                 precio_familia: nuevoProd.precio_familia,
                 precio_mayorista: nuevoProd.precio_mayorista,
                 unidad_medida: nuevoProd.unidad,
-                stock: nuevoProd.stock
+                stock: nuevoProd.stock,
+                visibleWeb: true
               });
               importadosCount++;
             }
@@ -2307,6 +2382,7 @@
       const precioMayorista = parseFloat(document.getElementById('inv-precio-mayorista').value) || precio;
       const unidad = document.getElementById('inv-unidad').value || 'unidad';
       const stock = parseFloat(document.getElementById('inv-stock').value) || 0;
+      const visibleWeb = document.getElementById('inv-visible-web').checked;
 
       if (!codigo || !nombre || isNaN(precio)) return alert('Completa los campos requeridos');
       
@@ -2322,7 +2398,8 @@
         precio_familia: precioFamilia,
         precio_mayorista: precioMayorista,
         unidad: unidad, 
-        stock 
+        stock,
+        visible_web: visibleWeb
       };
 
       const { error } = await supabaseClient.from('productos').insert([nuevoProdSupabase]);
@@ -2340,7 +2417,8 @@
         precio_familia: nuevoProdSupabase.precio_familia,
         precio_mayorista: nuevoProdSupabase.precio_mayorista,
         unidad_medida: nuevoProdSupabase.unidad,
-        stock: nuevoProdSupabase.stock
+        stock: nuevoProdSupabase.stock,
+        visibleWeb: nuevoProdSupabase.visible_web
       });
 
       document.getElementById('inv-codigo').value = '';
@@ -2352,6 +2430,7 @@
       document.getElementById('inv-precio-familia').value = '';
       document.getElementById('inv-precio-mayorista').value = '';
       document.getElementById('inv-stock').value = '';
+      document.getElementById('inv-visible-web').checked = false;
       renderInventario();
       alert('Producto guardado');
     }
@@ -2360,11 +2439,18 @@
       const localActual = usuarioActual ? String(usuarioActual.localId).trim() : '';
       const lista = dbProductos.filter(p => !localActual || p.localId === localActual);
       
+      const linkTienda = window.location.origin + window.location.pathname + `?tienda=${localActual}`;
+      const linkEl = document.getElementById('link-tienda-local');
+      if (linkEl) {
+        linkEl.innerText = linkTienda;
+        linkEl.href = linkTienda;
+      }
+
       const tbody = document.getElementById('inv-tabla-catalogo');
       if (!tbody) return;
 
       if (lista.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; color:var(--danger);">No hay productos registrados para este local (${localActual}).</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="12" style="text-align:center; color:var(--danger);">No hay productos registrados para este local (${localActual}).</td></tr>`;
         return;
       }
 
@@ -2386,12 +2472,21 @@
           <td><input type="number" step="0.01" id="edit-pfam-${p.id}" value="${(p.precio_familia || 0).toFixed(2)}" style="width:65px; margin:0; padding:4px;"></td>
           <td><input type="number" step="0.01" id="edit-pmay-${p.id}" value="${(p.precio_mayorista || 0).toFixed(2)}" style="width:65px; margin:0; padding:4px;"></td>
           <td><input type="number" step="0.01" id="edit-stock-${p.id}" value="${p.stock !== undefined ? p.stock : 0}" style="width:65px; margin:0; padding:4px;"></td>
+          <td style="text-align: center;">
+            <input type="checkbox" id="edit-visibleweb-${p.id}" ${p.visibleWeb ? 'checked' : ''} style="width:18px; height:18px; cursor:pointer;">
+          </td>
           <td>
             <button class="btn btn-primary btn-sm" onclick="actualizarProducto('${p.id}')">Guardar</button>
             <button class="btn btn-danger btn-sm" onclick="eliminarProducto('${p.id}')">X</button>
           </td>
         </tr>
       `).join('');
+    }
+
+    function copiarLinkTienda() {
+      const link = document.getElementById('link-tienda-local').href;
+      navigator.clipboard.writeText(link);
+      alert('¡Link de la tienda online copiado al portapapeles!');
     }
 
     async function actualizarProducto(id) {
@@ -2403,6 +2498,7 @@
       const nuevoPmay = parseFloat(document.getElementById(`edit-pmay-${id}`).value) || nuevoPrecio;
       const nuevaUnidad = document.getElementById(`edit-unidad-${id}`).value || 'unidad';
       const nuevoStock = parseFloat(document.getElementById(`edit-stock-${id}`).value) || 0;
+      const nuevoVisibleWeb = document.getElementById(`edit-visibleweb-${id}`).checked;
 
       const { error } = await supabaseClient.from('productos').update({ 
         costo: nuevoCosto, 
@@ -2412,7 +2508,8 @@
         precio_familia: nuevoPfam,
         precio_mayorista: nuevoPmay,
         unidad: nuevaUnidad,
-        stock: nuevoStock 
+        stock: nuevoStock,
+        visible_web: nuevoVisibleWeb
       }).eq('id', id);
 
       if (error) return alert("Error al actualizar: " + error.message);
@@ -2427,6 +2524,7 @@
         prod.precio_mayorista = nuevoPmay;
         prod.unidad_medida = nuevaUnidad;
         prod.stock = nuevoStock; 
+        prod.visibleWeb = nuevoVisibleWeb;
       }
       alert("Actualizado correctamente");
       renderInventario();
@@ -2456,7 +2554,7 @@
           <tr>
             <td>${v.id}</td>
             <td>${v.localNombre || ''}</td>
-            <td>${v.clienteNombre || ''}</td>
+            <td>${v.clienteNombre || ''} <br><small>${v.tipo_comprobante}</small></td>
             <td>${v.metodoPago || 'Efectivo'}</td>
             <td>${new Date(v.fecha).toLocaleString()}</td>
             <td>$${Number(v.total).toFixed(2)}</td>
@@ -2464,6 +2562,116 @@
           </tr>
         `).join('');
       }
+    }
+
+    // --- LÓGICA DE LA TIENDA PÚBLICA WEB PARA CLIENTES A DOMICILIO ---
+    async function inicializarTiendaWebPublica(localIdUrl) {
+      localTiendaIdActual = localIdUrl;
+      await cargarDatosSupabase();
+      
+      const localObj = dbLocales.find(l => String(l.id) === String(localIdUrl));
+      if (!localObj) {
+        document.body.innerHTML = `<h2 style="text-align:center; margin-top:50px; color:red;">Tienda online no encontrada o inactiva.</h2>`;
+        return;
+      }
+
+      document.getElementById('store-title').innerText = `Tienda Oficial: ${localObj.nombre}`;
+      document.getElementById('store-subtitle').innerText = `Envíos a domicilio directos de ${localObj.direccion || 'nuestro local'}`;
+      document.getElementById('vista-tienda-online').style.display = 'block';
+
+      renderCatalogoTiendaWeb();
+    }
+
+    function renderCatalogoTiendaWeb() {
+      const productosWeb = dbProductos.filter(p => String(p.localId) === String(localTiendaIdActual) && p.visibleWeb === true);
+      const grid = document.getElementById('store-grid-catalogo');
+
+      if (productosWeb.length === 0) {
+        grid.innerHTML = `<p style="grid-column: 1/-1; text-align:center; color:var(--text-muted);">No hay productos disponibles en este momento en la tienda online.</p>`;
+        return;
+      }
+
+      grid.innerHTML = productosWeb.map(p => `
+        <div class="store-item-card">
+          <div>
+            <h4 class="product-title" style="font-size:1rem; margin-bottom:6px;">${p.nombre}</h4>
+            <div class="product-price" style="font-size:1.1rem; margin-bottom:4px;">$${p.precio.toFixed(2)}</div>
+            <div class="product-stock">Stock disponible: ${p.stock} ${p.unidad_medida}</div>
+          </div>
+          <button class="btn btn-primary btn-sm" style="margin-top:10px;" onclick="agregarAlCarritoWeb('${p.id}')">Agregar al Pedido</button>
+        </div>
+      `).join('');
+    }
+
+    function agregarAlCarritoWeb(id) {
+      const prod = dbProductos.find(p => p.id === id);
+      if (!prod) return;
+      let item = carritoTiendaWeb.find(i => i.id === id);
+      if (item) {
+        if (item.cantidad + 1 > prod.stock) return alert('Stock insuficiente en tienda');
+        item.cantidad++;
+      } else {
+        carritoTiendaWeb.push({ id: prod.id, nombre: prod.nombre, precio: prod.precio, costo: prod.costo, cantidad: 1, unidad: prod.unidad_medida });
+      }
+      document.getElementById('store-cart-count').innerText = carritoTiendaWeb.reduce((s, x) => s + x.cantidad, 0);
+      alert(`Agregado: ${prod.nombre}`);
+    }
+
+    function abrirCarritoWebModal() {
+      if (carritoTiendaWeb.length === 0) return alert('Tu pedido está vacío');
+      let total = carritoTiendaWeb.reduce((s, x) => s + (x.precio * x.cantidad), 0);
+      document.getElementById('store-modal-total').innerText = total.toFixed(2);
+      
+      document.getElementById('store-tabla-carrito-modal').innerHTML = carritoTiendaWeb.map(i => `
+        <tr><td>${i.nombre}</td><td>${i.cantidad}</td><td>$${(i.precio * i.cantidad).toFixed(2)}</td></tr>
+      `).join('');
+
+      document.getElementById('modal-carrito-web').style.display = 'flex';
+    }
+
+    function cerrarCarritoWebModal() {
+      document.getElementById('modal-carrito-web').style.display = 'none';
+    }
+
+    function cerrarTiendaOnlineWeb() {
+      window.location.href = window.location.pathname; // Limpia el parámetro ?tienda=
+    }
+
+    async function enviarPedidoWebCliente() {
+      const nombre = document.getElementById('web-cli-nombre').value.trim();
+      const cedula = document.getElementById('web-cli-cedula').value.trim();
+      const direccion = document.getElementById('web-cli-direccion').value.trim();
+      const telefono = document.getElementById('web-cli-telefono').value.trim();
+
+      if (!nombre || !cedula || !direccion || !telefono) {
+        return alert('Por favor llena todos los datos para el envío a domicilio.');
+      }
+
+      let total = carritoTiendaWeb.reduce((s, x) => s + (x.precio * x.cantidad), 0);
+      const pedidoId = 'WEB-' + Date.now().toString().slice(-5);
+
+      const nuevoPedidoSupabase = {
+        id: pedidoId,
+        local_id: String(localTiendaIdActual),
+        local_nombre: dbLocales.find(l => String(l.id) === String(localTiendaIdActual))?.nombre || 'Tienda Web',
+        cliente_nombre: `${nombre} (Tel: ${telefono}) - Dir: ${direccion}`,
+        cliente_cedula: cedula,
+        metodo_pago: 'Efectivo contra entrega',
+        fecha: new Date().toISOString(),
+        items: [...carritoTiendaWeb],
+        total: total,
+        usuario: 'Cliente Web Online',
+        tipo_comprobante: 'PEDIDO_DOMICILIO_WEB',
+        punto_emision: '001-Web'
+      };
+
+      const { error } = await supabaseClient.from('ventas').insert([nuevoPedidoSupabase]);
+      if (error) return alert('Error al enviar el pedido: ' + error.message);
+
+      alert(`¡Pedido enviado con éxito!\nTu código de pedido es: ${pedidoId}\nTe contactaremos y entregaremos en tu domicilio pronto.`);
+      carritoTiendaWeb = [];
+      cerrarCarritoWebModal();
+      document.getElementById('store-cart-count').innerText = '0';
     }
 
     function prepararVistaReportes() {
@@ -2868,11 +3076,20 @@
 
     window.addEventListener('DOMContentLoaded', async () => {
       inicializarTema();
-      if (usuarioActual) {
-        await cargarDatosSupabase();
-        aplicarSesionActiva();
+      const params = new URLSearchParams(window.location.search);
+      const tiendaLocalId = params.get('tienda');
+
+      if (tiendaLocalId) {
+        // Carga la interfaz pública web del cliente
+        await inicializarTiendaWebPublica(tiendaLocalId);
       } else {
-        document.getElementById('login-screen').style.display = 'flex';
+        // Carga el POS interno normal de administración
+        if (usuarioActual) {
+          await cargarDatosSupabase();
+          aplicarSesionActiva();
+        } else {
+          document.getElementById('login-screen').style.display = 'flex';
+        }
       }
     });
   </script>
