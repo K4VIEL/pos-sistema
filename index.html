@@ -662,7 +662,14 @@
       <!-- VISTA INVENTARIO -->
       <section id="vista-inventario" class="page-section">
         <div class="card">
-          <h3>Gestión de Producto</h3>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h3 style="margin: 0;">Gestión de Producto</h3>
+            <div>
+              <input type="file" id="input-csv-inventario" accept=".csv" style="display: none;" onchange="importarInventarioCSV(event)">
+              <button class="btn btn-success btn-sm" onclick="document.getElementById('input-csv-inventario').click()">📁 Importar Inventario (CSV)</button>
+            </div>
+          </div>
+
           <div class="form-row">
             <div>
               <label>Código de Barras</label>
@@ -1107,7 +1114,7 @@
         if (resMer.data) {
           dbMermas = resMer.data.map(m => ({
             id: m.id,
-            localId: String(m.local_id || m.localId || '').trim(),
+            localId: String(m.local_id || m.local_id || '').trim(),
             idFactura: m.id_factura,
             productoNombre: m.producto_nombre,
             cantidad: m.cantidad,
@@ -2121,6 +2128,68 @@
         filas.push([`"${v.id}"`, `"${v.localNombre}"`, `"${v.clienteNombre}"`, `"${v.metodoPago}"`, `"${new Date(v.fecha).toLocaleString()}"`, v.total]);
       });
       descargarCSV("Historial_Ventas_BlackDiamond.csv", filas);
+    }
+
+    // FUNCIÓN PARA IMPORTAR INVENTARIO DESDE CSV MASIVAMENTE
+    async function importarInventarioCSV(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        const text = e.target.result;
+        const lineas = text.split('\n');
+        let importadosCount = 0;
+
+        for (let i = 1; i < lineas.length; i++) {
+          const linea = lineas[i].trim();
+          if (!linea) continue;
+
+          // Se asume formato CSV: codigo,nombre,unidad,costo,precio,stock
+          const cols = linea.split(',').map(c => c.replace(/^"|"$/g, '').trim());
+          if (cols.length < 5) continue;
+
+          const [codigo, nombre, unidad, costo, precio, stock] = cols;
+          const nuevoProd = {
+            id: 'PROD-' + Date.now() + '-' + i,
+            local_id: String(usuarioActual.localId).trim(),
+            codigo: codigo || ('BAR-' + Math.floor(Math.random()*100000)),
+            nombre: nombre || 'Producto sin nombre',
+            costo: parseFloat(costo) || 0,
+            precio: parseFloat(precio) || 0,
+            precio_rovendedor: parseFloat(precio) || 0,
+            precio_proveedor: parseFloat(precio) || 0,
+            precio_familia: parseFloat(precio) || 0,
+            precio_mayorista: parseFloat(precio) || 0,
+            unidad: unidad || 'unidad',
+            stock: parseFloat(stock) || 0
+          };
+
+          const { error } = await supabaseClient.from('productos').insert([nuevoProd]);
+          if (!error) {
+            dbProductos.push({
+              id: nuevoProd.id,
+              localId: nuevoProd.local_id,
+              codigo: nuevoProd.codigo,
+              nombre: nuevoProd.nombre,
+              costo: nuevoProd.costo,
+              precio: nuevoProd.precio,
+              precio_rovendedor: nuevoProd.precio_rovendedor,
+              precio_proveedor: nuevoProd.precio_proveedor,
+              precio_familia: nuevoProd.precio_familia,
+              precio_mayorista: nuevoProd.precio_mayorista,
+              unidad_medida: nuevoProd.unidad,
+              stock: nuevoProd.stock
+            });
+            importadosCount++;
+          }
+        }
+
+        alert(`¡Importación masiva completada! Se agregaron ${importadosCount} productos a tu inventario.`);
+        renderInventario();
+        event.target.value = ''; // Limpiar input file
+      };
+      reader.readAsText(file);
     }
 
     async function consultarSRI() {
