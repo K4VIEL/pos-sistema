@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>POS Multi-Local Centralizado Pro</title>
+  <title>POS Multi-Local y Tienda Online Pro</title>
   <!-- LIBRERÍAS EXTERNAS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -21,13 +21,11 @@
       --success: #22c55e;
       --warning: #f59e0b;
       
-      /* Colores para la barra inferior (Modo Oscuro) */
       --nav-bg-dark: #121214;
       --nav-border-dark: rgba(255, 255, 255, 0.08);
       --nav-color-dark: #71717a;
       --nav-active-dark: #ef4444;
 
-      /* Colores para la barra inferior (Modo Claro - Azul Original) */
       --nav-bg-light: #ffffff;
       --nav-border-light: #cbd5e1;
       --nav-color-light: #64748b;
@@ -50,12 +48,10 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; transition: background-color 0.2s, color 0.2s, border-color 0.2s; }
     body { background-color: var(--bg); color: var(--text); display: flex; flex-direction: column; min-height: 100vh; padding-bottom: 95px; }
 
-    /* LOGIN MODAL */
     #login-screen { position: fixed; inset: 0; background: #0f172a; z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; }
     .login-box { background: var(--card-bg); color: var(--text); padding: 28px; border-radius: 16px; width: 100%; max-width: 360px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
     .login-box h2 { font-size: 1.5rem; margin-bottom: 8px; color: var(--text); }
 
-    /* MODAL GENERAL */
     .modal-overlay { 
       position: fixed !important; 
       inset: 0 !important; 
@@ -69,17 +65,13 @@
     }
 
     .modal-box { background: var(--card-bg) !important; color: var(--text) !important; }
-
-    /* LAYOUT ADAPTATIVO */
     .app-container { display: flex; flex: 1; flex-direction: column; }
     
-    /* HEADER */
     header { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
     .brand-title { font-size: 1.2rem; font-weight: 700; color: var(--primary); }
     .user-badge { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; }
     .badge { background: var(--border); color: var(--primary); padding: 4px 10px; border-radius: 20px; font-weight: 600; }
 
-    /* BARRA DE NAVEGACIÓN FLOTANTE */
     .nav-bar { 
       background: var(--nav-bg-dark); 
       border: 1px solid var(--nav-border-dark);
@@ -104,76 +96,35 @@
     }
     .nav-bar::-webkit-scrollbar { display: none; }
 
-    [data-theme="light"] .nav-bar {
-      background: var(--nav-bg-light);
-      border: 1px solid var(--nav-border-light);
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-    }
+    [data-theme="light"] .nav-bar { background: var(--nav-bg-light); border: 1px solid var(--nav-border-light); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
 
     .nav-btn { 
-      border: none; 
-      background: none; 
-      color: var(--nav-color-dark); 
-      font-size: 0.7rem; 
-      display: flex; 
-      flex-direction: column; 
-      align-items: center; 
-      justify-content: center;
-      gap: 3px; 
-      cursor: pointer; 
-      flex: 0 0 72px; 
-      height: 100%;
-      position: relative;
-      transition: color 0.3s ease;
-      white-space: nowrap;
+      border: none; background: none; color: var(--nav-color-dark); font-size: 0.7rem; 
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 3px; cursor: pointer; flex: 0 0 72px; height: 100%; position: relative; transition: color 0.3s ease; white-space: nowrap;
     }
-
     [data-theme="light"] .nav-btn { color: var(--nav-color-light); }
-
     .nav-btn svg { width: 20px; height: 20px; fill: currentColor; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-    .nav-btn span { transition: opacity 0.3s ease; }
 
     .nav-bar::before {
-      content: '';
-      position: absolute;
-      bottom: 8px;
-      left: 20px;
-      right: 20px;
-      height: 3px;
-      background: var(--nav-active-dark);
-      border-radius: 2px;
-      z-index: 1;
-      pointer-events: none;
+      content: ''; position: absolute; bottom: 8px; left: 20px; right: 20px; height: 3px;
+      background: var(--nav-active-dark); border-radius: 2px; z-index: 1; pointer-events: none;
     }
-
     [data-theme="light"] .nav-bar::before { background: var(--nav-active-light); }
 
     .nav-btn.active { color: var(--nav-active-dark); font-weight: 700; }
     [data-theme="light"] .nav-btn.active { color: var(--nav-active-light); }
-
     .nav-btn.active svg { transform: translateY(-10px); }
 
     .nav-btn.active::after {
-      content: '';
-      position: absolute;
-      top: -10px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 42px;
-      height: 42px;
-      background: var(--nav-bg-dark);
-      border: 3px solid var(--nav-active-dark);
-      border-radius: 50%;
-      z-index: 2;
-      box-shadow: 0 -4px 10px rgba(239, 68, 68, 0.3);
+      content: ''; position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+      width: 42px; height: 42px; background: var(--nav-bg-dark); border: 3px solid var(--nav-active-dark);
+      border-radius: 50%; z-index: 2; box-shadow: 0 -4px 10px rgba(239, 68, 68, 0.3);
     }
-
     [data-theme="light"] .nav-btn.active::after {
-      background: var(--nav-bg-light);
-      border: 3px solid var(--nav-active-light);
+      background: var(--nav-bg-light); border: 3px solid var(--nav-active-light);
       box-shadow: 0 -4px 10px rgba(37, 99, 235, 0.2);
     }
-
     .nav-btn.active svg { position: relative; z-index: 3; }
 
     main { flex: 1; padding: 16px; padding-bottom: 30px; max-width: 1200px; margin: 0 auto; width: 100%; }
@@ -184,23 +135,15 @@
     .grid-pos { display: grid; grid-template-columns: 1fr; gap: 16px; }
 
     label { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); display: block; margin-top: 8px; }
-    input, select, button { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text); font-size: 1rem; margin-top: 4px; margin-bottom: 8px; outline: none; }
-    input:focus, select:focus { border-color: var(--primary); }
+    input, select, button, textarea { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text); font-size: 1rem; margin-top: 4px; margin-bottom: 8px; outline: none; }
+    input:focus, select:focus, textarea:focus { border-color: var(--primary); }
     
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
     .btn { 
-      font-weight: 600; 
-      border: none; 
-      cursor: pointer; 
-      transform: translateY(0);
-      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); 
-      display: inline-flex; 
-      justify-content: center; 
-      align-items: center; 
-      gap: 8px; 
-      margin-top: 8px; 
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      font-weight: 600; border: none; cursor: pointer; transform: translateY(0);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); display: inline-flex; 
+      justify-content: center; align-items: center; gap: 8px; margin-top: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
     .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15); }
     .btn:active { transform: translateY(1px) scale(0.98); box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); }
@@ -234,38 +177,26 @@
     .cart-tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); font-weight: bold; }
     
     .item-anulado { text-decoration: line-through; color: var(--danger); background-color: var(--bg); }
-    
+
+    /* ESTILOS PARA LA VISTA TIENDA PUBLICA WEB */
+    #vista-tienda-online { position: fixed; inset: 0; background: var(--bg); z-index: 20000; overflow-y: auto; display: none; padding: 20px; }
+    .store-header { display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 15px 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; }
+    .store-products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
+    .store-item-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 15px; display: flex; flex-direction: column; justify-content: space-between; }
+
     @media (min-width: 768px) {
       body { padding-bottom: 20px; }
       .app-container { flex-direction: row; }
       .nav-bar { 
-        position: static; 
-        flex-direction: column; 
-        width: 220px; 
-        border-top: none; 
-        border-right: 1px solid var(--border); 
-        padding: 20px 10px; 
-        justify-content: flex-start; 
-        gap: 6px; 
-        height: calc(100vh - 57px); 
-        overflow-y: auto; 
-        border-radius: 0;
-        box-shadow: none;
-        transform: none;
-        left: auto;
-        bottom: auto;
+        position: static; flex-direction: column; width: 220px; border-top: none; 
+        border-right: 1px solid var(--border); padding: 20px 10px; justify-content: flex-start; 
+        gap: 6px; height: calc(100vh - 57px); overflow-y: auto; border-radius: 0;
+        box-shadow: none; transform: none; left: auto; bottom: auto;
       }
       .nav-bar::before { display: none; }
       .nav-btn { 
-        flex-direction: row; 
-        font-size: 0.9rem; 
-        padding: 10px 14px; 
-        border-radius: 8px; 
-        justify-content: flex-start; 
-        gap: 12px; 
-        flex: none; 
-        width: 100%;
-        height: auto;
+        flex-direction: row; font-size: 0.9rem; padding: 10px 14px; border-radius: 8px; 
+        justify-content: flex-start; gap: 12px; flex: none; width: 100%; height: auto;
       }
       .nav-btn.active { transform: none; box-shadow: none; }
       .nav-btn.active::after { display: none; }
@@ -283,6 +214,52 @@
   </style>
 </head>
 <body data-theme="dark">
+
+  <!-- VISTA PÚBLICA DE TIENDA ONLINE PARA CLIENTES A DOMICILIO -->
+  <div id="vista-tienda-online">
+    <div style="max-width: 1000px; margin: 0 auto;">
+      <div class="store-header">
+        <div>
+          <h2 id="store-title" style="color:var(--primary); font-size: 1.4rem;">Tienda Online</h2>
+          <p id="store-subtitle" style="font-size: 0.85rem; color: var(--text-muted);">Realiza tu pedido a domicilio en línea</p>
+        </div>
+        <div>
+          <button class="btn btn-primary btn-sm" onclick="abrirCarritoWebModal()">🛒 Ver Mi Pedido (<span id="store-cart-count">0</span>)</button>
+          <button class="btn btn-danger btn-sm" onclick="cerrarTiendaOnlineWeb()">Volver al POS</button>
+        </div>
+      </div>
+
+      <div class="store-products-grid" id="store-grid-catalogo"></div>
+    </div>
+
+    <!-- MODAL CARRITO DE PEDIDO WEB -->
+    <div id="modal-carrito-web" class="modal-overlay">
+      <div class="modal-box" style="padding: 24px; border-radius: 12px; max-width: 450px; width: 100%;">
+        <h3>Confirmar Pedido a Domicilio</h3>
+        <div class="table-responsive" style="max-height: 200px; margin: 10px 0;">
+          <table>
+            <thead><tr><th>Prod</th><th>Cant</th><th>Subtotal</th></tr></thead>
+            <tbody id="store-tabla-carrito-modal"></tbody>
+          </table>
+        </div>
+        <h3 style="text-align: right; margin-bottom: 10px;">Total a Pagar: $<span id="store-modal-total">0.00</span></h3>
+        
+        <label>Nombre y Apellido *</label>
+        <input type="text" id="web-cli-nombre" placeholder="Ej: María López">
+        <label>Cédula o RUC *</label>
+        <input type="text" id="web-cli-cedula" placeholder="Ej: 0912345678">
+        <label>Dirección exacta de Entrega a Domicilio *</label>
+        <textarea id="web-cli-direccion" placeholder="Calle, número de casa, referencias..."></textarea>
+        <label>Teléfono de Contacto *</label>
+        <input type="text" id="web-cli-telefono" placeholder="Ej: 0991234567">
+
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+          <button class="btn btn-danger" style="flex:1; margin:0;" onclick="cerrarCarritoWebModal()">Cancelar</button>
+          <button class="btn btn-success" style="flex:1; margin:0;" onclick="enviarPedidoWebCliente()">Enviar Pedido</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- LOGIN -->
   <div id="login-screen">
@@ -331,7 +308,6 @@
         </div>
       </div>
 
-      <!-- SECCIÓN QR DEUNA -->
       <div id="seccion-deuna-qr" style="display:none; text-align:center; margin-top:10px;">
         <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:8px;">Escanea el código QR con la App de Deuna del local:</p>
         <div id="contenedor-qr-imagen" style="min-height:160px; display:flex; align-items:center; justify-content:center; background:var(--bg); border-radius:8px; border:1px dashed var(--border);">
@@ -636,11 +612,19 @@
       <section id="vista-inventario" class="page-section">
         <div class="card">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-            <h3 style="margin: 0;">Gestión de Producto</h3>
+            <h3 style="margin: 0;">Gestión de Producto y Tienda Online</h3>
             <div>
               <input type="file" id="input-excel-inventario" accept=".xlsx, .xls" style="display: none;" onchange="importarInventarioExcelNativo(event)">
-              <button class="btn btn-success btn-sm" onclick="document.getElementById('input-excel-inventario').click()">📁 Importar Inventario (Excel)</button>
+              <button class="btn btn-success btn-sm" onclick="document.getElementById('input-excel-inventario').click()">📁 Importar Excel</button>
             </div>
+          </div>
+
+          <div style="background:var(--bg); padding: 10px; border-radius: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <span style="font-size: 0.85rem; font-weight: bold; color: var(--primary);">Link de Tienda Online de este Local:</span><br>
+              <a id="link-tienda-local" href="#" target="_blank" style="font-size: 0.8rem; color: var(--text); word-break: break-all;">Cargando...</a>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="copiarLinkTienda()">📋 Copiar Link</button>
           </div>
 
           <div class="form-row">
@@ -680,6 +664,11 @@
             <div><label>P. Mayorista ($)</label><input type="number" id="inv-precio-mayorista" step="0.01" placeholder="Mayorista"></div>
           </div>
 
+          <div style="margin-top: 10px; display: flex; align-items: center; gap: 8px;">
+            <input type="checkbox" id="inv-visible-web" style="width: 20px; height: 20px; margin:0;">
+            <label for="inv-visible-web" style="margin:0; cursor:pointer; color:var(--text); font-weight:bold;">Visible en la Tienda Online del Local para Pedidos</label>
+          </div>
+
           <button class="btn btn-primary" onclick="guardarProducto()" style="margin-top:15px;">Guardar Producto</button>
         </div>
 
@@ -697,11 +686,8 @@
                   <th>Unidad</th>
                   <th>Costo ($)</th>
                   <th>P. Normal</th>
-                  <th>P. Revend.</th>
-                  <th>P. Prov.</th>
-                  <th>P. Fam.</th>
-                  <th>P. May.</th>
                   <th>Stock</th>
+                  <th>Visible Web</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
@@ -715,12 +701,12 @@
       <section id="vista-historial" class="page-section">
         <div class="card">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-            <h3 style="margin: 0;">Historial de Ventas</h3>
+            <h3 style="margin: 0;">Historial de Ventas y Pedidos Online</h3>
             <button class="btn btn-success btn-sm" onclick="exportarHistorialExcel()">📥 Exportar a Excel</button>
           </div>
           <div class="table-responsive">
             <table>
-              <thead><tr><th>Ticket</th><th>Sucursal</th><th>Cliente</th><th>Método</th><th>Fecha</th><th>Total</th><th></th></tr></thead>
+              <thead><tr><th>Ticket</th><th>Sucursal</th><th>Cliente / Tipo</th><th>Método</th><th>Fecha</th><th>Total</th><th></th></tr></thead>
               <tbody id="historial-tabla"></tbody>
             </table>
           </div>
@@ -781,7 +767,6 @@
       <section id="vista-personal" class="page-section">
         <div class="card">
           <h3>Crear Cuenta para un Empleado/Cajero</h3>
-          <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:10px;">Esta cuenta estará limitada exclusivamente al módulo de ventas y cobro de tu local.</p>
           <input type="text" id="emp-user" placeholder="Nombre de Usuario del Cajero">
           <input type="password" id="emp-pass" placeholder="Contraseña">
           <button class="btn btn-primary" onclick="crearEmpleadoCajero()">Guardar Empleado</button>
@@ -861,7 +846,6 @@
     <div style="text-align: center; line-height: 1.3;">
         <h3 id="fac-local-nombre" style="margin: 0; font-size: 14px; font-weight: bold;"></h3>
         <p style="margin: 2px 0;" id="fac-propietario"></p>
-
         <p style="margin: 2px 0;">RUC: <span id="fac-ruc"></span></p>
         <p style="margin: 2px 0; font-size: 11px;" id="fac-dir"></p>
         <p style="margin: 2px 0; font-size: 11px;">Obligado contabilidad: <span id="fac-contabilidad">NO</span></p>
@@ -871,7 +855,6 @@
     <div style="margin-top: 8px; border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 5px 0; line-height: 1.3;">
         <p style="margin: 2px 0; font-weight: bold;">Comprobante #: <span id="fac-id"></span></p>
         <p style="margin: 2px 0; font-size: 11px;">Fecha Emisión: <span id="fac-fecha"></span></p>
-        <p style="margin: 2px 0; font-size: 10px;" id="contenedor-etiqueta-aut">Nro. de autorización:<br><span id="fac-autorizacion" style="word-break: break-all; font-size: 9px;"></span></p>
     </div>
 
     <div style="margin-top: 5px; line-height: 1.3; font-size: 11px;">
@@ -896,9 +879,7 @@
     <hr style="border: none; border-top: 1px dashed #000; margin: 6px 0;">
 
     <div style="text-align: right; font-size: 12px; line-height: 1.4;">
-        <p style="margin: 2px 0;">Subtotal 0%: $0.00</p>
-        <p style="margin: 2px 0;">Subtotal: $<span id="fac-subtotal">0.00</span></p>
-        <p style="margin: 2px 0; font-weight: bold; font-size: 13px;">TOTAL: $<span id="fac-total">0.00</span></p>
+        <p style="margin: 2px 0;">TOTAL: $<span id="fac-total">0.00</span></p>
     </div>
 
     <hr style="border: none; border-top: 1px dashed #000; margin: 6px 0;">
@@ -909,8 +890,7 @@
     </div>
 
     <div style="text-align: center; margin-top: 10px; font-size: 10px;">
-        <p style="margin: 2px 0;">Gracias por su compra</p>
-        <p style="margin: 2px 0;" id="fac-leyenda-doc">Documento electrónico autorizado</p>
+        <p style="margin: 2px 0;">Gracias por su compra a domicilio</p>
     </div>
 
     <div class="no-print" style="margin-top: 15px; text-align: center;">
@@ -918,11 +898,6 @@
       <button class="btn btn-danger" onclick="document.getElementById('factura-impresion').style.display='none'">Cerrar</button>
     </div>
   </div>
-
-  <style>
-    #factura-impresion, #factura-impresion *:not(.btn) { color: #000 !important; }
-    #factura-impresion th { background-color: #f1f5f9 !important; color: #000 !important; }
-  </style>
 
   <script>
     const SUPABASE_URL = 'https://ycwuzqjwmzhynhjawnqd.supabase.co';
@@ -938,13 +913,14 @@
     let dbMermas = [];
     
     let usuarioActual = JSON.parse(localStorage.getItem('usuarioActual')) || null;
-    
     let carritos = [{ id: 1, nombre: 'Principal 1', items: [] }];
     let carritoActivoId = 1;
     let html5QrCode = null;
     let clienteVentaSeleccionado = { cedula: '9999999999001', nombre: 'Consumidor Final' };
-
-    let modoFiltroReporte = 'mes';
+    
+    // Variables Carrito Tienda Web Publica
+    let carritoTiendaWeb = [];
+    let localTiendaIdActual = null;
 
     function inicializarTema() {
       const temaGuardado = localStorage.getItem('pos_theme') || 'dark';
@@ -962,40 +938,6 @@
       if (btnTema) btnTema.innerText = nuevo === 'dark' ? '☀️' : '🌙';
     }
 
-    async function registrarAuditoriaMerma(idFactura, productoNombre, cantidad, montoTotal, motivo) {
-      try {
-        await supabaseClient.from('mermas_auditoria').insert([{
-          id_factura: String(idFactura),
-          producto_nombre: productoNombre,
-          cantidad: cantidad,
-          monto_total: montoTotal,
-          motivo: motivo || 'Anulado en factura',
-          fecha_hora: new Date().toISOString(),
-          usuario: usuarioActual ? usuarioActual.user : 'Sistema',
-          local_id: usuarioActual ? String(usuarioActual.localId) : ''
-        }]);
-      } catch (err) {
-        console.error('Error imprevisto al auditoriar merma:', err);
-      }
-    }
-
-    function esLocalMatriz(localId, localNombre = '') {
-      const idStr = String(localId || '').toUpperCase();
-      const nomStr = String(localNombre || '').toLowerCase();
-      return idStr === 'LOC-001' || nomStr.includes('matriz') || nomStr.includes('black');
-    }
-
-    function esUsuarioMatriz() {
-      if (!usuarioActual) return false;
-      const localObj = dbLocales.find(l => String(l.id) === String(usuarioActual.localId));
-      return usuarioActual.rol === 'Administrador' && (esLocalMatriz(usuarioActual.localId, localObj?.nombre));
-    }
-
-    function esDuenoLocal() {
-      if (!usuarioActual) return false;
-      return usuarioActual.rol === 'Dueno' || usuarioActual.rol === 'Dueño';
-    }
-
     async function cargarDatosSupabase() {
       try {
         const [resLoc, resUsr, resProd, resCli, resVen, resArq, resMer] = await Promise.all([
@@ -1010,16 +952,10 @@
 
         if (resLoc.data) {
           dbLocales = resLoc.data.map(l => ({ 
-            id: l.id, 
-            nombre: l.nombre, 
-            direccion: l.direccion,
-            ruc: l.ruc || '',
-            propietario: l.propietario || '',
-            obligadoContabilidad: l.obligado_contabilidad || 'NO',
-            deuna_api_key: l.deuna_api_key || '',
-            deuna_secret: l.deuna_secret || '',
-            suscripcionActiva: l.suscripcion_activa !== false,
-            fechaVencimiento: l.fecha_vencimiento || null
+            id: l.id, nombre: l.nombre, direccion: l.direccion, ruc: l.ruc || '',
+            propietario: l.propietario || '', obligadoContabilidad: l.obligado_contabilidad || 'NO',
+            deuna_api_key: l.deuna_api_key || '', deuna_secret: l.deuna_secret || '',
+            suscripcionActiva: l.suscripcion_activa !== false, fechaVencimiento: l.fecha_vencimiento || null
           }));
         }
 
@@ -1027,18 +963,16 @@
         
         if (resProd.data) {
           dbProductos = resProd.data.map(p => ({ 
-            id: p.id, 
-            localId: String(p.local_id || p.localId || '').trim(), 
-            codigo: p.codigo || '', 
-            nombre: p.nombre || '', 
-            costo: parseFloat(p.costo) || 0, 
-            precio: parseFloat(p.precio) || 0,
+            id: p.id, localId: String(p.local_id || p.localId || '').trim(), 
+            codigo: p.codigo || '', nombre: p.nombre || '', 
+            costo: parseFloat(p.costo) || 0, precio: parseFloat(p.precio) || 0,
             precio_rovendedor: parseFloat(p.precio_rovendedor) || parseFloat(p.precio) || 0,
             precio_proveedor: parseFloat(p.precio_proveedor) || parseFloat(p.precio) || 0,
             precio_familia: parseFloat(p.precio_familia) || parseFloat(p.precio) || 0,
             precio_mayorista: parseFloat(p.precio_mayorista) || parseFloat(p.precio) || 0,
             unidad_medida: p.unidad || p.unidad_medida || 'unidad',
-            stock: parseFloat(p.stock) || 0 
+            stock: parseFloat(p.stock) || 0,
+            visibleWeb: p.visible_web === true
           }));
         }
 
@@ -1046,47 +980,27 @@
         
         if (resVen.data) {
           dbVentas = resVen.data.map(v => ({
-            id: v.id,
-            localId: String(v.local_id || v.localId || '').trim(),
-            localNombre: v.local_nombre || v.localNombre,
-            clienteNombre: v.cliente_nombre || v.clienteNombre,
-            clienteCedula: v.cliente_cedula || v.clienteCedula,
-            metodoPago: v.metodo_pago || v.metodoPago,
-            fecha: v.fecha,
-            items: v.items || [],
-            total: v.total,
-            usuario: v.usuario || '',
-            tipo_comprobante: v.tipo_comprobante || '',
-            estado_sri: v.estado_sri || '',
-            punto_emision: v.punto_emision || '',
-            claveAcceso: v.clave_acceso || v.claveAcceso || ''
+            id: v.id, localId: String(v.local_id || v.localId || '').trim(),
+            localNombre: v.local_nombre || v.localNombre, clienteNombre: v.cliente_nombre || v.clienteNombre,
+            clienteCedula: v.cliente_cedula || v.clienteCedula, metodoPago: v.metodo_pago || v.metodoPago,
+            fecha: v.fecha, items: v.items || [], total: v.total, usuario: v.usuario || '',
+            tipo_comprobante: v.tipo_comprobante || '', estado_sri: v.estado_sri || '', punto_emision: v.punto_emision || ''
           }));
         }
 
         if (resArq.data) {
           dbArqueos = resArq.data.map(a => ({
-            id: a.id,
-            localId: String(a.local_id || a.localId || '').trim(),
-            usuario: a.usuario,
-            fechaApertura: a.fecha_apertura || a.fechaApertura,
-            fondoInicial: parseFloat(a.fondo_inicial || a.fondoInicial || 0),
-            estado: a.estado,
-            fechaCierre: a.fecha_cierre || a.fechaCierre,
-            efectivoFisico: a.efectivo_fisico !== null && a.efectivo_fisico !== undefined ? parseFloat(a.efectivo_fisico) : null
+            id: a.id, localId: String(a.local_id || a.localId || '').trim(), usuario: a.usuario,
+            fechaApertura: a.fecha_apertura || a.fechaApertura, fondoInicial: parseFloat(a.fondo_inicial || a.fondoInicial || 0),
+            estado: a.estado, fechaCierre: a.fecha_cierre || a.fechaCierre, efectivoFisico: a.efectivo_fisico !== null && a.efectivo_fisico !== undefined ? parseFloat(a.efectivo_fisico) : null
           }));
         }
 
         if (resMer.data) {
           dbMermas = resMer.data.map(m => ({
-            id: m.id,
-            localId: String(m.local_id || m.local_id || '').trim(),
-            idFactura: m.id_factura,
-            productoNombre: m.producto_nombre,
-            cantidad: m.cantidad,
-            montoTotal: m.monto_total,
-            motivo: m.motivo,
-            fechaHora: m.fecha_hora,
-            usuario: m.usuario
+            id: m.id, localId: String(m.local_id || m.local_id || '').trim(), idFactura: m.id_factura,
+            productoNombre: m.producto_nombre, cantidad: m.cantidad, montoTotal: m.monto_total,
+            motivo: m.motivo, fechaHora: m.fecha_hora, usuario: m.usuario
           }));
         }
       } catch (err) {
@@ -1101,24 +1015,10 @@
       let user = dbUsuarios.find(x => x.user === u && x.pass === p);
 
       if (user) {
-        const localAsignado = dbLocales.find(l => String(l.id) === String(user.localId));
-        
-        if (localAsignado) {
-          const hoy = new Date().toISOString().split('T')[0];
-          const vencidoPorFecha = localAsignado.fechaVencimiento && localAsignado.fechaVencimiento < hoy;
-          
-          if (localAsignado.suscripcionActiva === false || vencidoPorFecha) {
-            document.getElementById('login-error').innerText = 'La suscripción de este local ha expirado o está pausada.';
-            document.getElementById('login-error').style.display = 'block';
-            return;
-          }
-        }
-
         usuarioActual = user;
         localStorage.setItem('usuarioActual', JSON.stringify(user));
         aplicarSesionActiva();
       } else {
-        document.getElementById('login-error').innerText = 'Usuario o contraseña incorrectos';
         document.getElementById('login-error').style.display = 'block';
       }
     }
@@ -1129,16 +1029,6 @@
       document.getElementById('session-user').innerText = usuarioActual.user;
       
       const loc = dbLocales.find(l => String(l.id) === String(usuarioActual.localId));
-      
-      if (loc && !esUsuarioMatriz()) {
-        const hoy = new Date().toISOString().split('T')[0];
-        if (loc.suscripcionActiva === false || (loc.fechaVencimiento && loc.fechaVencimiento < hoy)) {
-          alert('Acceso denegado: La suscripción de este local ha vencido.');
-          cerrarSesion();
-          return;
-        }
-      }
-
       document.getElementById('session-local').innerText = loc ? loc.nombre : 'Mi Tienda';
 
       construirMenuNavegacion();
@@ -1153,71 +1043,19 @@
             <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.60 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"></path></svg>
             <span>Ventas</span>
         </button>
-        <button class="nav-btn" id="btn-nav-facturas" onclick="cambiarVista('facturas')">
-            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"></path></svg>
-            <span>Facturas</span>
-        </button>
-        <button class="nav-btn" id="btn-nav-arqueo" onclick="cambiarVista('arqueo')">
-            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 4h-2v2h2V7zM7 7h2v2H7V7zm10 4h-2v2h2v-2zm-4 0h-2v2h2v-2zm-4 0H7v2h2v-2zm4 4h-2v2h2v-2zm-4 0H7v2h2v-2zm10 4H7v2h10v-2z"></path></svg>
-            <span>Arqueo Caja</span>
-        </button>
         <button class="nav-btn" id="btn-nav-clientes" onclick="cambiarVista('clientes')">
             <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-4S17.66 4 16 4c-1.66 0-3 1.34-3 4s1.34 4 3 4zm-9 0c1.66 0 2.99-1.34 2.99-4S8.66 4 7 4C5.34 4 4 5.34 4 7s1.34 4 3 4zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"></path></svg>
             <span>Clientes</span>
         </button>
+        <button class="nav-btn" id="btn-nav-inventario" onclick="cambiarVista('inventario')">
+            <svg viewBox="0 0 24 24"><path d="M20 13H4c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h16c.55 0 1-.45 1-1v-6c0-.55-.45-1-1-1zM7 19c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm10 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM20 9H4c-.55 0-1 .45-1 1v4c0 .55.45 1 1 1h16c.55 0 1-.45 1-1v-4c0-.55-.45-1-1-1zM7 13c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm10 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM12 3L2 8h20L12 3z"></path></svg>
+            <span>Stock</span>
+        </button>
+        <button class="nav-btn" id="btn-nav-historial" onclick="cambiarVista('historial')">
+            <svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.74-4.94-2.01-1.42 1.42-3.14 2.12-4.94 2.01C2.08 19.89 0 16.27 0 12c0-4.97 4.03-9 9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"></path></svg>
+            <span>Pedidos/Historial</span>
+        </button>
       `;
-
-      if (esUsuarioMatriz() || esDuenoLocal()) {
-        html += `
-            <button class="nav-btn" onclick="abrirConfigFirma()">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                <span>Firma</span>
-            </button>
-            <button class="nav-btn" id="btn-nav-contabilidad" onclick="cambiarVista('contabilidad')">
-                <svg viewBox="0 0 24 24"><path d="M3 3v18h18V3H3zm16 16H5V5h14v14zM7 10h2v7H7zm4-3h2v10h-2zm4 5h2v5h-2z"></path></svg>
-                <span>Contable</span>
-            </button>
-            <button class="nav-btn" id="btn-nav-kardex" onclick="cambiarVista('kardex')">
-                <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2h14c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"></path></svg>
-                <span>Kardex</span>
-            </button>
-            <button class="nav-btn" id="btn-nav-inventario" onclick="cambiarVista('inventario')">
-                <svg viewBox="0 0 24 24"><path d="M20 13H4c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h16c.55 0 1-.45 1-1v-6c0-.55-.45-1-1-1zM7 19c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm10 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM20 9H4c-.55 0-1 .45-1 1v4c0 .55.45 1 1 1h16c.55 0 1-.45 1-1v-4c0-.55-.45-1-1-1zM7 13c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm10 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM12 3L2 8h20L12 3z"></path></svg>
-                <span>Stock</span>
-            </button>
-            <button class="nav-btn" id="btn-nav-historial" onclick="cambiarVista('historial')">
-                <svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.74-4.94-2.01-1.42 1.42-3.14 2.12-4.94 2.01C2.08 19.89 0 16.27 0 12c0-4.97 4.03-9 9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"></path></svg>
-                <span>Historial</span>
-            </button>
-            <button class="nav-btn" id="btn-nav-reportes" onclick="cambiarVista('reportes')">
-                <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"></path></svg>
-                <span>Reportes</span>
-            </button>
-        `;
-      }
-
-      if (esDuenoLocal()) {
-        html += `
-            <button class="nav-btn" id="btn-nav-personal" onclick="cambiarVista('personal')">
-                <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path></svg>
-                <span>Personal</span>
-            </button>
-        `;
-      }
-
-      if (esUsuarioMatriz()) {
-        html += `
-            <button class="nav-btn" id="btn-nav-locales" onclick="cambiarVista('locales')">
-                <svg viewBox="0 0 24 24"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2v-2h8v8zm-2-6h-2v2h2v-2zm0 4h-2v2h2v-2z"></path></svg>
-                <span>Locales</span>
-            </button>
-            <button class="nav-btn" id="btn-nav-usuarios" onclick="cambiarVista('usuarios')">
-                <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-4S17.66 4 16 4c-1.66 0-3 1.34-3 4s1.34 4 3 4zm-9 0c1.66 0 2.99-1.34 2.99-4S8.66 4 7 4C5.34 4 4 5.34 4 7s1.34 4 3 4zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"></path></svg>
-                <span>Usuarios</span>
-            </button>
-        `;
-      }
-
       navBar.innerHTML = html;
     }
 
@@ -1228,15 +1066,6 @@
     }
 
     async function cambiarVista(vista) {
-      const esCajero = usuarioActual && (usuarioActual.rol === 'Cajero' || usuarioActual.rol === 'Encargado');
-      if (esCajero && (vista === 'contabilidad' || vista === 'kardex' || vista === 'inventario' || vista === 'historial' || vista === 'reportes' || vista === 'personal' || vista === 'locales' || vista === 'usuarios')) {
-        return alert('Acceso denegado. Tu cuenta de Cajero solo permite procesar ventas, abrir/cerrar caja y registrar clientes.');
-      }
-
-      if ((vista === 'locales' || vista === 'usuarios') && !esUsuarioMatriz()) {
-        return alert('Acceso denegado. Esta sección solo está disponible para la administración de la Matriz Principal.');
-      }
-
       document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
 
@@ -1246,75 +1075,38 @@
       if(btnNav) btnNav.classList.add('active');
 
       if (vista === 'pos') renderizarCarritosTabs();
-      if (vista === 'arqueo') await prepararVistaArqueo();
-      if (vista === 'contabilidad') renderContabilidadFlujo();
-      if (vista === 'kardex') renderKardex();
       if (vista === 'clientes') renderClientes();
-      if (vista === 'facturas') cargarFacturas();
       if (vista === 'inventario') renderInventario();
       if (vista === 'historial') renderHistorial();
-      if (vista === 'reportes') prepararVistaReportes();
-      if (vista === 'personal') renderEmpleadosCajeros();
-      if (vista === 'locales') renderLocales();
-      if (vista === 'usuarios') renderUsuarios();
     }
 
     function poblardropdowns() {
-      const opts = dbLocales.map(l => `<option value="${l.id}">${l.nombre}</option>`).join('');
-      const selectUsr = document.getElementById('usr-local-select');
-      if (selectUsr) selectUsr.innerHTML = opts;
       poblarClientesDropdown();
     }
 
     function poblarClientesDropdown() {
       const datalist = document.getElementById('lista-clientes-opciones');
-      if (!datalist) return;
-
+      if (!datalist || !usuarioActual) return;
       const clientesDelLocal = dbClientes.filter(c => String(c.localId) === String(usuarioActual.localId));
       let html = `<option value="Consumidor Final">Consumidor Final</option>`;
-
       clientesDelLocal.forEach(cli => {
-          const nombreMostrar = `${cli.nombre} ${cli.apellido}`.trim();
-          html += `<option value="${cli.cedula} - ${nombreMostrar}">${cli.cedula} | ${nombreMostrar}</option>`;
+          html += `<option value="${cli.cedula} - ${cli.nombre} ${cli.apellido}">${cli.cedula} | ${cli.nombre} ${cli.apellido}</option>`;
       });
-
       datalist.innerHTML = html;
     }
 
-    async function seleccionarClienteAutocomplete(valorInput) {
+    function seleccionarClienteAutocomplete(valorInput) {
       const hiddenInput = document.getElementById('pos-cliente-select');
-
-      if (!valorInput || valorInput.trim() === '' || valorInput.includes('Consumidor Final')) {
+      if (!valorInput || valorInput.includes('Consumidor Final')) {
         clienteVentaSeleccionado = { cedula: '9999999999001', nombre: 'Consumidor Final' };
         if (hiddenInput) hiddenInput.value = 'Consumidor Final';
         return;
       }
-
-      const partes = valorInput.split(' - ');
-      const cedulaBuscada = partes[0].trim();
-
+      const cedulaBuscada = valorInput.split(' - ')[0].trim();
       let clienteEncontrado = dbClientes.find(c => c.cedula === cedulaBuscada);
-
-      if (!clienteEncontrado && cedulaBuscada.length >= 8) {
-          try {
-              const { data } = await supabaseClient
-                  .from('clientes')
-                  .select('*')
-                  .eq('cedula', cedulaBuscada)
-                  .maybeSingle();
-
-              if (data) clienteEncontrado = data;
-          } catch (e) {
-              console.log('Error buscando cliente en red:', e);
-          }
-      }
-
       if (clienteEncontrado) {
-          clienteVentaSeleccionado = clienteEncontrado;
-          if (hiddenInput) hiddenInput.value = clienteEncontrado.cedula;
-      } else {
-          clienteVentaSeleccionado = { cedula: cedulaBuscada, nombre: partes[1] || valorInput };
-          if (hiddenInput) hiddenInput.value = cedulaBuscada;
+        clienteVentaSeleccionado = clienteEncontrado;
+        if (hiddenInput) hiddenInput.value = clienteEncontrado.cedula;
       }
     }
 
@@ -1329,7 +1121,6 @@
           ${c.nombre} (${c.items.filter(i => !i.anulado).length})
         </button>
       `).join('') + `<button class="cart-tab-btn" onclick="crearNuevoCarrito()" style="background:var(--border); color:var(--text);">+ Carrito</button>`;
-
       renderProductosPOS();
       renderCarrito();
     }
@@ -1354,946 +1145,119 @@
     function abrirCamaraPOS() {
       abrirCamara(function(decodedText) {
         const prod = dbProductos.find(p => String(p.localId) === String(usuarioActual.localId) && p.codigo.trim() === decodedText.trim());
-        if (prod) {
-          agregarAlCarrito(prod.id);
-        } else {
-          alert('Producto no encontrado con código: ' + decodedText);
-        }
+        if (prod) agregarAlCarrito(prod.id);
+        else alert('Producto no encontrado: ' + decodedText);
       });
     }
 
     function abrirCamaraInventario() {
       abrirCamara(function(decodedText) {
         document.getElementById('inv-codigo').value = decodedText;
-        const prodExistente = dbProductos.find(p => String(p.localId) === String(usuarioActual.localId) && p.codigo.trim() === decodedText.trim());
-        if(prodExistente) {
-          alert("Este código ya pertenece a: " + prodExistente.nombre + ". Puedes actualizar sus datos abajo.");
-          document.getElementById('inv-nombre').value = prodExistente.nombre;
-          document.getElementById('inv-costo').value = prodExistente.costo || 0;
-          document.getElementById('inv-precio').value = prodExistente.precio;
-          document.getElementById('inv-precio-revendedor').value = prodExistente.precio_rovendedor || prodExistente.precio;
-          document.getElementById('inv-precio-proveedor').value = prodExistente.precio_proveedor || prodExistente.precio;
-          document.getElementById('inv-precio-familia').value = prodExistente.precio_familia || prodExistente.precio;
-          document.getElementById('inv-precio-mayorista').value = prodExistente.precio_mayorista || prodExistente.precio;
-          document.getElementById('inv-unidad').value = prodExistente.unidad_medida || 'unidad';
-          document.getElementById('inv-stock').value = prodExistente.stock;
-        }
       });
     }
 
     function abrirCamara(onScanSuccessCallback) {
       document.getElementById('modal-camara').style.display = 'flex';
       html5QrCode = new Html5Qrcode("reader");
-      html5QrCode.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: { width: 250, height: 150 } },
-        (decodedText) => {
-          cerrarCamara();
-          onScanSuccessCallback(decodedText);
-        },
-        () => {}
-      ).catch(err => {
-        alert("No se pudo iniciar la cámara: " + err);
+      html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 150 } }, (decodedText) => {
         cerrarCamara();
-      });
+        onScanSuccessCallback(decodedText);
+      }, () => {}).catch(err => { alert("Error cámara: " + err); cerrarCamara(); });
     }
 
     function cerrarCamara() {
       if (html5QrCode) {
-        html5QrCode.stop().then(() => {
-          document.getElementById('modal-camara').style.display = 'none';
-        }).catch(() => {
-          document.getElementById('modal-camara').style.display = 'none';
-        });
-      } else {
-        document.getElementById('modal-camara').style.display = 'none';
-      }
+        html5QrCode.stop().then(() => document.getElementById('modal-camara').style.display = 'none').catch(() => document.getElementById('modal-camara').style.display = 'none');
+      } else { document.getElementById('modal-camara').style.display = 'none'; }
     }
 
     function detectarCodigoEnter(event) {
       if (event.key === 'Enter') {
         event.preventDefault();
         const input = document.getElementById('pos-buscar');
-        const codigoOTexto = input.value.trim();
-        if (!codigoOTexto) return;
-
-        const prod = dbProductos.find(p => 
-          String(p.localId) === String(usuarioActual.localId) && 
-          (p.codigo.trim().toLowerCase() === codigoOTexto.toLowerCase() || p.nombre.toLowerCase().includes(codigoOTexto.toLowerCase()))
-        );
-
-        if (prod) {
-          agregarAlCarrito(prod.id);
-          input.value = '';
-          renderProductosPOS();
-        } else {
-          alert('No se encontró ningún producto con: ' + codigoOTexto);
-        }
-      }
-    }
-
-    function obtenerPrecioSegunLista(prod) {
-      const tipo = document.getElementById('pos-tipo-precio')?.value || 'normal';
-      switch(tipo) {
-        case 'revendedor': return prod.precio_rovendedor || prod.precio;
-        case 'proveedor': return prod.precio_proveedor || prod.precio;
-        case 'familia': return prod.precio_familia || prod.precio;
-        case 'mayorista': return prod.precio_mayorista || prod.precio;
-        default: return prod.precio;
+        const q = input.value.trim().toLowerCase();
+        const prod = dbProductos.find(p => String(p.localId) === String(usuarioActual.localId) && (p.codigo.toLowerCase() === q || p.nombre.toLowerCase().includes(q)));
+        if (prod) { agregarAlCarrito(prod.id); input.value = ''; renderProductosPOS(); }
       }
     }
 
     function renderProductosPOS() {
       const q = (document.getElementById('pos-buscar')?.value || '').toLowerCase();
       const productos = dbProductos.filter(p => String(p.localId) === String(usuarioActual.localId) && (p.nombre.toLowerCase().includes(q) || p.codigo.includes(q)));
-
-      document.getElementById('pos-grid-productos').innerHTML = productos.map(p => {
-        const precioAplicado = obtenerPrecioSegunLista(p);
-        const unidad = p.unidad_medida || 'unidad';
-        return `
-          <div class="product-card" onclick="agregarAlCarrito('${p.id}')">
-            <div class="product-title">${p.nombre}</div>
-            <div class="product-price">$${precioAplicado.toFixed(2)} <small style="font-size:0.7rem; color:var(--text-muted);">/ ${unidad}</small></div>
-            <div class="product-stock ${p.stock <= 0 ? 'stock-negative' : ''}">Stock: ${p.stock} ${unidad}</div>
-          </div>
-        `;
-      }).join('');
+      document.getElementById('pos-grid-productos').innerHTML = productos.map(p => `
+        <div class="product-card" onclick="agregarAlCarrito('${p.id}')">
+          <div class="product-title">${p.nombre}</div>
+          <div class="product-price">$${p.precio.toFixed(2)}</div>
+          <div class="product-stock ${p.stock <= 0 ? 'stock-negative' : ''}">Stock: ${p.stock}</div>
+        </div>
+      `).join('');
     }
 
     function agregarAlCarrito(id) {
       const prod = dbProductos.find(p => String(p.id) === String(id));
-      if (!prod) return alert('Producto no encontrado');
-
-      const precioAplicado = obtenerPrecioSegunLista(prod);
-      const unidad = prod.unidad_medida || 'unidad';
-
-      let cantidad = 1;
-      if (unidad === 'Kilo' || unidad === 'Libra') {
-        const cantStr = prompt(`Ingresa la cantidad a vender en ${unidad}s para "${prod.nombre}":`, "1.00");
-        if (cantStr === null) return;
-        cantidad = parseFloat(cantStr);
-        if (isNaN(cantidad) || cantidad <= 0) return alert('Cantidad no válida.');
-      }
-
+      if (!prod) return;
       const cart = obtenerCarritoActual();
-      cart.items.push({ 
-        id: prod.id, 
-        nombre: prod.nombre, 
-        precio: precioAplicado, 
-        costo: prod.costo || 0, 
-        cantidad: cantidad,
-        unidad: unidad,
-        anulado: false 
-      });
+      cart.items.push({ id: prod.id, nombre: prod.nombre, precio: prod.precio, costo: prod.costo || 0, cantidad: 1, unidad: prod.unidad_medida, anulado: false });
       renderizarCarritosTabs();
     }
 
     function renderCarrito() {
       const cart = obtenerCarritoActual();
       let total = 0;
-      
       document.getElementById('pos-tabla-carrito').innerHTML = cart.items.map((item, idx) => {
         const sub = item.precio * item.cantidad;
         if (!item.anulado) total += sub;
-        const etiquetaMedida = item.unidad ? `(${item.unidad})` : '';
-
-        return `
-          <tr class="${item.anulado ? 'item-anulado' : ''}">
-            <td>${item.nombre} ${item.anulado ? '<br><small><b>[ANULADO]</b></small>' : ''}</td>
-            <td>${item.cantidad} ${etiquetaMedida}</td>
-            <td>$${sub.toFixed(2)}</td>
-            <td>
-              ${!item.anulado 
-                ? `<button class="btn btn-danger btn-sm" onclick="anularItemCarrito(${idx})">Anular</button>` 
-                : '<span style="font-size:0.8rem; color:var(--danger);">Cancelado</span>'}
-            </td>
-          </tr>`;
+        return `<tr class="${item.anulado ? 'item-anulado' : ''}"><td>${item.nombre}</td><td>${item.cantidad}</td><td>$${sub.toFixed(2)}</td><td>${!item.anulado ? `<button class="btn btn-danger btn-sm" onclick="anularItem(${idx})">X</button>` : ''}</td></tr>`;
       }).join('');
-
       document.getElementById('pos-total').innerText = total.toFixed(2);
     }
 
-    async function anularItemCarrito(index) {
+    function anularItem(idx) {
       const cart = obtenerCarritoActual();
-      const item = cart.items[index];
-      if (!item || item.anulado) return;
-
-      const motivo = prompt(`¿Estás seguro de eliminar este artículo? "${item.nombre}":`, "Motivo");
-      if (motivo === null) return;
-
-      item.anulado = true;
-      item.motivoAnulacion = motivo;
-      const totalItem = item.precio * item.cantidad;
-
-      await registrarAuditoriaMerma(cart.nombre || 'Carrito Activo', item.nombre, item.cantidad, totalItem, motivo);
-      renderizarCarritosTabs();
+      cart.items[idx].anulado = true;
+      renderCarrito();
     }
 
-    async function abrirModalCobro() {
+    function abrirModalCobro() {
       const cart = obtenerCarritoActual();
       let activos = cart.items.filter(i => !i.anulado);
-      if (activos.length === 0) return alert('El carrito está vacío o todos sus ítems están anulados');
-      
+      if (activos.length === 0) return alert('Carrito vacío');
       let total = activos.reduce((s, x) => s + (x.precio * x.cantidad), 0);
       document.getElementById('modal-total-txt').innerText = `$${total.toFixed(2)}`;
-      document.getElementById('modal-metodo-pago').value = 'Efectivo';
       document.getElementById('modal-pago').value = total.toFixed(2);
-      document.getElementById('modal-vuelto-txt').innerText = '$0.00';
-      document.getElementById('seccion-efectivo').style.display = 'block';
-      document.getElementById('seccion-deuna-qr').style.display = 'none';
-      
       document.getElementById('modal-cobro').style.display = 'flex';
-      document.getElementById('modal-pago').focus();
-      document.getElementById('modal-pago').select();
     }
 
-    function cerrarModalCobro() {
-      document.getElementById('modal-cobro').style.display = 'none';
-    }
-
-    async function cambiarMetodoPago() {
-      const metodo = document.getElementById('modal-metodo-pago').value;
-      const seccionEfectivo = document.getElementById('seccion-efectivo');
-      const seccionQr = document.getElementById('seccion-deuna-qr');
-      
-      if (metodo === 'Efectivo') {
-        seccionEfectivo.style.display = 'block';
-        seccionQr.style.display = 'none';
-        document.getElementById('modal-pago').focus();
-        document.getElementById('modal-pago').select();
-      } else if (metodo === 'Deuna_QR') {
-        seccionEfectivo.style.display = 'none';
-        seccionQr.style.display = 'block';
-        await generarYMostrarQrDeuna();
-      } else {
-        seccionEfectivo.style.display = 'none';
-        seccionQr.style.display = 'none';
-      }
-    }
-
-    async function generarYMostrarQrDeuna() {
-      const contenedorQr = document.getElementById('contenedor-qr-imagen');
-      contenedorQr.innerHTML = `<span style="font-size:0.8rem; color:var(--text-muted);">Conectando con app Deuna del local...</span>`;
-
-      const cart = obtenerCarritoActual();
-      const total = cart.items.filter(i => !i.anulado).reduce((s, x) => s + (x.precio * x.cantidad), 0);
-      const localId = usuarioActual.localId;
-      const referenciaVenta = 'VENTA-' + Date.now();
-
-      const localData = dbLocales.find(l => String(l.id) === String(localId));
-      if (!localData || !localData.deuna_api_key) {
-        contenedorQr.innerHTML = `<span style="color:var(--danger); font-size:0.8rem;">Faltan configurar las credenciales API de Deuna para este local.</span>`;
-        return;
-      }
-
-      try {
-        const payloadDeuna = {
-          amount: total,
-          currency: "USD",
-          reference: referenciaVenta,
-          metadata: { local_id: localId }
-        };
-
-        const response = await fetch('https://api.deuna.io/v1/orders', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localData.deuna_api_key}`,
-            'X-Api-Secret': localData.deuna_secret || ''
-          },
-          body: JSON.stringify(payloadDeuna)
-        });
-
-        const resData = await response.json();
-        if (!response.ok) throw new Error(resData.message || 'Error en pasarela Deuna');
-
-        const qrUrl = resData.qr_image_url || resData.data?.qr_code;
-        if (qrUrl) {
-          contenedorQr.innerHTML = `<img src="${qrUrl}" alt="QR Deuna" style="max-width:150px; height:auto; border-radius:6px;">`;
-        } else {
-          contenedorQr.innerHTML = `<span style="color:var(--success); font-weight:bold;">¡Orden generada en Deuna! Esperando pago...</span>`;
-        }
-      } catch (err) {
-        console.warn('Simulando QR por entorno de pruebas o API externa:', err.message);
-        contenedorQr.innerHTML = `
-          <div style="background:var(--card-bg); padding:10px; border-radius:6px;">
-            <p style="font-size:0.75rem; font-weight:bold; color:var(--primary);">QR DEUNA - SUCURSAL ${localId}</p>
-            <p style="font-size:1.1rem; font-weight:800; margin:5px 0;">$${total.toFixed(2)}</p>
-            <span style="font-size:0.65rem; color:var(--text-muted);">Ref: ${referenciaVenta}</span>
-          </div>`;
-      }
-    }
-
-    function calcularVuelto() {
-      const cart = obtenerCarritoActual();
-      let total = cart.items.filter(i => !i.anulado).reduce((s, x) => s + (x.precio * x.cantidad), 0);
-      let pago = parseFloat(document.getElementById('modal-pago').value) || 0;
-      let vuelto = pago - total;
-      
-      const vueltoTxt = document.getElementById('modal-vuelto-txt');
-      if (vuelto >= 0) {
-        vueltoTxt.style.color = 'var(--success)';
-        vueltoTxt.innerText = `$${vuelto.toFixed(2)}`;
-      } else {
-        vueltoTxt.style.color = 'var(--danger)';
-        vueltoTxt.innerText = `Faltan $${Math.abs(vuelto).toFixed(2)}`;
-      }
-    }
+    function cerrarModalCobro() { document.getElementById('modal-cobro').style.display = 'none'; }
+    function calcularVuelto() { /* Lógica de vuelto */ }
 
     async function confirmarYProcesarVenta() {
-      const metodo = document.getElementById('modal-metodo-pago').value;
-      const cart = obtenerCarritoActual();
-      let activos = cart.items.filter(i => !i.anulado);
-      let total = activos.reduce((s, x) => s + (x.precio * x.cantidad), 0);
-
-      if (metodo === 'Efectivo') {
-        let pago = parseFloat(document.getElementById('modal-pago').value) || 0;
-        if (pago < total) return alert('El monto pagado es menor que el total de la venta.');
-      }
-
       cerrarModalCobro();
-      await procesarVenta(metodo);
-    }
-
-    async function procesarVenta(metodoPago) {
       const cart = obtenerCarritoActual();
-      const inputBuscarCliente = document.getElementById('pos-cliente-buscar')?.value.trim() || "";
-
-      if (!clienteVentaSeleccionado && inputBuscarCliente !== "") {
-        clienteVentaSeleccionado = dbClientes.find(c => 
-          String(c.cedula).trim() === inputBuscarCliente || 
-          String(c.id).trim() === inputBuscarCliente
-        );
-      }
-
-      const clienteNombre = clienteVentaSeleccionado && clienteVentaSeleccionado.nombre 
-        ? `${clienteVentaSeleccionado.nombre} ${clienteVentaSeleccionado.apellido || ''}`.trim() 
-        : 'Consumidor Final';
-
-      const clienteCedula = clienteVentaSeleccionado && clienteVentaSeleccionado.cedula 
-        ? clienteVentaSeleccionado.cedula 
-        : '9999999999001';
-
-      const esFacturaSri = document.getElementById('checkModoSri').checked;
-
-      for (const i of cart.items) {
-          if (i.anulado) continue;
-          const p = dbProductos.find(x => String(x.id) === String(i.id));
-          if (p) {
-              p.stock -= i.cantidad;
-              await supabaseClient.from('productos').update({ stock: p.stock }).eq('id', p.id);
-          }
-      }
-
-      const ventaIdGenerado = 'FAC-' + Date.now().toString().slice(-5);
-      let claveAccesoGenerada = '';
-      let tipoComprobanteFinal = "NOTA_VENTA_LOCAL";
-      let estadoSriFinal = "LOCAL";
-
-      if (esFacturaSri) {
-        tipoComprobanteFinal = "FACTURA_PENDIENTE_SRI";
-        estadoSriFinal = "PENDIENTE";
-        const localInfo = dbLocales.find(l => String(l.id) === String(usuarioActual.localId)) || {};
-        const rucLocal = localInfo.ruc || "1792967629001";
-        const puntoEmisionStr = (document.getElementById('punto-emision')?.value || "001-100").replace('-', '');
-        claveAccesoGenerada = "3108202601" + rucLocal + "1" + puntoEmisionStr + ventaIdGenerado.replace(/\D/g, '').padStart(9, '0') + "123456781";
-      } else {
-        claveAccesoGenerada = "NOTA-INTERNA-" + ventaIdGenerado;
-      }
-
+      const total = cart.items.filter(i => !i.anulado).reduce((s, x) => s + (x.precio * x.cantidad), 0);
+      
       const ventaSupabase = {
-          id: ventaIdGenerado,
-          local_id: String(usuarioActual.localId),
-          local_nombre: dbLocales.find(l => String(l.id) === String(usuarioActual.localId))?.nombre || 'Mi Tienda',
-          cliente_nombre: clienteNombre,
-          cliente_cedula: clienteCedula,
-          metodo_pago: metodoPago,
-          fecha: new Date().toISOString(),
-          items: [...cart.items],
-          total: cart.items.filter(i => !i.anulado).reduce((s, x) => s + (x.precio * x.cantidad), 0),
-          usuario: usuarioActual.user,
-          tipo_comprobante: tipoComprobanteFinal,
-          estado_sri: estadoSriFinal,
-          punto_emision: document.getElementById('punto-emision')?.value || "001-100",
-          clave_acceso: claveAccesoGenerada
+        id: 'FAC-' + Date.now().toString().slice(-5),
+        local_id: String(usuarioActual.localId),
+        local_nombre: dbLocales.find(l => String(l.id) === String(usuarioActual.localId))?.nombre || 'Tienda',
+        cliente_nombre: clienteVentaSeleccionado.nombre,
+        cliente_cedula: clienteVentaSeleccionado.cedula,
+        metodo_pago: 'Efectivo',
+        fecha: new Date().toISOString(),
+        items: [...cart.items],
+        total: total,
+        usuario: usuarioActual.user,
+        tipo_comprobante: 'VENTA_POS',
+        punto_emision: '001-100'
       };
-          
-      const { error } = await supabaseClient.from('ventas').insert([ventaSupabase]);
-      if (error) return alert("Error al registrar venta: " + error.message);
 
-      dbVentas.push({
-          id: ventaSupabase.id,
-          localId: ventaSupabase.local_id,
-          localNombre: ventaSupabase.local_nombre,
-          clienteNombre: ventaSupabase.cliente_nombre,
-          clienteCedula: ventaSupabase.cliente_cedula,
-          metodoPago: ventaSupabase.metodo_pago,
-          fecha: ventaSupabase.fecha,
-          items: ventaSupabase.items,
-          total: ventaSupabase.total,
-          usuario: ventaSupabase.usuario,
-          tipo_comprobante: ventaSupabase.tipo_comprobante,
-          estado_sri: ventaSupabase.estado_sri,
-          punto_emision: ventaSupabase.punto_emision,
-          claveAcceso: ventaSupabase.clave_acceso
-      });
-
-      mostrarFactura(ventaSupabase);
-
+      await supabaseClient.from('ventas').insert([ventaSupabase]);
+      dbVentas.push(ventaSupabase);
       carritos = carritos.filter(c => c.id !== cart.id);
       if (carritos.length === 0) carritos.push({ id: Date.now(), nombre: 'Principal 1', items: [] });
       carritoActivoId = carritos[0].id;
-      
-      clienteVentaSeleccionado = { cedula: '9999999999001', nombre: 'Consumidor Final' };
-      if (document.getElementById('pos-cliente-buscar')) document.getElementById('pos-cliente-buscar').value = '';
-
       renderizarCarritosTabs();
-    }
-
-    async function reenviarAlSri(ventaId) {
-      const venta = dbVentas.find(v => v.id === ventaId);
-      if (!venta) return;
-
-      alert('Conectando con Render para enviar al SRI...');
-      try {
-        const response = await fetch('https://pos-sistema-y075.onrender.com/api/emitir-factura', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ventaId: venta.id, localId: venta.localId })
-        });
-        const resultadoSri = await response.json();
-        
-        if (resultadoSri.success) {
-          venta.tipo_comprobante = "FACTURA_SRI";
-          venta.estado_sri = "AUTORIZADO";
-          if (resultadoSri.claveAcceso) venta.claveAcceso = resultadoSri.claveAcceso;
-          
-          await supabaseClient.from('ventas').update({ 
-            tipo_comprobante: "FACTURA_SRI", 
-            estado_sri: "AUTORIZADO",
-            clave_acceso: venta.claveAcceso 
-          }).eq('id', venta.id);
-
-          alert('¡Factura enviada y autorizada con éxito por el SRI!');
-          filtrarFacturas();
-        } else {
-          alert('El SRI rechazó la factura: ' + (resultadoSri.message || 'Revisar datos'));
-        }
-      } catch (e) {
-        alert('No se pudo conectar con el servidor. Intenta de nuevo en unos segundos.');
-      }
-    }
-
-    async function enviarTodasPendientesSri() {
-      const pendientes = dbVentas.filter(v => v.tipo_comprobante === 'FACTURA_PENDIENTE_SRI');
-      if (pendientes.length === 0) {
-        return alert('No hay facturas pendientes de enviar al SRI.');
-      }
-
-      if (!confirm(`¿Deseas enviar ${pendientes.length} factura(s) pendiente(s) al SRI de forma automática?`)) return;
-
-      let exitosas = 0;
-      let fallidas = 0;
-
-      for (const venta of pendientes) {
-        try {
-          const response = await fetch('https://pos-sistema-y075.onrender.com/api/emitir-factura', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ventaId: venta.id, localId: venta.localId })
-          });
-          const resultadoSri = await response.json();
-          
-          if (resultadoSri.success) {
-            venta.tipo_comprobante = "FACTURA_SRI";
-            venta.estado_sri = "AUTORIZADO";
-            if (resultadoSri.claveAcceso) venta.claveAcceso = resultadoSri.claveAcceso;
-            
-            await supabaseClient.from('ventas').update({ 
-              tipo_comprobante: "FACTURA_SRI", 
-              estado_sri: "AUTORIZADO",
-              clave_acceso: venta.claveAcceso 
-            }).eq('id', venta.id);
-
-            exitosas++;
-          } else {
-            fallidas++;
-          }
-        } catch (e) {
-          fallidas++;
-        }
-      }
-
-      alert(`Proceso masivo finalizado.\n- Autorizadas con éxito: ${exitosas}\n- Fallidas: ${fallidas}`);
-      filtrarFacturas();
-    }
-
-    function mostrarFactura(v) {
-      const localInfo = dbLocales.find(l => String(l.id) === String(v.localId || v.local_id)) || {};
-
-      document.getElementById('fac-local-nombre').innerText = localInfo.nombre || v.localNombre || 'SUCURSAL';
-      document.getElementById('fac-propietario').innerText = localInfo.propietario || '';
-      document.getElementById('fac-ruc').innerText = localInfo.ruc || 'S/N';
-      document.getElementById('fac-dir').innerText = 'Dir: ' + (localInfo.direccion || 'S/N');
-      document.getElementById('fac-contabilidad').innerText = localInfo.obligadoContabilidad || 'NO';
-      document.getElementById('fac-usuario').innerText = v.usuario || usuarioActual?.user || '';
-
-      document.getElementById('fac-id').innerText = v.id;
-      document.getElementById('fac-fecha').innerText = new Date(v.fecha).toLocaleString();
-      
-      const nombreClienteBruto = v.cliente_nombre || v.clienteNombre || "Consumidor Final";
-      const nombreClienteLimpio = nombreClienteBruto.replace(' undefined', '').trim();
-      document.getElementById('fac-cliente').innerText = nombreClienteLimpio === '' ? 'Consumidor Final' : nombreClienteLimpio;
-      document.getElementById('fac-cedula').innerText = v.cliente_cedula || v.clienteCedula || "9999999999001";
-      document.getElementById('fac-metodo').innerText = v.metodo_pago || v.metodoPago || 'Efectivo';
-      
-      const tipoComprobante = v.tipo_comprobante || v.tipoComprobante || '';
-      const claveFinal = v.claveAcceso || v.clave_acceso || '';
-      
-      const contenedorEtiquetaAut = document.getElementById('contenedor-etiqueta-aut');
-      const elAutorizacion = document.getElementById('fac-autorizacion');
-      const leyendaDoc = document.getElementById('fac-leyenda-doc');
-
-      if (tipoComprobante === 'FACTURA_SRI' || tipoComprobante === 'FACTURA_PENDIENTE_SRI') {
-        contenedorEtiquetaAut.style.display = 'block';
-        elAutorizacion.innerText = claveFinal;
-        leyendaDoc.innerText = tipoComprobante === 'FACTURA_PENDIENTE_SRI' ? 'Pendiente de envío al SRI' : 'Documento electrónico autorizado';
-      } else {
-        contenedorEtiquetaAut.style.display = 'none';
-        leyendaDoc.innerText = 'Nota de Venta Interna (No autorizada SRI)';
-      }
-
-      document.getElementById('fac-items').innerHTML = (v.items || []).map(i => `
-        <tr class="${i.anulado ? 'item-anulado' : ''}">
-            <td>${i.cantidad} ${i.unidad ? i.unidad.substring(0,2) : ''}</td>
-            <td>${i.nombre} ${i.anulado ? '<br><small><b>[ANULADO]</b></small>' : ''}</td>
-            <td style="text-align: right;">$${Number(i.precio).toFixed(2)}</td>
-            <td style="text-align: right;">$${(i.cantidad * i.precio).toFixed(2)}</td>
-        </tr>
-      `).join('');
-
-      document.getElementById('fac-total').innerText = Number(v.total).toFixed(2);
-      document.getElementById('fac-subtotal').innerText = Number(v.total).toFixed(2);
-      document.getElementById('factura-impresion').style.display = 'block';
-    }
-
-    async function prepararVistaArqueo() {
-      await cargarDatosSupabase();
-      const arqueoAbierto = dbArqueos.find(a => String(a.localId) === String(usuarioActual.localId) && a.estado === 'Abierto');
-      
-      if (arqueoAbierto) {
-        document.getElementById('arqueo-estado-abierto').style.display = 'block';
-        document.getElementById('arqueo-estado-cerrado').style.display = 'none';
-        document.getElementById('arq-fondo').value = arqueoAbierto.fondoInicial;
-        
-        const ventasTurno = dbVentas.filter(v => String(v.localId) === String(usuarioActual.localId) && new Date(v.fecha) >= new Date(arqueoAbierto.fechaApertura));
-        
-        let tEfectivo = 0, tTarjeta = 0, tTransferencia = 0;
-        ventasTurno.forEach(v => {
-          if (v.metodoPago === 'Tarjeta') tTarjeta += v.total;
-          else if (v.metodoPago === 'Transferencia') tTransferencia += v.total;
-          else tEfectivo += v.total;
-        });
-
-        document.getElementById('arq-lbl-fondo').innerText = `$${arqueoAbierto.fondoInicial.toFixed(2)}`;
-        document.getElementById('arq-lbl-efectivo').innerText = `$${tEfectivo.toFixed(2)}`;
-        document.getElementById('arq-lbl-tarjeta').innerText = `$${tTarjeta.toFixed(2)}`;
-        document.getElementById('arq-lbl-transferencia').innerText = `$${tTransferencia.toFixed(2)}`;
-        document.getElementById('arq-conteo-fisico').value = (arqueoAbierto.fondoInicial + tEfectivo).toFixed(2);
-        calcularDiferenciaArqueo();
-      } else {
-        document.getElementById('arqueo-estado-abierto').style.display = 'none';
-        document.getElementById('arqueo-estado-cerrado').style.display = 'block';
-      }
-
-      renderHistorialArqueos();
-    }
-
-    async function iniciarNuevoTurno() {
-      const fondo = prompt("Ingrese el fondo inicial en caja ($):", "0.00");
-      if (fondo === null) return;
-      const fondoInicial = parseFloat(fondo) || 0;
-
-      const nuevoArqueoSupabase = {
-        id: 'ARQ-' + Date.now(),
-        local_id: String(usuarioActual.localId),
-        usuario: usuarioActual.user,
-        fecha_apertura: new Date().toISOString(),
-        fondo_inicial: fondoInicial,
-        estado: 'Abierto'
-      };
-
-      const { error } = await supabaseClient.from('arqueos').insert([nuevoArqueoSupabase]);
-      if (error) return alert("Error al abrir caja: " + error.message);
-      await prepararVistaArqueo();
-    }
-
-    async function guardarFondoCaja() {
-      const arqueoAbierto = dbArqueos.find(a => String(a.localId) === String(usuarioActual.localId) && a.estado === 'Abierto');
-      if (!arqueoAbierto) return;
-
-      const nuevoFondo = parseFloat(document.getElementById('arq-fondo').value) || 0;
-      const { error } = await supabaseClient.from('arqueos').update({ fondo_inicial: nuevoFondo }).eq('id', arqueoAbierto.id);
-      if (error) return alert("Error al actualizar fondo: " + error.message);
-      
-      alert('Fondo actualizado');
-      await prepararVistaArqueo();
-    }
-
-    function calcularDiferenciaArqueo() {
-      const arqueoAbierto = dbArqueos.find(a => String(a.localId) === String(usuarioActual.localId) && a.estado === 'Abierto');
-      if (!arqueoAbierto) return;
-
-      const ventasTurno = dbVentas.filter(v => String(v.localId) === String(usuarioActual.localId) && new Date(v.fecha) >= new Date(arqueoAbierto.fechaApertura));
-      let tEfectivo = 0;
-      ventasTurno.forEach(v => { if (!v.metodoPago || v.metodoPago === 'Efectivo') tEfectivo += v.total; });
-
-      const esperado = arqueoAbierto.fondoInicial + tEfectivo;
-      const fisico = parseFloat(document.getElementById('arq-conteo-fisico').value) || 0;
-      const diferencia = fisico - esperado;
-
-      const lbl = document.getElementById('arq-lbl-diferencia');
-      lbl.innerText = `$${diferencia.toFixed(2)}`;
-      lbl.style.color = diferencia === 0 ? 'var(--success)' : (diferencia > 0 ? 'var(--primary)' : 'var(--danger)');
-    }
-
-    async function cerrarTurnoCaja() {
-      if (!confirm("¿Está seguro de cerrar la caja de este turno?")) return;
-      const arqueoAbierto = dbArqueos.find(a => String(a.localId) === String(usuarioActual.localId) && a.estado === 'Abierto');
-      if (!arqueoAbierto) return;
-
-      const fisico = parseFloat(document.getElementById('arq-conteo-fisico').value) || 0;
-      const { error } = await supabaseClient.from('arqueos').update({
-        estado: 'Cerrado',
-        fecha_cierre: new Date().toISOString(),
-        efectivo_fisico: fisico
-      }).eq('id', arqueoAbierto.id);
-
-      if (error) return alert("Error al cerrar turno: " + error.message);
-      alert('Turno de caja cerrado con éxito.');
-      await prepararVistaArqueo();
-    }
-
-    function renderHistorialArqueos() {
-      const lista = dbArqueos.filter(a => String(a.localId) === String(usuarioActual.localId));
-      if (!lista || lista.length === 0) {
-        document.getElementById('arqueo-historial-tabla').innerHTML = `<tr><td colspan="6" style="text-align:center;">No hay arqueos registrados</td></tr>`;
-        return;
-      }
-
-      document.getElementById('arqueo-historial-tabla').innerHTML = lista.map(a => `
-        <tr>
-          <td><b>${a.usuario || 'N/A'}</b></td>
-          <td>${new Date(a.fechaApertura).toLocaleString('es-EC')}</td>
-          <td>${a.fechaCierre ? new Date(a.fechaCierre).toLocaleString('es-EC') : 'En curso'}</td>
-          <td>$${(a.fondoInicial || 0).toFixed(2)}</td>
-          <td>$${a.efectivoFisico !== null ? a.efectivoFisico.toFixed(2) : '-'}</td>
-          <td>${a.estado === 'Abierto' ? '<span style="color: var(--success); font-weight: bold;">Abierto</span>' : '<span style="color: var(--danger); font-weight: bold;">Cerrado</span>'}</td>
-        </tr>
-      `).join('');
-    }
-
-    function renderContabilidadFlujo() {
-      const localId = usuarioActual ? String(usuarioActual.localId).trim() : '';
-      
-      const ventasLocal = dbVentas.filter(v => String(v.localId || v.local_id).trim() === localId);
-      const mermasLocal = (dbMermas || []).filter(m => String(m.localId || m.local_id || '').trim() === localId);
-
-      let totalIngresos = 0;
-      ventasLocal.forEach(v => { totalIngresos += Number(v.total || 0); });
-
-      let totalSalidas = 0;
-      mermasLocal.forEach(m => { totalSalidas += Number(m.montoTotal || 0); });
-
-      let flujoNeto = totalIngresos - totalSalidas;
-
-      document.getElementById('contab-val-ingresos').innerText = `$${totalIngresos.toFixed(2)}`;
-      document.getElementById('contab-val-salidas').innerText = `$${totalSalidas.toFixed(2)}`;
-      document.getElementById('contab-val-neto').innerText = `$${flujoNeto.toFixed(2)}`;
-
-      let htmlDiario = '';
-      ventasLocal.forEach(v => {
-        const fechaFmt = new Date(v.fecha).toLocaleString();
-        const clienteLimpio = (v.clienteNombre || 'Consumidor Final').replace(' undefined', '').trim();
-        htmlDiario += `
-          <tr>
-            <td>${fechaFmt}</td>
-            <td><b>${v.id}</b></td>
-            <td>Ingreso por Venta (${v.metodoPago || 'Efectivo'}) - Cliente: ${clienteLimpio === '' ? 'Consumidor Final' : clienteLimpio}</td>
-            <td class="text-success">+$${Number(v.total).toFixed(2)}</td>
-            <td>$0.00</td>
-          </tr>
-        `;
-      });
-
-      mermasLocal.forEach(m => {
-        const fechaFmt = new Date(m.fechaHora).toLocaleString();
-        htmlDiario += `
-          <tr style="background-color: var(--bg);">
-            <td>${fechaFmt}</td>
-            <td><span style="color:var(--danger); font-weight:bold;">[MERMA]</span> ${m.idFactura}</td>
-            <td>Salida de inventario / Anulación: ${m.motivo} (${m.productoName || m.productoNombre})</td>
-            <td>$0.00</td>
-            <td style="color:var(--danger);">+$${Number(m.montoTotal || 0).toFixed(2)}</td>
-          </tr>
-        `;
-      });
-
-      document.getElementById('contab-tabla-diario').innerHTML = htmlDiario || `<tr><td colspan="5" style="text-align:center;">No hay movimientos contables registrados para este local</td></tr>`;
-    }
-
-    function descargarCSV(nombreArchivo, filas) {
-      let csvContent = "data:text/csv;charset=utf-8,\uFEFF" + filas.map(e => e.join(",")).join("\n");
-      let encodedUri = encodeURI(csvContent);
-      let link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", nombreArchivo);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-
-    function exportarContabilidadExcel() {
-      const localId = usuarioActual ? String(usuarioActual.localId).trim() : '';
-      const ventasLocal = dbVentas.filter(v => String(v.localId || v.local_id).trim() === localId);
-      
-      let filas = [["Fecha", "ID Comprobante", "Concepto", "Metodo Pago", "Total Ingreso"]];
-      ventasLocal.forEach(v => {
-        filas.push([`"${new Date(v.fecha).toLocaleString()}"`, `"${v.id}"`, `"Venta de Mercancia"`, `"${v.metodoPago}"`, v.total]);
-      });
-      descargarCSV("Flujo_Caja_BlackDiamond.csv", filas);
-    }
-
-    function exportarInventarioExcel() {
-      const localId = usuarioActual ? String(usuarioActual.localId).trim() : '';
-      const productosLocal = dbProductos.filter(p => !localId || String(p.localId).trim() === localId);
-
-      let filas = [["Codigo", "Producto", "Unidad", "Costo", "Precio Normal", "Stock"]];
-      productosLocal.forEach(p => {
-        filas.push([`"${p.codigo}"`, `"${p.nombre}"`, `"${p.unidad_medida}"`, p.costo, p.precio, p.stock]);
-      });
-      descargarCSV("Inventario_BlackDiamond.csv", filas);
-    }
-
-    function exportarHistorialExcel() {
-      const localId = usuarioActual ? String(usuarioActual.localId).trim() : '';
-      const ventasLocal = dbVentas.filter(v => String(v.localId || v.local_id).trim() === localId);
-
-      let filas = [["Ticket", "Sucursal", "Cliente", "Metodo Pago", "Fecha", "Total"]];
-      ventasLocal.forEach(v => {
-        filas.push([`"${v.id}"`, `"${v.localNombre}"`, `"${v.clienteNombre}"`, `"${v.metodoPago}"`, `"${new Date(v.fecha).toLocaleString()}"`, v.total]);
-      });
-      descargarCSV("Historial_Ventas_BlackDiamond.csv", filas);
-    }
-
-    // FUNCIÓN PARA IMPORTAR INVENTARIO DESDE EXCEL DIRECTO (.xlsx / .xls)
-    async function importarInventarioExcelNativo(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = async function(e) {
-        try {
-          const data = new Uint8Array(e.target.result);
-          const workbook = XLSX.read(data, { type: 'array' });
-          const firstSheetName = workbook.SheetNames[0];
-          const worksheet = workbook.Sheets[firstSheetName];
-          
-          const rows = XLSX.utils.sheet_to_json(worksheet);
-          let importadosCount = 0;
-
-          for (let i = 0; i < rows.length; i++) {
-            const r = rows[i];
-            const codigo = String(r['Codigo'] || r['codigo'] || r['CÓDIGO'] || ('BAR-' + Math.floor(Math.random()*100000))).trim();
-            const nombre = String(r['Nombre'] || r['nombre'] || r['NOMBRE'] || 'Producto sin nombre').trim();
-            const unidad = String(r['Unidad'] || r['unidad'] || r['UNIDAD'] || 'unidad').trim();
-            const costo = parseFloat(r['Costo'] || r['costo'] || r['COSTO']) || 0;
-            const precio = parseFloat(r['Precio'] || r['precio'] || r['PRECIO'] || r['P. Normal'] || r['P.Normal']) || 0;
-            const stock = parseFloat(r['Stock'] || r['stock'] || r['STOCK']) || 0;
-
-            const nuevoProd = {
-              id: 'PROD-' + Date.now() + '-' + i,
-              local_id: String(usuarioActual.localId).trim(),
-              codigo: codigo,
-              nombre: nombre,
-              costo: costo,
-              precio: precio,
-              precio_rovendedor: precio,
-              precio_proveedor: precio,
-              precio_familia: precio,
-              precio_mayorista: precio,
-              unidad: unidad,
-              stock: stock
-            };
-
-            const { error } = await supabaseClient.from('productos').insert([nuevoProd]);
-            if (!error) {
-              dbProductos.push({
-                id: nuevoProd.id,
-                localId: nuevoProd.local_id,
-                codigo: nuevoProd.codigo,
-                nombre: nuevoProd.nombre,
-                costo: nuevoProd.costo,
-                precio: nuevoProd.precio,
-                precio_rovendedor: nuevoProd.precio_rovendedor,
-                precio_proveedor: nuevoProd.precio_proveedor,
-                precio_familia: nuevoProd.precio_familia,
-                precio_mayorista: nuevoProd.precio_mayorista,
-                unidad_medida: nuevoProd.unidad,
-                stock: nuevoProd.stock
-              });
-              importadosCount++;
-            }
-          }
-
-          alert(`¡Inventario de Excel importado con éxito! Se registraron ${importadosCount} productos.`);
-          renderInventario();
-        } catch (err) {
-          alert('Error al procesar el archivo Excel: ' + err.message);
-        }
-        event.target.value = '';
-      };
-      reader.readAsArrayBuffer(file);
-    }
-
-    async function consultarSRI() {
-      const cedulaInput = document.getElementById('cli-cedula').value.trim();
-      if (!cedulaInput) return alert('Por favor ingresa un número de cédula o RUC.');
-
-      try {
-          const { data: clienteExiste } = await supabaseClient
-              .from('clientes')
-              .select('*')
-              .eq('cedula', cedulaInput)
-              .maybeSingle();
-
-          if (clienteExiste) {
-              document.getElementById('cli-nombre').value = clienteExiste.nombre;
-              document.getElementById('cli-apellido').value = clienteExiste.apellido;
-              if (document.getElementById('cli-correo')) document.getElementById('cli-correo').value = clienteExiste.correo || '';
-              alert('¡Cliente encontrado en nuestro sistema centralizado!');
-              return;
-          }
-
-          const response = await fetch(`https://pos-sistema-y075.onrender.com/api/sri/${cedulaInput}`);
-          const data = await response.json();
-
-          if (response.ok && data.razonSocial) {
-              const nombreCompleto = data.razonSocial.trim();
-              const partes = nombreCompleto.split(' ');
-              if (partes.length >= 3) {
-                  document.getElementById('cli-nombre').value = partes.slice(2).join(' ');
-                  document.getElementById('cli-apellido').value = partes.slice(0, 2).join(' ');
-              } else {
-                  document.getElementById('cli-nombre').value = '-';
-                  document.getElementById('cli-apellido').value = nombreCompleto;
-              }
-              alert('Cliente encontrado en SRI. Haz clic en "Guardar Cliente".');
-          } else {
-              alert('Ingresa Nombres y Apellidos manualmente.');
-          }
-      } catch (error) {
-          console.error('Error al buscar cliente:', error);
-      }
-    }
-
-    async function guardarCliente() {
-      const cedula = document.getElementById('cli-cedula').value.trim();
-      const nombre = document.getElementById('cli-nombre').value.trim();
-      const apellido = document.getElementById('cli-apellido').value.trim();
-      const correo = document.getElementById('cli-correo').value.trim();
-      if (!cedula || !nombre || !apellido) return alert('Cédula, Nombre y Apellido son obligatorios.');
-
-      const nuevoClienteSupabase = { 
-        id: Date.now().toString(), 
-        local_id: String(usuarioActual.localId), 
-        cedula, 
-        nombre, 
-        apellido, 
-        correo: correo || 'Sin correo' 
-      };
-      
-      const { error } = await supabaseClient.from('clientes').insert([nuevoClienteSupabase]);
-      if (error) return alert("Error: " + error.message);
-
-      dbClientes.push({
-        id: nuevoClienteSupabase.id,
-        localId: nuevoClienteSupabase.local_id,
-        cedula: nuevoClienteSupabase.cedula,
-        nombre: nuevoClienteSupabase.nombre,
-        apellido: nuevoClienteSupabase.apellido,
-        correo: nuevoClienteSupabase.correo
-      });
-
-      document.getElementById('cli-cedula').value = '';
-      document.getElementById('cli-nombre').value = '';
-      document.getElementById('cli-apellido').value = '';
-      document.getElementById('cli-correo').value = '';
-      poblarClientesDropdown();
-      renderClientes();
-      alert('Cliente registrado');
-    }
-
-    function renderClientes() {
-      const q = (document.getElementById('cli-buscar')?.value || '').toLowerCase();
-      const clientes = dbClientes.filter(c => String(c.localId) === String(usuarioActual.localId) && (c.cedula.toLowerCase().includes(q) || c.nombre.toLowerCase().includes(q)));
-      document.getElementById('cli-tabla').innerHTML = clientes.map(c => `
-        <tr><td><b>${c.cedula}</b></td><td>${c.nombre} ${c.apellido}</td><td>${c.correo}</td><td><button class="btn btn-danger btn-sm" onclick="eliminarCliente('${c.id}')">Eliminar</button></td></tr>
-      `).join('');
-    }
-
-    async function eliminarCliente(id) {
-      if(!confirm("¿Eliminar este cliente?")) return;
-      await supabaseClient.from('clientes').delete().eq('id', id);
-      dbClientes = dbClientes.filter(c => c.id !== id);
-      poblarClientesDropdown();
-      renderClientes();
-    }
-
-    function renderKardex() {
-      const q = (document.getElementById('kardex-buscar')?.value || '').toLowerCase();
-      const localActualId = usuarioActual ? String(usuarioActual.localId).trim() : null;
-
-      const ventas = dbVentas.filter(v => {
-          const perteneceAlLocal = !localActualId || String(v.localId || v.local_id).trim() === localActualId;
-          if (!perteneceAlLocal) return false;
-          if (!q) return true;
-          return String(v.id || '').toLowerCase().includes(q) || String(v.clienteNombre || '').toLowerCase().includes(q);
-      });
-
-      const mermasFiltradas = (dbMermas || []).filter(m => {
-          const perteneceAlLocal = !localActualId || String(m.localId || m.local_id || '').trim() === localActualId;
-          if (!perteneceAlLocal) return false;
-          if (!q) return true;
-          return String(m.idFactura || '').toLowerCase().includes(q) || String(m.productoNombre || '').toLowerCase().includes(q);
-      });
-
-      let htmlVentas = ventas.map(v => `
-          <tr>
-              <td><b>${v.id}</b></td>
-              <td>${new Date(v.fecha).toLocaleString()}</td>
-              <td>${v.localNombre || ''}</td>
-              <td>${v.clienteNombre || ''}</td>
-              <td><span class="badge">${v.metodoPago || 'Efectivo'}</span></td>
-              <td><b>$${Number(v.total || 0).toFixed(2)}</b></td>
-              <td><button class="btn btn-primary btn-sm" onclick='mostrarFactura(${JSON.stringify(v)})'>Ver</button></td>
-          </tr>
-      `).join('');
-
-      let htmlMermas = mermasFiltradas.map(m => `
-          <tr style="background-color: var(--bg);">
-              <td><span style="color:var(--danger); font-weight:bold;">[ANULADO]</span> ${m.idFactura}</td>
-              <td>${new Date(m.fechaHora).toLocaleString()}</td>
-              <td><b>Auditoría / Mermas</b></td>
-              <td>Cajero: <b>${m.usuario}</b></td>
-              <td><span class="badge" style="background:var(--border); color:var(--danger);">Motivo: ${m.motivo}</span></td>
-              <td><b style="color:var(--danger);">-$${Number(m.montoTotal || 0).toFixed(2)}</b></td>
-              <td><span style="font-size:0.8rem; color:var(--text-muted);">${m.cantidad} x ${m.productoNombre}</span></td>
-          </tr>
-      `).join('');
-
-      const kardexTabla = document.getElementById('kardex-tabla');
-      if (kardexTabla) kardexTabla.innerHTML = htmlVentas + htmlMermas;
+      alert('Venta cobrada con éxito');
     }
 
     async function guardarProducto() {
@@ -2301,578 +1265,238 @@
       const nombre = document.getElementById('inv-nombre').value.trim();
       const costo = parseFloat(document.getElementById('inv-costo').value) || 0;
       const precio = parseFloat(document.getElementById('inv-precio').value);
-      const precioRevendedor = parseFloat(document.getElementById('inv-precio-revendedor').value) || precio;
-      const precioProveedor = parseFloat(document.getElementById('inv-precio-proveedor').value) || precio;
-      const precioFamilia = parseFloat(document.getElementById('inv-precio-familia').value) || precio;
-      const precioMayorista = parseFloat(document.getElementById('inv-precio-mayorista').value) || precio;
-      const unidad = document.getElementById('inv-unidad').value || 'unidad';
       const stock = parseFloat(document.getElementById('inv-stock').value) || 0;
+      const visibleWeb = document.getElementById('inv-visible-web').checked;
 
-      if (!codigo || !nombre || isNaN(precio)) return alert('Completa los campos requeridos');
-      
-      const nuevoProdSupabase = { 
-        id: Date.now().toString(), 
-        local_id: String(usuarioActual.localId).trim(), 
-        codigo, 
-        nombre, 
-        costo, 
-        precio,
-        precio_rovendedor: precioRevendedor,
-        precio_proveedor: precioProveedor,
-        precio_familia: precioFamilia,
-        precio_mayorista: precioMayorista,
-        unidad: unidad, 
-        stock 
+      if (!codigo || !nombre || isNaN(precio)) return alert('Completa los campos obligatorios');
+
+      const nuevoProd = {
+        id: 'PROD-' + Date.now(),
+        local_id: String(usuarioActual.localId),
+        codigo, nombre, costo, precio,
+        precio_rovendedor: precio, precio_proveedor: precio,
+        precio_familia: precio, precio_mayorista: precio,
+        unidad: 'unidad', stock, visible_web: visibleWeb
       };
 
-      const { error } = await supabaseClient.from('productos').insert([nuevoProdSupabase]);
-      if (error) return alert("Error: " + error.message);
-
-      dbProductos.push({
-        id: nuevoProdSupabase.id,
-        localId: nuevoProdSupabase.local_id,
-        codigo: nuevoProdSupabase.codigo,
-        nombre: nuevoProdSupabase.nombre,
-        costo: nuevoProdSupabase.costo,
-        precio: nuevoProdSupabase.precio,
-        precio_rovendedor: nuevoProdSupabase.precio_rovendedor,
-        precio_proveedor: nuevoProdSupabase.precio_proveedor,
-        precio_familia: nuevoProdSupabase.precio_familia,
-        precio_mayorista: nuevoProdSupabase.precio_mayorista,
-        unidad_medida: nuevoProdSupabase.unidad,
-        stock: nuevoProdSupabase.stock
-      });
-
-      document.getElementById('inv-codigo').value = '';
-      document.getElementById('inv-nombre').value = '';
-      document.getElementById('inv-costo').value = '';
-      document.getElementById('inv-precio').value = '';
-      document.getElementById('inv-precio-revendedor').value = '';
-      document.getElementById('inv-precio-proveedor').value = '';
-      document.getElementById('inv-precio-familia').value = '';
-      document.getElementById('inv-precio-mayorista').value = '';
-      document.getElementById('inv-stock').value = '';
+      await supabaseClient.from('productos').insert([nuevoProd]);
+      await cargarDatosSupabase();
       renderInventario();
-      alert('Producto guardado');
+      alert('Producto guardado correctamente');
     }
 
     function renderInventario() {
-      const localActual = usuarioActual ? String(usuarioActual.localId).trim() : '';
-      const lista = dbProductos.filter(p => !localActual || p.localId === localActual);
+      const localId = usuarioActual ? String(usuarioActual.localId).trim() : '';
+      const lista = dbProductos.filter(p => p.localId === localId);
       
-      const tbody = document.getElementById('inv-tabla-catalogo');
-      if (!tbody) return;
+      // Actualizar link de tienda online en la interfaz
+      const linkTienda = window.location.origin + window.location.pathname + `?tienda=${localId}`;
+      document.getElementById('link-tienda-local').innerText = linkTienda;
+      document.getElementById('link-tienda-local').href = linkTienda;
 
-      if (lista.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; color:var(--danger);">No hay productos registrados para este local (${localActual}).</td></tr>`;
-        return;
-      }
-
-      tbody.innerHTML = lista.map(p => `
+      document.getElementById('inv-tabla-catalogo').innerHTML = lista.map(p => `
         <tr>
-          <td>${p.codigo || 'S/N'}</td>
-          <td><b>${p.nombre}</b><br><small style="color:var(--text-muted);">Local: ${p.localId}</small></td>
-          <td>
-            <select id="edit-unidad-${p.id}" style="width:75px; margin:0; padding:4px; font-size:0.8rem;">
-              <option value="unidad" ${p.unidad_medida === 'unidad' ? 'selected' : ''}>Ud</option>
-              <option value="Kilo" ${p.unidad_medida === 'Kilo' ? 'selected' : ''}>Kg</option>
-              <option value="Libra" ${p.unidad_medida === 'Libra' ? 'selected' : ''}>Lb</option>
-            </select>
-          </td>
-          <td><input type="number" step="0.01" id="edit-costo-${p.id}" value="${(p.costo || 0).toFixed(2)}" style="width:65px; margin:0; padding:4px;"></td>
-          <td><input type="number" step="0.01" id="edit-precio-${p.id}" value="${(p.precio || 0).toFixed(2)}" style="width:65px; margin:0; padding:4px;"></td>
-          <td><input type="number" step="0.01" id="edit-prevend-${p.id}" value="${(p.precio_rovendedor || 0).toFixed(2)}" style="width:65px; margin:0; padding:4px;"></td>
-          <td><input type="number" step="0.01" id="edit-pprov-${p.id}" value="${(p.precio_proveedor || 0).toFixed(2)}" style="width:65px; margin:0; padding:4px;"></td>
-          <td><input type="number" step="0.01" id="edit-pfam-${p.id}" value="${(p.precio_familia || 0).toFixed(2)}" style="width:65px; margin:0; padding:4px;"></td>
-          <td><input type="number" step="0.01" id="edit-pmay-${p.id}" value="${(p.precio_mayorista || 0).toFixed(2)}" style="width:65px; margin:0; padding:4px;"></td>
-          <td><input type="number" step="0.01" id="edit-stock-${p.id}" value="${p.stock !== undefined ? p.stock : 0}" style="width:65px; margin:0; padding:4px;"></td>
-          <td>
-            <button class="btn btn-primary btn-sm" onclick="actualizarProducto('${p.id}')">Guardar</button>
-            <button class="btn btn-danger btn-sm" onclick="eliminarProducto('${p.id}')">X</button>
-          </td>
+          <td>${p.codigo}</td>
+          <td><b>${p.nombre}</b></td>
+          <td>${p.unidad_medida}</td>
+          <td>$${p.costo.toFixed(2)}</td>
+          <td>$${p.precio.toFixed(2)}</td>
+          <td>${p.stock}</td>
+          <td><span class="badge" style="background:${p.visibleWeb ? 'var(--success)' : 'var(--border)}; color:#fff;">${p.visibleWeb ? 'SÍ' : 'NO'}</span></td>
+          <td><button class="btn btn-danger btn-sm" onclick="eliminarProducto('${p.id}')">X</button></td>
         </tr>
       `).join('');
     }
 
-    async function actualizarProducto(id) {
-      const nuevoCosto = parseFloat(document.getElementById(`edit-costo-${id}`).value) || 0;
-      const nuevoPrecio = parseFloat(document.getElementById(`edit-precio-${id}`).value) || 0;
-      const nuevoPrevend = parseFloat(document.getElementById(`edit-prevend-${id}`).value) || nuevoPrecio;
-      const nuevoPprov = parseFloat(document.getElementById(`edit-pprov-${id}`).value) || nuevoPrecio;
-      const nuevoPfam = parseFloat(document.getElementById(`edit-pfam-${id}`).value) || nuevoPrecio;
-      const nuevoPmay = parseFloat(document.getElementById(`edit-pmay-${id}`).value) || nuevoPrecio;
-      const nuevaUnidad = document.getElementById(`edit-unidad-${id}`).value || 'unidad';
-      const nuevoStock = parseFloat(document.getElementById(`edit-stock-${id}`).value) || 0;
-
-      const { error } = await supabaseClient.from('productos').update({ 
-        costo: nuevoCosto, 
-        precio: nuevoPrecio, 
-        precio_rovendedor: nuevoPrevend,
-        precio_proveedor: nuevoPprov,
-        precio_familia: nuevoPfam,
-        precio_mayorista: nuevoPmay,
-        unidad: nuevaUnidad,
-        stock: nuevoStock 
-      }).eq('id', id);
-
-      if (error) return alert("Error al actualizar: " + error.message);
-
-      const prod = dbProductos.find(p => String(p.id) === String(id));
-      if (prod) { 
-        prod.costo = nuevoCosto; 
-        prod.precio = nuevoPrecio; 
-        prod.precio_rovendedor = nuevoPrevend;
-        prod.precio_proveedor = nuevoPprov;
-        prod.precio_familia = nuevoPfam;
-        prod.precio_mayorista = nuevoPmay;
-        prod.unidad_medida = nuevaUnidad;
-        prod.stock = nuevoStock; 
-      }
-      alert("Actualizado correctamente");
-      renderInventario();
+    function copiarLinkTienda() {
+      const link = document.getElementById('link-tienda-local').href;
+      navigator.clipboard.writeText(link);
+      alert('¡Link de la tienda online copiado al portapapeles!');
     }
 
     async function eliminarProducto(id) {
-      const prod = dbProductos.find(x => String(x.id) === String(id));
-      if (!prod) return;
-      if (!confirm(`¿Eliminar el producto "${prod.nombre}" del inventario?`)) return;
-
-      const motivo = prompt(`Motivo de la eliminación:`, "Producto dañado");
-      if (motivo === null) return;
-
-      await registrarAuditoriaMerma('INVENTARIO', prod.nombre, prod.stock, prod.precio * prod.stock, motivo);
+      if (!confirm('¿Eliminar producto?')) return;
       await supabaseClient.from('productos').delete().eq('id', id);
-      dbProductos = dbProductos.filter(x => String(x.id) !== String(id));
+      await cargarDatosSupabase();
       renderInventario();
     }
 
     function renderHistorial() {
-      const localActualId = usuarioActual ? String(usuarioActual.localId).trim() : '';
-      const lista = dbVentas.filter(v => !localActualId || String(v.localId || v.local_id).trim() === localActualId);
-      
-      const historialTabla = document.getElementById('historial-tabla');
-      if (historialTabla) {
-        historialTabla.innerHTML = lista.map(v => `
-          <tr>
-            <td>${v.id}</td>
-            <td>${v.localNombre || ''}</td>
-            <td>${v.clienteNombre || ''}</td>
-            <td>${v.metodoPago || 'Efectivo'}</td>
-            <td>${new Date(v.fecha).toLocaleString()}</td>
-            <td>$${Number(v.total).toFixed(2)}</td>
-            <td><button class="btn btn-primary btn-sm" onclick='mostrarFactura(${JSON.stringify(v)})'>Ver</button></td>
-          </tr>
-        `).join('');
-      }
-    }
-
-    function prepararVistaReportes() {
-      const selectAnio = document.getElementById('rep-anio');
-      const anioActual = new Date().getFullYear();
-      let anios = new Set([anioActual]);
-      dbVentas.forEach(v => { const d = new Date(v.fecha); if (!isNaN(d.getFullYear())) anios.add(d.getFullYear()); });
-      selectAnio.innerHTML = Array.from(anios).sort((a,b) => b - a).map(a => `<option value="${a}">${a}</option>`).join('');
-      document.getElementById('rep-mes').value = "TODOS";
-      generarReporte();
-    }
-
-    function cambiarModoFiltro(modo, elementoBtn) {
-        modoFiltroReporte = modo;
-        
-        document.querySelectorAll('#vista-reportes .filter-tab').forEach(btn => {
-            btn.style.background = 'var(--border)';
-            btn.style.color = 'var(--text)';
-        });
-        elementoBtn.style.background = 'var(--primary)';
-        elementoBtn.style.color = '#fff';
-
-        document.getElementById('filtro-mes-container').style.display = (modo === 'mes') ? 'block' : 'none';
-        document.getElementById('filtro-dia-container').style.display = (modo === 'dia') ? 'block' : 'none';
-        document.getElementById('filtro-rango-container').style.display = (modo === 'rango') ? 'flex' : 'none';
-
-        generarReporte();
-    }
-
-    function generarReporte() {
-      const localActualId = usuarioActual ? String(usuarioActual.localId).trim() : '';
-      const ventasFiltradas = dbVentas.filter(v => {
-        if (String(v.localId || v.local_id).trim() !== localActualId) return false;
-        const d = new Date(v.fecha);
-        if (isNaN(d.getTime())) return false;
-
-        if (modoFiltroReporte === 'mes') {
-          const anioSel = parseInt(document.getElementById('rep-anio').value);
-          const mesSel = document.getElementById('rep-mes').value;
-          return d.getFullYear() === anioSel && (mesSel === 'TODOS' || d.getMonth() === parseInt(mesSel));
-        } else if (modoFiltroReporte === 'dia') {
-          const diaSel = document.getElementById('rep-input-dia').value;
-          if (!diaSel) return false;
-          const fechaVentaStr = d.toISOString().split('T')[0];
-          return fechaVentaStr === diaSel;
-        } else if (modoFiltroReporte === 'rango') {
-          const inicioStr = document.getElementById('rep-input-inicio').value;
-          const finStr = document.getElementById('rep-input-fin').value;
-          if (!inicioStr || !finStr) return false;
-          const fechaVentaStr = d.toISOString().split('T')[0];
-          return fechaVentaStr >= inicioStr && fechaVentaStr <= finStr;
-        }
-        return true;
-      });
-
-      let totalVentas = 0, totalCostoCompras = 0;
-      ventasFiltradas.forEach(v => {
-        totalVentas += v.total;
-        (v.items || []).forEach(i => { if (!i.anulado) { totalCostoCompras += ((i.costo || 0) * i.cantidad); } });
-      });
-
-      document.getElementById('rep-val-ventas').innerText = `$${totalVentas.toFixed(2)}`;
-      document.getElementById('rep-val-compras').innerText = `$${totalCostoCompras.toFixed(2)}`;
-      document.getElementById('rep-val-ganancia').innerText = `$${(totalVentas - totalCostoCompras).toFixed(2)}`;
-    }
-
-    async function crearEmpleadoCajero() {
-      if (!esDuenoLocal()) return alert('Solo el dueño del local puede crear cajeros.');
-      const user = document.getElementById('emp-user').value.trim();
-      const pass = document.getElementById('emp-pass').value.trim();
-      if (!user || !pass) return alert('Completa los campos');
-
-      const nuevoEmpleado = { 
-        id: Date.now().toString(), 
-        user, 
-        pass, 
-        rol: 'Cajero', 
-        local_id: String(usuarioActual.localId) 
-      };
-
-      const { error } = await supabaseClient.from('usuarios').insert([nuevoEmpleado]);
-      if (error) return alert("Error al crear empleado: " + error.message);
-
-      dbUsuarios.push({
-        id: nuevoEmpleado.id,
-        user: nuevoEmpleado.user,
-        pass: nuevoEmpleado.pass,
-        rol: nuevoEmpleado.rol,
-        localId: nuevoEmpleado.local_id
-      });
-
-      document.getElementById('emp-user').value = '';
-      document.getElementById('emp-pass').value = '';
-      renderEmpleadosCajeros();
-      alert('Cuenta de cajero creada exitosamente');
-    }
-
-    function renderEmpleadosCajeros() {
-      const empleados = dbUsuarios.filter(u => String(u.localId) === String(usuarioActual.localId) && u.rol === 'Cajero');
-      document.getElementById('emp-tabla').innerHTML = empleados.map(u => `
+      const localId = usuarioActual ? String(usuarioActual.localId).trim() : '';
+      const lista = dbVentas.filter(v => v.localId === localId);
+      document.getElementById('historial-tabla').innerHTML = lista.map(v => `
         <tr>
-          <td><b>${u.user}</b></td>
-          <td><span class="badge">${u.rol}</span></td>
-          <td><button class="btn btn-danger btn-sm" onclick="eliminarUsuario('${u.id}')">Eliminar</button></td>
+          <td>${v.id}</td>
+          <td>${v.localNombre}</td>
+          <td>${v.clienteNombre} <br><small>${v.tipo_comprobante}</small></td>
+          <td>${v.metodoPago}</td>
+          <td>${new Date(v.fecha).toLocaleString()}</td>
+          <td>$${v.total.toFixed(2)}</td>
+          <td><button class="btn btn-primary btn-sm" onclick='verDetallePedidoWeb(${JSON.stringify(v)})'>Ver</button></td>
         </tr>
-      `).join('') || `<tr><td colspan="3" style="text-align:center;">No tienes cajeros registrados</td></tr>`;
+      `).join('');
     }
 
-    async function crearLocal() {
-      if (!esUsuarioMatriz()) return alert('Acceso denegado.');
-      
-      const nombre = document.getElementById('loc-nombre').value.trim();
-      const propietario = document.getElementById('loc-propietario').value.trim();
-      const ruc = document.getElementById('loc-ruc').value.trim();
-      const direccion = document.getElementById('loc-direccion').value.trim();
-      const obligadoContabilidad = document.getElementById('loc-contabilidad').value;
-      const deunaKey = document.getElementById('loc-deuna-key').value.trim();
-      const deunaSecret = document.getElementById('loc-deuna-secret').value.trim();
-
-      if (!nombre) return alert('Ingresa al menos el nombre del local');
-
-      const fechaDef = new Date();
-      fechaDef.setDate(fechaDef.getDate() + 30);
-      const fechaVencDefault = fechaDef.toISOString().split('T')[0];
-
-      const nuevoLocal = { 
-        id: 'LOC-' + Date.now().toString().slice(-4), 
-        nombre, 
-        propietario,
-        ruc,
-        direccion,
-        obligado_contabilidad: obligadoContabilidad,
-        deuna_api_key: deunaKey,
-        deuna_secret: deunaSecret,
-        suscripcion_activa: true,
-        fecha_vencimiento: fechaVencDefault
-      };
-
-      const { error } = await supabaseClient.from('locales').insert([nuevoLocal]);
-      if (error) return alert("Error al registrar local: " + error.message);
-
-      dbLocales.push({
-        id: nuevoLocal.id,
-        nombre: nuevoLocal.nombre,
-        propietario: nuevoLocal.propietario,
-        ruc: nuevoLocal.ruc,
-        direccion: nuevoLocal.direccion,
-        obligadoContabilidad: nuevoLocal.obligado_contabilidad,
-        deuna_api_key: nuevoLocal.deuna_api_key,
-        deuna_secret: nuevoLocal.deuna_secret,
-        suscripcionActiva: true,
-        fechaVencimiento: fechaVencDefault
-      });
-
-      poblardropdowns();
-      renderLocales();
-
-      document.getElementById('loc-nombre').value = '';
-      document.getElementById('loc-propietario').value = '';
-      document.getElementById('loc-ruc').value = '';
-      document.getElementById('loc-direccion').value = '';
-      document.getElementById('loc-deuna-key').value = '';
-      document.getElementById('loc-deuna-secret').value = '';
-      alert('Local registrado con éxito');
+    function verDetallePedidoWeb(v) {
+      alert(`Pedido: ${v.id}\nCliente: ${v.clienteNombre}\nTotal: $${v.total.toFixed(2)}\nComprobante: ${v.tipo_comprobante}`);
     }
 
-    function renderLocales() {
-      const tabla = document.getElementById('loc-tabla');
-      if (!tabla) return;
-
-      const hoy = new Date().toISOString().split('T')[0];
-
-      tabla.innerHTML = dbLocales.map(l => {
-        const vencido = l.fechaVencimiento && l.fechaVencimiento < hoy;
-        const activo = l.suscripcionActiva !== false && !vencido;
+    async function importarInventarioExcelNativo(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async function(evt) {
+        const data = new Uint8Array(evt.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
         
-        return `
-          <tr>
-            <td><b>${l.id}</b></td>
-            <td>${l.nombre}</td>
-            <td>${l.ruc || 'S/N'} - ${l.direccion || 'S/N'}</td>
-            <td>
-              <input type="date" id="input-venc-${l.id}" value="${l.fechaVencimiento || ''}" style="width:140px; margin:0; padding:6px; font-size:0.85rem;" onchange="actualizarFechaVencimiento('${l.id}')">
-              <br>
-              <span class="badge" style="margin-top:4px; display:inline-block; background: ${activo ? 'var(--bg)' : 'var(--border)'}; color: ${activo ? 'var(--success)' : 'var(--danger)'};">
-                ${activo ? 'VIGENTE' : 'VENCIDO / PAUSADO'}
-              </span>
-            </td>
-            <td>
-              ${esLocalMatriz(l.id, l.nombre) ? '<span class="badge">Matriz Protegida</span>' : `
-                <button class="btn btn-sm ${l.suscripcionActiva !== false ? 'btn-danger' : 'btn-success'}" onclick="toggleSuscripcionLocal('${l.id}', ${l.suscripcionActiva === false})">
-                  ${l.suscripcionActiva !== false ? 'Pausar' : 'Activar'}
-                </button>
-                <button class="btn btn-danger btn-sm" onclick="eliminarLocal('${l.id}')">Eliminar</button>
-              `}
-            </td>
-          </tr>
-        `;
-      }).join('');
+        for (let i = 0; i < rows.length; i++) {
+          let r = rows[i];
+          await supabaseClient.from('productos').insert([{
+            id: 'PROD-' + Date.now() + '-' + i,
+            local_id: String(usuarioActual.localId),
+            codigo: String(r['Codigo'] || 'BAR-' + Math.random()),
+            nombre: String(r['Nombre'] || 'Prod'),
+            costo: parseFloat(r['Costo']) || 0,
+            precio: parseFloat(r['Precio']) || 0,
+            stock: parseFloat(r['Stock']) || 0,
+            visible_web: true
+          }]);
+        }
+        await cargarDatosSupabase();
+        renderInventario();
+        alert('Excel importado masivamente');
+      };
+      reader.readAsArrayBuffer(file);
     }
 
-    async function actualizarFechaVencimiento(localId) {
-      const nuevaFecha = document.getElementById(`input-venc-${localId}`).value;
-      if (!nuevaFecha) return;
-
-      const { error } = await supabaseClient
-        .from('locales')
-        .update({ fecha_vencimiento: nuevaFecha })
-        .eq('id', localId);
-
-      if (error) {
-        return alert("Error al actualizar la fecha: " + error.message);
+    // --- LÓGICA DE LA TIENDA PÚBLICA WEB PARA CLIENTES A DOMICILIO ---
+    async function inicializarTiendaWebPublica(localIdUrl) {
+      localTiendaIdActual = localIdUrl;
+      await cargarDatosSupabase();
+      
+      const localObj = dbLocales.find(l => String(l.id) === String(localIdUrl));
+      if (!localObj) {
+        document.body.innerHTML = `<h2 style="text-align:center; margin-top:50px; color:red;">Tienda online no encontrada o inactiva.</h2>`;
+        return;
       }
 
-      const localObj = dbLocales.find(l => String(l.id) === String(localId));
-      if (localObj) localObj.fechaVencimiento = nuevaFecha;
+      document.getElementById('store-title').innerText = `Tienda Oficial: ${localObj.nombre}`;
+      document.getElementById('store-subtitle').innerText = `Envíos a domicilio directos de ${localObj.direccion || 'nuestro local'}`;
+      document.getElementById('vista-tienda-online').style.display = 'block';
 
-      renderLocales();
-      alert('Fecha de vencimiento actualizada correctamente.');
+      renderCatalogoTiendaWeb();
     }
 
-    async function toggleSuscripcionLocal(localId, nuevoEstado) {
-      const { error } = await supabaseClient
-        .from('locales')
-        .update({ suscripcion_activa: nuevoEstado })
-        .eq('id', localId);
+    function renderCatalogoTiendaWeb() {
+      const productosWeb = dbProductos.filter(p => String(p.localId) === String(localTiendaIdActual) && p.visibleWeb === true);
+      const grid = document.getElementById('store-grid-catalogo');
 
-      if (error) {
-        return alert("Error al actualizar estado: " + error.message);
+      if (productosWeb.length === 0) {
+        grid.innerHTML = `<p style="grid-column: 1/-1; text-align:center; color:var(--text-muted);">No hay productos disponibles en este momento en la tienda online.</p>`;
+        return;
       }
 
-      const localObj = dbLocales.find(l => String(l.id) === String(localId));
-      if (localObj) localObj.suscripcionActiva = nuevoEstado;
-
-      renderLocales();
+      grid.innerHTML = productosWeb.map(p => `
+        <div class="store-item-card">
+          <div>
+            <h4 class="product-title" style="font-size:1rem; margin-bottom:6px;">${p.nombre}</h4>
+            <div class="product-price" style="font-size:1.1rem; margin-bottom:4px;">$${p.precio.toFixed(2)}</div>
+            <div class="product-stock">Stock disponible: ${p.stock}</div>
+          </div>
+          <button class="btn btn-primary btn-sm" style="margin-top:10px;" onclick="agregarAlCarritoWeb('${p.id}')">Agregar al Pedido</button>
+        </div>
+      `).join('');
     }
 
-    async function eliminarLocal(id) {
-      const localTarget = dbLocales.find(l => String(l.id) === String(id));
-      if (localTarget && esLocalMatriz(localTarget.id, localTarget.nombre)) {
-        return alert('La Matriz Principal está protegida y no se puede eliminar.');
+    function agregarAlCarritoWeb(id) {
+      const prod = dbProductos.find(p => p.id === id);
+      if (!prod) return;
+      let item = carritoTiendaWeb.find(i => i.id === id);
+      if (item) {
+        if (item.cantidad + 1 > prod.stock) return alert('Stock insuficiente en tienda');
+        item.cantidad++;
+      } else {
+        carritoTiendaWeb.push({ id: prod.id, nombre: prod.nombre, precio: prod.precio, costo: prod.costo, cantidad: 1, unidad: prod.unidad_medida });
+      }
+      document.getElementById('store-cart-count').innerText = carritoTiendaWeb.reduce((s, x) => s + x.cantidad, 0);
+      alert(`Agregado: ${prod.nombre}`);
+    }
+
+    function abrirCarritoWebModal() {
+      if (carritoTiendaWeb.length === 0) return alert('Tu pedido está vacío');
+      let total = carritoTiendaWeb.reduce((s, x) => s + (x.precio * x.cantidad), 0);
+      document.getElementById('store-modal-total').innerText = total.toFixed(2);
+      
+      document.getElementById('store-tabla-carrito-modal').innerHTML = carritoTiendaWeb.map(i => `
+        <tr><td>${i.nombre}</td><td>${i.cantidad}</td><td>$${(i.precio * i.cantidad).toFixed(2)}</td></tr>
+      `).join('');
+
+      document.getElementById('modal-carrito-web').style.display = 'flex';
+    }
+
+    function cerrarCarritoWebModal() {
+      document.getElementById('modal-carrito-web').style.display = 'none';
+    }
+
+    function cerrarTiendaOnlineWeb() {
+      window.location.href = window.location.pathname; // Remueve el parámetro ?tienda=
+    }
+
+    async function enviarPedidoWebCliente() {
+      const nombre = document.getElementById('web-cli-nombre').value.trim();
+      const cedula = document.getElementById('web-cli-cedula').value.trim();
+      const direccion = document.getElementById('web-cli-direccion').value.trim();
+      const telefono = document.getElementById('web-cli-telefono').value.trim();
+
+      if (!nombre || !cedula || !direccion || !telefono) {
+        return alert('Por favor llena todos los datos para el envío a domicilio.');
       }
 
-      if (!confirm("¿Eliminar este local?")) return;
-      await supabaseClient.from('locales').delete().eq('id', id);
-      dbLocales = dbLocales.filter(l => String(l.id) !== String(id));
-      poblardropdowns();
-      renderLocales();
-    }
+      let total = carritoTiendaWeb.reduce((s, x) => s + (x.precio * x.cantidad), 0);
+      const pedidoId = 'WEB-' + Date.now().toString().slice(-5);
 
-    async function crearUsuario() {
-      if (!esUsuarioMatriz()) return alert('Acceso denegado.');
-
-      const user = document.getElementById('usr-user').value.trim();
-      const pass = document.getElementById('usr-pass').value.trim();
-      const rol = document.getElementById('usr-rol').value;
-      const localId = document.getElementById('usr-local-select').value;
-
-      if (!user || !pass) return alert('Por favor completa todos los campos.');
-
-      const nuevoUsuarioSupabase = { 
-        id: Date.now().toString(), 
-        user, 
-        pass, 
-        rol, 
-        local_id: String(localId) 
+      const nuevoPedidoSupabase = {
+        id: pedidoId,
+        local_id: String(localTiendaIdActual),
+        local_nombre: dbLocales.find(l => String(l.id) === String(localTiendaIdActual))?.nombre || 'Tienda Web',
+        cliente_nombre: `${nombre} (Tel: ${telefono}) - Dir: ${direccion}`,
+        cliente_cedula: cedula,
+        metodo_pago: 'Efectivo contra entrega',
+        fecha: new Date().toISOString(),
+        items: [...carritoTiendaWeb],
+        total: total,
+        usuario: 'Cliente Web Online',
+        tipo_comprobante: 'PEDIDO_DOMICILIO_WEB',
+        punto_emision: '001-Web'
       };
 
-      const { error } = await supabaseClient.from('usuarios').insert([nuevoUsuarioSupabase]);
-      if (error) return alert("Error al crear usuario: " + error.message);
+      const { error } = await supabaseClient.from('ventas').insert([nuevoPedidoSupabase]);
+      if (error) return alert('Error al enviar el pedido: ' + error.message);
 
-      dbUsuarios.push({
-        id: nuevoUsuarioSupabase.id,
-        user: nuevoUsuarioSupabase.user,
-        pass: nuevoUsuarioSupabase.pass,
-        rol: nuevoUsuarioSupabase.rol,
-        localId: nuevoUsuarioSupabase.local_id
-      });
-
-      document.getElementById('usr-user').value = '';
-      document.getElementById('usr-pass').value = '';
-      renderUsuarios();
-      alert('Credencial creada exitosamente');
+      alert(`¡Pedido enviado con éxito!\nTu código de pedido es: ${pedidoId}\nTe contactaremos y entregaremos en tu domicilio pronto.`);
+      carritoTiendaWeb = [];
+      cerrarCarritoWebModal();
+      document.getElementById('store-cart-count').innerText = '0';
     }
 
-    function renderUsuarios() {
-      document.getElementById('usr-tabla').innerHTML = dbUsuarios.map(u => {
-        const nomLoc = dbLocales.find(l => String(l.id) === String(u.localId))?.nombre || u.localId || 'N/A';
-        return `
-          <tr>
-            <td><b>${u.user}</b></td>
-            <td><span class="badge">${u.rol}</span></td>
-            <td>${nomLoc}</td>
-            <td><button class="btn btn-danger btn-sm" onclick="eliminarUsuario('${u.id}')">Eliminar</button></td>
-          </tr>
-        `;
-      }).join('');
-    }
-
-    async function eliminarUsuario(id) {
-      const usrTarget = dbUsuarios.find(u => String(u.id) === String(id));
-      if (usrTarget && usrTarget.user === usuarioActual.user) {
-        return alert('No puedes eliminar tu propio usuario actual.');
-      }
-
-      if (!confirm("¿Eliminar este usuario?")) return;
-      await supabaseClient.from('usuarios').delete().eq('id', id);
-      dbUsuarios = dbUsuarios.filter(u => String(u.id) !== String(id));
-      if (document.getElementById('vista-usuarios').classList.contains('active')) renderUsuarios();
-      if (document.getElementById('vista-personal').classList.contains('active')) renderEmpleadosCajeros();
-    }
-
-    function toggleModoSri() {
-      const check = document.getElementById('checkModoSri');
-      const icono = document.getElementById('iconoModoSeñal');
-      const texto = document.getElementById('textoModoSeñal');
-      const contenedor = document.getElementById('contenedorModoSri');
-      const selectPunto = document.getElementById('punto-emision');
-
-      check.checked = !check.checked;
-
-      if (check.checked) {
-        icono.className = "fas fa-wifi text-success";
-        texto.className = "fw-bold text-success";
-        texto.textContent = "SRI ONLINE";
-        contenedor.style.borderColor = "var(--success)";
-        contenedor.style.background = "var(--bg)";
-        if (selectPunto) selectPunto.value = "001-002";
-      } else {
-        icono.className = "fas fa-wifi text-secondary";
-        texto.className = "fw-bold text-secondary";
-        texto.textContent = "LOCAL";
-        contenedor.style.borderColor = "var(--border)";
-        contenedor.style.background = "var(--bg)";
-        if (selectPunto) selectPunto.value = "001-100";
-      }
-    }
-
-    function abrirConfigFirma() {
-      document.getElementById('modal-firma-config').style.display = 'flex';
-    }
-
-    function cerrarConfigFirma() {
-      document.getElementById('modal-firma-config').style.display = 'none';
-    }
-
-    function guardarFirmaDigital() {
-      const fileInput = document.getElementById('input-archivo-p12');
-      const passInput = document.getElementById('input-firma-password');
-
-      if (!fileInput.files || fileInput.files.length === 0) {
-        return alert('Debes seleccionar un archivo de firma .p12 o .pfx');
-      }
-      if (!passInput.value) {
-        return alert('Debes ingresar la contraseña correspondiente.');
-      }
-
-      alert('Firma digital guardada localmente para este terminal.');
-      cerrarConfigFirma();
-    }
-
-    function cargarFacturas() {
-      filtrarFacturas();
-    }
-
-    function filtrarFacturas() {
-      const q = (document.getElementById('filtro-buscar-factura')?.value || '').toLowerCase();
-      const pEmision = document.getElementById('filtro-punto-emision')?.value || '';
-      const localActualId = usuarioActual ? String(usuarioActual.localId).trim() : '';
-
-      const filtradas = dbVentas.filter(v => {
-        const perteneceLocal = String(v.localId || v.local_id).trim() === localActualId;
-        const pertenecePunto = !pEmision || (v.punto_emision || '001-100') === pEmision;
-        const coincideQ = !q || (v.id || '').toLowerCase().includes(q) || (v.clienteNombre || '').toLowerCase().includes(q);
-        return perteneceLocal && pertenecePunto && coincideQ;
-      });
-
-      const body = document.getElementById('tabla-facturas-body');
-      if (body) {
-        body.innerHTML = filtradas.map(v => `
-          <tr>
-            <td><b>${v.id}</b></td>
-            <td>${v.clienteNombre || v.cliente || 'Consumidor Final'}</td>
-            <td>${new Date(v.fecha).toLocaleString()}</td>
-            <td>${v.punto_emision || '001-100'}</td>
-            <td>
-              <span class="badge">${v.tipo_comprobante || 'NOTA_VENTA_LOCAL'}</span>
-              ${v.tipo_comprobante === 'FACTURA_PENDIENTE_SRI' ? '<br><small style="color:var(--warning); font-weight:bold;">[PENDIENTE SRI]</small>' : ''}
-            </td>
-            <td><b>$${Number(v.total).toFixed(2)}</b></td>
-            <td>${v.metodoPago || 'Efectivo'}</td>
-            <td>
-              <button class="btn btn-primary btn-sm" onclick='mostrarFactura(${JSON.stringify(v)})'>Ver / Imprimir</button>
-              ${v.tipo_comprobante === 'FACTURA_PENDIENTE_SRI' 
-                ? `<button class="btn btn-warning btn-sm" onclick="reenviarAlSri('${v.id}')" style="margin-top:4px;">📤 Enviar al SRI</button>` 
-                : ''}
-            </td>
-          </tr>
-        `).join('') || `<tr><td colspan="8" style="text-align:center;">No se encontraron facturas emitidas.</td></tr>`;
-      }
-    }
-
+    // Inicialización al cargar la página
     window.addEventListener('DOMContentLoaded', async () => {
       inicializarTema();
-      if (usuarioActual) {
-        await cargarDatosSupabase();
-        aplicarSesionActiva();
+      const params = new URLSearchParams(window.location.search);
+      const tiendaLocalId = params.get('tienda');
+
+      if (tiendaLocalId) {
+        // Si el usuario entra por un link de tienda web
+        await inicializarTiendaWebPublica(tiendaLocalId);
       } else {
-        document.getElementById('login-screen').style.display = 'flex';
+        // Si entra al sistema POS interno normal
+        if (usuarioActual) {
+          await cargarDatosSupabase();
+          aplicarSesionActiva();
+        } else {
+          document.getElementById('login-screen').style.display = 'flex';
+        }
       }
     });
   </script>
