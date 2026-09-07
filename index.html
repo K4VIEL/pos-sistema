@@ -207,7 +207,7 @@
     .item-anulado { text-decoration: line-through; color: var(--danger); background-color: var(--bg); }
 
     /* =========================================================
-       NUEVO DISEÑO PROFESIONAL PARA LA TIENDA PÚBLICA WEB
+       DISEÑO PROFESIONAL PARA LA TIENDA PÚBLICA WEB
        ========================================================= */
     #vista-tienda-online { 
       position: fixed; 
@@ -292,16 +292,14 @@
 </head>
 <body data-theme="dark">
 
-  <!-- VISTA PÚBLICA DE TIENDA ONLINE PARA CLIENTES A DOMICILIO (DISEÑO REDISEÑADO) -->
+  <!-- VISTA PÚBLICA DE TIENDA ONLINE PARA CLIENTES A DOMICILIO -->
   <div id="vista-tienda-online">
-    <!-- Banner superior llamativo -->
     <div class="store-hero-banner">
       <h1 id="store-title" style="font-size: 2rem; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.5px;">Tienda Online</h1>
       <p id="store-subtitle" style="font-size: 1rem; color: #94a3b8; max-width: 600px; margin: 0 auto;">Explora nuestro catálogo y haz tu pedido a domicilio de forma rápida y segura.</p>
     </div>
 
     <div class="store-main-container">
-      <!-- Barra flotante de acciones del cliente -->
       <div class="store-top-bar">
         <div>
           <span style="font-size: 0.85rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Catálogo Activo</span>
@@ -313,7 +311,6 @@
         </div>
       </div>
 
-      <!-- Cuadrícula de productos de alta gama -->
       <div class="store-products-grid" id="store-grid-catalogo"></div>
     </div>
 
@@ -398,7 +395,6 @@
         </div>
       </div>
 
-      <!-- SECCIÓN QR DEUNA -->
       <div id="seccion-deuna-qr" style="display:none; text-align:center; margin-top:10px;">
         <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:8px;">Escanea el código QR con la App de Deuna del local:</p>
         <div id="contenedor-qr-imagen" style="min-height:160px; display:flex; align-items:center; justify-content:center; background:var(--bg); border-radius:8px; border:1px dashed var(--border);">
@@ -710,7 +706,6 @@
             </div>
           </div>
 
-          <!-- SECCIÓN LINK DE TIENDA ONLINE POR SUCURSAL -->
           <div style="background:var(--bg); padding: 10px; border-radius: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
             <div>
               <span style="font-size: 0.85rem; font-weight: bold; color: var(--primary);">Link de Tienda Online de este Local:</span><br>
@@ -741,6 +736,10 @@
           <label>Nombre del Producto</label>
           <input type="text" id="inv-nombre" placeholder="Nombre de Producto">
 
+          <!-- NUEVO CAMPO: FOTO / ARCHIVO PARA SUPABASE STORAGE -->
+          <label>Fotografía del Producto (Opcional)</label>
+          <input type="file" id="inv-archivo-img" accept="image/*">
+
           <div class="form-row">
             <div><label>Costo de Compra ($)</label><input type="number" id="inv-costo" step="0.01" placeholder="Costo"></div>
             <div><label>P. Normal ($)</label><input type="number" id="inv-precio" step="0.01" placeholder="Normal"></div>
@@ -756,7 +755,6 @@
             <div><label>P. Mayorista ($)</label><input type="number" id="inv-precio-mayorista" step="0.01" placeholder="Mayorista"></div>
           </div>
 
-          <!-- CHECKBOX DE VISIBILIDAD WEB -->
           <div style="margin-top: 10px; display: flex; align-items: center; gap: 8px;">
             <input type="checkbox" id="inv-visible-web" style="width: 20px; height: 20px; margin:0;">
             <label for="inv-visible-web" style="margin:0; cursor:pointer; color:var(--text); font-weight:bold;">Visible en la Tienda Online del Local para Pedidos</label>
@@ -774,6 +772,7 @@
             <table>
               <thead>
                 <tr>
+                  <th>Foto</th>
                   <th>Código</th>
                   <th>Producto</th>
                   <th>Unidad</th>
@@ -1029,7 +1028,6 @@
 
     let modoFiltroReporte = 'mes';
 
-    // Variables para la Tienda Online Pública
     let carritoTiendaWeb = [];
     let localTiendaIdActual = null;
 
@@ -1126,7 +1124,8 @@
             precio_mayorista: parseFloat(p.precio_mayorista) || parseFloat(p.precio) || 0,
             unidad_medida: p.unidad || p.unidad_medida || 'unidad',
             stock: parseFloat(p.stock) || 0,
-            visibleWeb: p.visible_web === true
+            visibleWeb: p.visible_web === true,
+            imagenUrl: p.imagen_url || ''
           }));
         }
 
@@ -2212,7 +2211,8 @@
               precio_mayorista: precio,
               unidad: unidad,
               stock: stock,
-              visible_web: true
+              visible_web: true,
+              imagen_url: ''
             };
 
             const { error } = await supabaseClient.from('productos').insert([nuevoProd]);
@@ -2230,7 +2230,8 @@
                 precio_mayorista: nuevoProd.precio_mayorista,
                 unidad_medida: nuevoProd.unidad,
                 stock: nuevoProd.stock,
-                visibleWeb: true
+                visibleWeb: true,
+                imagenUrl: ''
               });
               importadosCount++;
             }
@@ -2398,9 +2399,33 @@
       const unidad = document.getElementById('inv-unidad').value || 'unidad';
       const stock = parseFloat(document.getElementById('inv-stock').value) || 0;
       const visibleWeb = document.getElementById('inv-visible-web').checked;
+      const fileInput = document.getElementById('inv-archivo-img');
 
       if (!codigo || !nombre || isNaN(precio)) return alert('Completa los campos requeridos');
       
+      let imagenUrl = '';
+      if (fileInput.files && fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}.${fileExt}`;
+        const filePath = `${usuarioActual.localId}/${fileName}`;
+
+        const { error: uploadError } = await supabaseClient.storage
+          .from('productos-bucket')
+          .upload(filePath, file);
+
+        if (uploadError) {
+          alert('Error al subir la imagen a Supabase Storage: ' + uploadError.message);
+          return;
+        }
+
+        const { data: urlData } = supabaseClient.storage
+          .from('productos-bucket')
+          .getPublicUrl(filePath);
+
+        imagenUrl = urlData.publicUrl;
+      }
+
       const nuevoProdSupabase = { 
         id: Date.now().toString(), 
         local_id: String(usuarioActual.localId).trim(), 
@@ -2414,7 +2439,8 @@
         precio_mayorista: precioMayorista,
         unidad: unidad, 
         stock,
-        visible_web: visibleWeb
+        visible_web: visibleWeb,
+        imagen_url: imagenUrl
       };
 
       const { error } = await supabaseClient.from('productos').insert([nuevoProdSupabase]);
@@ -2433,7 +2459,8 @@
         precio_mayorista: nuevoProdSupabase.precio_mayorista,
         unidad_medida: nuevoProdSupabase.unidad,
         stock: nuevoProdSupabase.stock,
-        visibleWeb: nuevoProdSupabase.visible_web
+        visibleWeb: nuevoProdSupabase.visible_web,
+        imagenUrl: nuevoProdSupabase.imagen_url
       });
 
       document.getElementById('inv-codigo').value = '';
@@ -2446,8 +2473,9 @@
       document.getElementById('inv-precio-mayorista').value = '';
       document.getElementById('inv-stock').value = '';
       document.getElementById('inv-visible-web').checked = false;
+      document.getElementById('inv-archivo-img').value = '';
       renderInventario();
-      alert('Producto guardado');
+      alert('Producto guardado con éxito');
     }
 
     function renderInventario() {
@@ -2465,12 +2493,15 @@
       if (!tbody) return;
 
       if (lista.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="12" style="text-align:center; color:var(--danger);">No hay productos registrados para este local (${localActual}).</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="13" style="text-align:center; color:var(--danger);">No hay productos registrados para este local (${localActual}).</td></tr>`;
         return;
       }
 
       tbody.innerHTML = lista.map(p => `
         <tr>
+          <td style="text-align:center;">
+            <img src="${p.imagenUrl || 'https://via.placeholder.com/50?text=No+Img'}" alt="Foto" style="width: 40px; height: 40px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border);">
+          </td>
           <td>${p.codigo || 'S/N'}</td>
           <td><b>${p.nombre}</b><br><small style="color:var(--text-muted);">Local: ${p.localId}</small></td>
           <td>
@@ -2610,6 +2641,9 @@
       grid.innerHTML = productosWeb.map(p => `
         <div class="store-item-card">
           <div>
+            <div style="width: 100%; height: 140px; border-radius: 12px; overflow: hidden; margin-bottom: 12px; background: #f1f5f9;">
+              <img src="${p.imagenUrl || 'https://via.placeholder.com/300?text=Sin+Imagen'}" alt="${p.nombre}" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
             <span class="store-item-badge">${p.unidad_medida || 'Unidad'}</span>
             <h4 style="font-size:1.05rem; font-weight:700; color:#0f172a; margin-bottom:8px; line-height: 1.4;">${p.nombre}</h4>
             <div style="font-size: 0.8rem; color: #64748b; margin-bottom: 12px;">Stock: <span style="font-weight:600; color:${p.stock > 0 ? '#10b981' : '#ef4444'};">${p.stock} disponibles</span></div>
@@ -2636,7 +2670,6 @@
       }
       document.getElementById('store-cart-count').innerText = carritoTiendaWeb.reduce((s, x) => s + x.cantidad, 0);
       
-      // Feedback visual rápido
       const btn = event.target;
       const textoOrig = btn.innerText;
       btn.innerText = '✓ Añadido';
@@ -3111,10 +3144,8 @@
       const tiendaLocalId = params.get('tienda');
 
       if (tiendaLocalId) {
-        // Carga la interfaz pública web del cliente rediseñada
         await inicializarTiendaWebPublica(tiendaLocalId);
       } else {
-        // Carga el POS interno normal de administración
         if (usuarioActual) {
           await cargarDatosSupabase();
           aplicarSesionActiva();
@@ -3126,4 +3157,4 @@
   </script>
 </body>
 </html>
-
+y
