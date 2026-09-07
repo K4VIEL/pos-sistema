@@ -59,7 +59,7 @@
       display: none; 
       align-items: flex-start !important;
       justify-content: center !important; 
-      padding-top: 40px !important; 
+      padding-top: 20px !important; 
       overflow-y: auto !important; 
     }
 
@@ -307,42 +307,69 @@
         </div>
         <div style="display: flex; gap: 10px; align-items: center;">
           <button class="btn btn-primary btn-sm" style="padding: 10px 18px; border-radius: 30px; font-weight: 700; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);" onclick="abrirCarritoWebModal()">🛒 Ver Mi Pedido (<span id="store-cart-count">0</span>)</button>
-          <button class="btn btn-danger btn-sm" style="padding: 10px 14px; border-radius: 30px; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1;" onclick="cerrarTiendaOnlineWeb()">Salir al POS</button>
         </div>
       </div>
 
       <div class="store-products-grid" id="store-grid-catalogo"></div>
     </div>
 
-    <!-- MODAL CARRITO DE PEDIDO WEB -->
+    <!-- MODAL CARRITO DE PEDIDO WEB Y DATOS DE FACTURACIÓN -->
     <div id="modal-carrito-web" class="modal-overlay">
-      <div class="modal-box" style="padding: 30px; border-radius: 20px; max-width: 500px; width: 100%; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);">
+      <div class="modal-box" style="padding: 25px; border-radius: 20px; max-width: 520px; width: 100%; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); max-height: 90vh; overflow-y: auto;">
         <h3 style="font-size: 1.3rem; margin-bottom: 5px; color: #0f172a;">Resumen de tu Pedido</h3>
-        <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 15px;">Completa tus datos para coordinar el envío a domicilio.</p>
+        <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 12px;">Completa tus datos de facturación y entrega a domicilio.</p>
         
-        <div class="table-responsive" style="max-height: 220px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 12px; padding: 5px;">
+        <div class="table-responsive" style="max-height: 180px; margin: 5px 0; border: 1px solid #e2e8f0; border-radius: 12px; padding: 5px;">
           <table>
             <thead><tr><th>Producto</th><th>Cant</th><th>Subtotal</th></tr></thead>
             <tbody id="store-tabla-carrito-modal"></tbody>
           </table>
         </div>
-        <div style="background: #f8fafc; padding: 12px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin: 15px 0;">
+        <div style="background: #f8fafc; padding: 10px 14px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin: 10px 0;">
           <span style="font-weight: 600; color: #64748b;">Total a Pagar:</span>
-          <span style="font-size: 1.5rem; font-weight: 800; color: var(--primary);">$<span id="store-modal-total">0.00</span></span>
+          <span style="font-size: 1.4rem; font-weight: 800; color: var(--primary);">$<span id="store-modal-total">0.00</span></span>
         </div>
         
-        <label style="color:#334155;">Nombre y Apellido *</label>
-        <input type="text" id="web-cli-nombre" placeholder="Ej: María López" style="border-radius: 10px; border: 1px solid #cbd5e1; padding: 10px 14px;">
-        <label style="color:#334155;">Cédula o RUC *</label>
-        <input type="text" id="web-cli-cedula" placeholder="Ej: 0912345678" style="border-radius: 10px; border: 1px solid #cbd5e1; padding: 10px 14px;">
-        <label style="color:#334155;">Dirección exacta de Entrega a Domicilio *</label>
-        <textarea id="web-cli-direccion" placeholder="Calle, número de casa, referencias..." style="border-radius: 10px; border: 1px solid #cbd5e1; padding: 10px 14px; height: 75px; resize: none;"></textarea>
-        <label style="color:#334155;">Teléfono de Contacto *</label>
-        <input type="text" id="web-cli-telefono" placeholder="Ej: 0991234567" style="border-radius: 10px; border: 1px solid #cbd5e1; padding: 10px 14px;">
+        <div style="border-top: 1px solid #e2e8f0; padding-top: 10px; margin-top: 5px;">
+          <h4 style="font-size: 0.95rem; color: #0f172a; margin-bottom: 4px;">Datos para Facturación</h4>
+          
+          <div class="form-row" style="margin-bottom: 0;">
+            <div>
+              <label style="color:#334155; font-size:0.75rem;">Cédula o RUC *</label>
+              <input type="text" id="web-cli-cedula" placeholder="Ej: 0912345678" style="border-radius: 8px; border: 1px solid #cbd5e1; padding: 8px 10px; font-size:0.9rem;" onchange="buscarClienteWebSri()">
+            </div>
+            <div>
+              <label style="color:#334155; font-size:0.75rem;">Correo Electrónico *</label>
+              <input type="email" id="web-cli-correo" placeholder="correo@ejemplo.com" style="border-radius: 8px; border: 1px solid #cbd5e1; padding: 8px 10px; font-size:0.9rem;">
+            </div>
+          </div>
 
-        <div style="display: flex; gap: 12px; margin-top: 20px;">
-          <button class="btn btn-danger" style="flex:1; margin:0; border-radius: 12px; background: #f1f5f9; color: #475569;" onclick="cerrarCarritoWebModal()">Seguir Comprando</button>
-          <button class="btn btn-success" style="flex:1; margin:0; border-radius: 12px; background: #2563eb; color: #fff;" onclick="enviarPedidoWebCliente()">Confirmar Pedido</button>
+          <div class="form-row" style="margin-bottom: 0;">
+            <div>
+              <label style="color:#334155; font-size:0.75rem;">Nombres *</label>
+              <input type="text" id="web-cli-nombre" placeholder="Ej: María" style="border-radius: 8px; border: 1px solid #cbd5e1; padding: 8px 10px; font-size:0.9rem;">
+            </div>
+            <div>
+              <label style="color:#334155; font-size:0.75rem;">Apellidos / Razón Social *</label>
+              <input type="text" id="web-cli-apellido" placeholder="Ej: López" style="border-radius: 8px; border: 1px solid #cbd5e1; padding: 8px 10px; font-size:0.9rem;">
+            </div>
+          </div>
+
+          <h4 style="font-size: 0.95rem; color: #0f172a; margin-top: 10px; margin-bottom: 4px;">Datos de Envío a Domicilio</h4>
+          
+          <label style="color:#334155; font-size:0.75rem;">Teléfono / Celular de Contacto *</label>
+          <input type="text" id="web-cli-telefono" placeholder="Ej: 0991234567" style="border-radius: 8px; border: 1px solid #cbd5e1; padding: 8px 10px; font-size:0.9rem;">
+
+          <label style="color:#334155; font-size:0.75rem;">Dirección Exacta *</label>
+          <input type="text" id="web-cli-direccion" placeholder="Calle principal y número de casa" style="border-radius: 8px; border: 1px solid #cbd5e1; padding: 8px 10px; font-size:0.9rem;">
+
+          <label style="color:#334155; font-size:0.75rem;">Referencias de Ubicación / Coordenadas (Opcional)</label>
+          <textarea id="web-cli-referencia" placeholder="Ej: Casa color blanca de dos pisos, frente a la tienda del barrio, o enlace de ubicación..." style="border-radius: 8px; border: 1px solid #cbd5e1; padding: 8px 10px; height: 55px; resize: none; font-size:0.9rem;"></textarea>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+          <button class="btn btn-danger" style="flex:1; margin:0; border-radius: 10px; background: #f1f5f9; color: #475569;" onclick="cerrarCarritoWebModal()">Seguir Comprando</button>
+          <button class="btn btn-success" style="flex:1; margin:0; border-radius: 10px; background: #2563eb; color: #fff;" onclick="enviarPedidoWebCliente()">Confirmar Pedido</button>
         </div>
       </div>
     </div>
@@ -2387,7 +2414,6 @@
       if (kardexTabla) kardexTabla.innerHTML = htmlVentas + htmlMermas;
     }
 
-    // --- FUNCIÓN DE COMPRESIÓN AUTOMÁTICA DE IMÁGENES ---
     async function comprimirYSubirImagen(fileInput, localId) {
       if (!fileInput.files || fileInput.files.length === 0) return '';
       const file = fileInput.files[0];
@@ -2741,28 +2767,79 @@
       document.getElementById('modal-carrito-web').style.display = 'none';
     }
 
-    function cerrarTiendaOnlineWeb() {
-      window.location.href = window.location.pathname; 
+    async function buscarClienteWebSri() {
+      const cedulaInput = document.getElementById('web-cli-cedula').value.trim();
+      if (!cedulaInput || cedulaInput.length < 10) return;
+
+      let clienteEncontrado = dbClientes.find(c => c.cedula === cedulaInput);
+      if (clienteEncontrado) {
+        document.getElementById('web-cli-nombre').value = clienteEncontrado.nombre;
+        document.getElementById('web-cli-apellido').value = clienteEncontrado.apellido;
+        if (clienteEncontrado.correo) document.getElementById('web-cli-correo').value = clienteEncontrado.correo;
+        return;
+      }
+
+      try {
+        const response = await fetch(`https://pos-sistema-y075.onrender.com/api/sri/${cedulaInput}`);
+        const data = await response.json();
+        if (response.ok && data.razonSocial) {
+          const nombreCompleto = data.razonSocial.trim();
+          const partes = nombreCompleto.split(' ');
+          if (partes.length >= 3) {
+            document.getElementById('web-cli-nombre').value = partes.slice(2).join(' ');
+            document.getElementById('web-cli-apellido').value = partes.slice(0, 2).join(' ');
+          } else {
+            document.getElementById('web-cli-nombre').value = '-';
+            document.getElementById('web-cli-apellido').value = nombreCompleto;
+          }
+        }
+      } catch (e) {
+        console.log('Consulta SRI web omitida:', e);
+      }
     }
 
     async function enviarPedidoWebCliente() {
-      const nombre = document.getElementById('web-cli-nombre').value.trim();
       const cedula = document.getElementById('web-cli-cedula').value.trim();
-      const direccion = document.getElementById('web-cli-direccion').value.trim();
+      const correo = document.getElementById('web-cli-correo').value.trim();
+      const nombre = document.getElementById('web-cli-nombre').value.trim();
+      const apellido = document.getElementById('web-cli-apellido').value.trim();
       const telefono = document.getElementById('web-cli-telefono').value.trim();
+      const direccion = document.getElementById('web-cli-direccion').value.trim();
+      const referencia = document.getElementById('web-cli-referencia').value.trim();
 
-      if (!nombre || !cedula || !direccion || !telefono) {
-        return alert('Por favor llena todos los datos obligatorios para el envío a domicilio.');
+      if (!cedula || !correo || !nombre || !apellido || !telefono || !direccion) {
+        return alert('Por favor llena todos los campos obligatorios de facturación y envío.');
+      }
+
+      // Guardar o actualizar automáticamente en la base de datos de clientes
+      try {
+        const clienteExistente = dbClientes.find(c => c.cedula === cedula);
+        if (!clienteExistente) {
+          const nuevoCli = {
+            id: Date.now().toString(),
+            local_id: String(localTiendaIdActual),
+            cedula,
+            nombre,
+            apellido,
+            correo
+          };
+          await supabaseClient.from('clientes').insert([nuevoCli]);
+          dbClientes.push({ id: nuevoCli.id, localId: nuevoCli.local_id, cedula, nombre, apellido, correo });
+        }
+      } catch (e) {
+        console.log('Aviso al guardar cliente web:', e);
       }
 
       let total = carritoTiendaWeb.reduce((s, x) => s + (x.precio * x.cantidad), 0);
       const pedidoId = 'WEB-' + Date.now().toString().slice(-5);
 
+      const detalleClienteTexto = `${nombre} ${apellido} (C.I/RUC: ${cedula}) - Tel: ${telefono} - Dir: ${direccion} [Ref: ${referencia || 'Ninguna'}]`;
+
       const nuevoPedidoSupabase = {
         id: pedidoId,
         local_id: String(localTiendaIdActual),
         local_nombre: dbLocales.find(l => String(l.id) === String(localTiendaIdActual))?.nombre || 'Tienda Web',
-        cliente_nombre: `${nombre} (Tel: ${telefono}) - Dir: ${direccion}`,
+        cliente_nombre: detalleClienteTexto,
         cliente_cedula: cedula,
         metodo_pago: 'Efectivo contra entrega',
         fecha: new Date().toISOString(),
@@ -2776,7 +2853,7 @@
       const { error } = await supabaseClient.from('ventas').insert([nuevoPedidoSupabase]);
       if (error) return alert('Error al enviar el pedido: ' + error.message);
 
-      alert(`¡Pedido enviado con éxito!\n\nTu código de pedido es: ${pedidoId}\nTe contactaremos en breve para la entrega en tu domicilio.`);
+      alert(`¡Pedido enviado con éxito!\n\nTu código de pedido es: ${pedidoId}\nEl local ha recibido la notificación en su panel de historial de ventas.`);
       carritoTiendaWeb = [];
       cerrarCarritoWebModal();
       document.getElementById('store-cart-count').innerText = '0';
