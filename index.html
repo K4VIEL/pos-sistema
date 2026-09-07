@@ -999,7 +999,8 @@
           monto_total: montoTotal,
           motivo: motivo || 'Anulado en factura',
           fecha_hora: new Date().toISOString(),
-          usuario: usuarioActual ? usuarioActual.user : 'Sistema'
+          usuario: usuarioActual ? usuarioActual.user : 'Sistema',
+          local_id: usuarioActual ? String(usuarioActual.localId) : ''
         }]);
       } catch (err) {
         console.error('Error imprevisto al auditoriar merma:', err);
@@ -1106,6 +1107,7 @@
         if (resMer.data) {
           dbMermas = resMer.data.map(m => ({
             id: m.id,
+            localId: String(m.local_id || m.localId || '').trim(),
             idFactura: m.id_factura,
             productoNombre: m.producto_nombre,
             cantidad: m.cantidad,
@@ -1700,13 +1702,13 @@
         );
       }
 
-      const clienteNombre = clienteVentaSeleccionado 
-        ? `${clienteVentaSeleccionado.nombre} ${clienteVentaSeleccionado.apellido}`.trim() 
+      const clienteNombre = clienteVentaSeleccionado && clienteVentaSeleccionado.nombre 
+        ? `${clienteVentaSeleccionado.nombre} ${clienteVentaSeleccionado.apellido || ''}`.trim() 
         : 'Consumidor Final';
 
-      const clienteCedula = clienteVentaSeleccionado 
-        ? (clienteVentaSeleccionado.cedula || clienteVentaSeleccionado.id) 
-        : '9999999999';
+      const clienteCedula = clienteVentaSeleccionado && clienteVentaSeleccionado.cedula 
+        ? clienteVentaSeleccionado.cedula 
+        : '9999999999001';
 
       const esFacturaSri = document.getElementById('checkModoSri').checked;
 
@@ -1875,8 +1877,9 @@
       document.getElementById('fac-id').innerText = v.id;
       document.getElementById('fac-fecha').innerText = new Date(v.fecha).toLocaleString();
       
-      const nombreClienteLimpio = (v.cliente_nombre || v.clienteNombre || "Consumidor Final").replace(' undefined', '');
-      document.getElementById('fac-cliente').innerText = nombreClienteLimpio;
+      const nombreClienteBruto = v.cliente_nombre || v.clienteNombre || "Consumidor Final";
+      const nombreClienteLimpio = nombreClienteBruto.replace(' undefined', '').trim();
+      document.getElementById('fac-cliente').innerText = nombreClienteLimpio === '' ? 'Consumidor Final' : nombreClienteLimpio;
       document.getElementById('fac-cedula').innerText = v.cliente_cedula || v.clienteCedula || "9999999999001";
       document.getElementById('fac-metodo').innerText = v.metodo_pago || v.metodoPago || 'Efectivo';
       
@@ -2027,9 +2030,11 @@
     }
 
     function renderContabilidadFlujo() {
-      const localId = usuarioActual ? String(usuarioActual.localId) : '';
-      const ventasLocal = dbVentas.filter(v => String(v.localId) === localId);
-      const mermasLocal = dbMermas || [];
+      const localId = usuarioActual ? String(usuarioActual.localId).trim() : '';
+      
+      // FILTRADO ESTRICTO POR LOCAL ACTUAL
+      const ventasLocal = dbVentas.filter(v => String(v.localId || v.local_id).trim() === localId);
+      const mermasLocal = (dbMermas || []).filter(m => String(m.localId || m.local_id || '').trim() === localId);
 
       let totalIngresos = 0;
       ventasLocal.forEach(v => { totalIngresos += Number(v.total || 0); });
@@ -2046,11 +2051,12 @@
       let htmlDiario = '';
       ventasLocal.forEach(v => {
         const fechaFmt = new Date(v.fecha).toLocaleString();
+        const clienteLimpio = (v.clienteNombre || 'Consumidor Final').replace(' undefined', '').trim();
         htmlDiario += `
           <tr>
             <td>${fechaFmt}</td>
             <td><b>${v.id}</b></td>
-            <td>Ingreso por Venta (${v.metodoPago || 'Efectivo'}) - Cliente: ${v.clienteNombre || 'Consumidor Final'}</td>
+            <td>Ingreso por Venta (${v.metodoPago || 'Efectivo'}) - Cliente: ${clienteLimpio === '' ? 'Consumidor Final' : clienteLimpio}</td>
             <td class="text-success">+$${Number(v.total).toFixed(2)}</td>
             <td>$0.00</td>
           </tr>
@@ -2070,7 +2076,7 @@
         `;
       });
 
-      document.getElementById('contab-tabla-diario').innerHTML = htmlDiario || `<tr><td colspan="5" style="text-align:center;">No hay movimientos contables registrados</td></tr>`;
+      document.getElementById('contab-tabla-diario').innerHTML = htmlDiario || `<tr><td colspan="5" style="text-align:center;">No hay movimientos contables registrados para este local</td></tr>`;
     }
 
     function descargarCSV(nombreArchivo, filas) {
@@ -2085,8 +2091,8 @@
     }
 
     function exportarContabilidadExcel() {
-      const localId = usuarioActual ? String(usuarioActual.localId) : '';
-      const ventasLocal = dbVentas.filter(v => String(v.localId) === localId);
+      const localId = usuarioActual ? String(usuarioActual.localId).trim() : '';
+      const ventasLocal = dbVentas.filter(v => String(v.localId || v.local_id).trim() === localId);
       
       let filas = [["Fecha", "ID Comprobante", "Concepto", "Metodo Pago", "Total Ingreso"]];
       ventasLocal.forEach(v => {
@@ -2097,7 +2103,7 @@
 
     function exportarInventarioExcel() {
       const localId = usuarioActual ? String(usuarioActual.localId).trim() : '';
-      const productosLocal = dbProductos.filter(p => !localId || p.localId === localId);
+      const productosLocal = dbProductos.filter(p => !localId || String(p.localId).trim() === localId);
 
       let filas = [["Codigo", "Producto", "Unidad", "Costo", "Precio Normal", "Stock"]];
       productosLocal.forEach(p => {
@@ -2107,8 +2113,8 @@
     }
 
     function exportarHistorialExcel() {
-      const localId = usuarioActual ? String(usuarioActual.localId) : '';
-      const ventasLocal = dbVentas.filter(v => String(v.localId) === localId);
+      const localId = usuarioActual ? String(usuarioActual.localId).trim() : '';
+      const ventasLocal = dbVentas.filter(v => String(v.localId || v.local_id).trim() === localId);
 
       let filas = [["Ticket", "Sucursal", "Cliente", "Metodo Pago", "Fecha", "Total"]];
       ventasLocal.forEach(v => {
@@ -2213,16 +2219,18 @@
 
     function renderKardex() {
       const q = (document.getElementById('kardex-buscar')?.value || '').toLowerCase();
-      const localActualId = usuarioActual ? String(usuarioActual.localId) : null;
+      const localActualId = usuarioActual ? String(usuarioActual.localId).trim() : null;
 
       const ventas = dbVentas.filter(v => {
-          const perteneceAlLocal = !localActualId || String(v.localId) === localActualId;
+          const perteneceAlLocal = !localActualId || String(v.localId || v.local_id).trim() === localActualId;
           if (!perteneceAlLocal) return false;
           if (!q) return true;
           return String(v.id || '').toLowerCase().includes(q) || String(v.clienteNombre || '').toLowerCase().includes(q);
       });
 
       const mermasFiltradas = (dbMermas || []).filter(m => {
+          const perteneceAlLocal = !localActualId || String(m.localId || m.local_id).trim() === localActualId;
+          if (!perteneceAlLocal) return false;
           if (!q) return true;
           return String(m.idFactura || '').toLowerCase().includes(q) || String(m.productoNombre || '').toLowerCase().includes(q);
       });
@@ -2406,8 +2414,8 @@
     }
 
     function renderHistorial() {
-      const localActualId = usuarioActual ? String(usuarioActual.localId) : '';
-      const lista = dbVentas.filter(v => !localActualId || String(v.localId) === localActualId);
+      const localActualId = usuarioActual ? String(usuarioActual.localId).trim() : '';
+      const lista = dbVentas.filter(v => !localActualId || String(v.localId || v.local_id).trim() === localActualId);
       
       const historialTabla = document.getElementById('historial-tabla');
       if (historialTabla) {
@@ -2453,8 +2461,9 @@
     }
 
     function generarReporte() {
+      const localActualId = usuarioActual ? String(usuarioActual.localId).trim() : '';
       const ventasFiltradas = dbVentas.filter(v => {
-        if (String(v.localId) !== String(usuarioActual.localId)) return false;
+        if (String(v.localId || v.local_id).trim() !== localActualId) return false;
         const d = new Date(v.fecha);
         if (isNaN(d.getTime())) return false;
 
@@ -2790,11 +2799,13 @@
     function filtrarFacturas() {
       const q = (document.getElementById('filtro-buscar-factura')?.value || '').toLowerCase();
       const pEmision = document.getElementById('filtro-punto-emision')?.value || '';
+      const localActualId = usuarioActual ? String(usuarioActual.localId).trim() : '';
 
       const filtradas = dbVentas.filter(v => {
+        const perteneceLocal = String(v.localId || v.local_id).trim() === localActualId;
         const pertenecePunto = !pEmision || (v.punto_emision || '001-100') === pEmision;
         const coincideQ = !q || (v.id || '').toLowerCase().includes(q) || (v.clienteNombre || '').toLowerCase().includes(q);
-        return pertenecePunto && coincideQ;
+        return perteneceLocal && pertenecePunto && coincideQ;
       });
 
       const body = document.getElementById('tabla-facturas-body');
