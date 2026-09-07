@@ -6,6 +6,7 @@
   <title>POS Multi-Local Centralizado Pro</title>
   <!-- LIBRERÍAS EXTERNAS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <style>
     :root {
@@ -34,7 +35,7 @@
     }
 
     [data-theme="light"] {
-      --primary: #2563eb;       /* Azul original restaurado para el modo claro */
+      --primary: #2563eb;       
       --primary-hover: #1d4ed8;
       --bg: #f8fafc;
       --card-bg: #ffffff;
@@ -78,7 +79,7 @@
     .user-badge { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; }
     .badge { background: var(--border); color: var(--primary); padding: 4px 10px; border-radius: 20px; font-weight: 600; }
 
-    /* BARRA DE NAVEGACIÓN FLOTANTE (DINÁMICA SEGÚN TEMA) */
+    /* BARRA DE NAVEGACIÓN FLOTANTE */
     .nav-bar { 
       background: var(--nav-bg-dark); 
       border: 1px solid var(--nav-border-dark);
@@ -127,14 +128,11 @@
       white-space: nowrap;
     }
 
-    [data-theme="light"] .nav-btn {
-      color: var(--nav-color-light);
-    }
+    [data-theme="light"] .nav-btn { color: var(--nav-color-light); }
 
     .nav-btn svg { width: 20px; height: 20px; fill: currentColor; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
     .nav-btn span { transition: opacity 0.3s ease; }
 
-    /* LÍNEA INFERIOR CONTINUA */
     .nav-bar::before {
       content: '';
       position: absolute;
@@ -148,23 +146,12 @@
       pointer-events: none;
     }
 
-    [data-theme="light"] .nav-bar::before {
-      background: var(--nav-active-light);
-    }
+    [data-theme="light"] .nav-bar::before { background: var(--nav-active-light); }
 
-    /* ESTILO ACTIVO Y CURVA */
-    .nav-btn.active { 
-      color: var(--nav-active-dark); 
-      font-weight: 700; 
-    }
+    .nav-btn.active { color: var(--nav-active-dark); font-weight: 700; }
+    [data-theme="light"] .nav-btn.active { color: var(--nav-active-light); }
 
-    [data-theme="light"] .nav-btn.active {
-      color: var(--nav-active-light);
-    }
-
-    .nav-btn.active svg {
-      transform: translateY(-10px);
-    }
+    .nav-btn.active svg { transform: translateY(-10px); }
 
     .nav-btn.active::after {
       content: '';
@@ -187,12 +174,8 @@
       box-shadow: 0 -4px 10px rgba(37, 99, 235, 0.2);
     }
 
-    .nav-btn.active svg {
-      position: relative;
-      z-index: 3;
-    }
+    .nav-btn.active svg { position: relative; z-index: 3; }
 
-    /* CONTENIDO PRINCIPAL */
     main { flex: 1; padding: 16px; padding-bottom: 30px; max-width: 1200px; margin: 0 auto; width: 100%; }
     .page-section { display: none; }
     .page-section.active { display: block !important; }
@@ -206,7 +189,6 @@
     
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
-    /* BOTONES CON ANIMACIÓN */
     .btn { 
       font-weight: 600; 
       border: none; 
@@ -220,17 +202,10 @@
       margin-top: 8px; 
       box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
-    .btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
-    }
-    .btn:active {
-      transform: translateY(1px) scale(0.98);
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15); }
+    .btn:active { transform: translateY(1px) scale(0.98); box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); }
 
     .btn-primary { background: var(--primary); color: white; }
-    .btn-primary:active { background: var(--primary-hover); }
     .btn-danger { background: var(--danger); color: white; }
     .btn-warning { background: var(--warning); color: white; }
     .btn-success { background: var(--success); color: white; }
@@ -243,7 +218,6 @@
     .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; max-height: 400px; overflow-y: auto; }
     .product-card { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px; text-align: center; cursor: pointer; transition: transform 0.2s; }
     .product-card:hover { transform: translateY(-2px); border-color: var(--primary); }
-    .product-card:active { transform: scale(0.96); }
     .product-title { font-weight: 600; font-size: 0.85rem; margin-bottom: 4px; color: var(--text); }
     .product-price { color: var(--primary); font-weight: 700; font-size: 0.95rem; }
     .product-stock { font-size: 0.75rem; color: var(--text-muted); }
@@ -261,7 +235,6 @@
     
     .item-anulado { text-decoration: line-through; color: var(--danger); background-color: var(--bg); }
     
-    /* MODO ESCRITORIO: Barra lateral fija */
     @media (min-width: 768px) {
       body { padding-bottom: 20px; }
       .app-container { flex-direction: row; }
@@ -665,8 +638,8 @@
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
             <h3 style="margin: 0;">Gestión de Producto</h3>
             <div>
-              <input type="file" id="input-csv-inventario" accept=".csv" style="display: none;" onchange="importarInventarioCSV(event)">
-              <button class="btn btn-success btn-sm" onclick="document.getElementById('input-csv-inventario').click()">📁 Importar Inventario (CSV)</button>
+              <input type="file" id="input-excel-inventario" accept=".xlsx, .xls" style="display: none;" onchange="importarInventarioExcelNativo(event)">
+              <button class="btn btn-success btn-sm" onclick="document.getElementById('input-excel-inventario').click()">📁 Importar Inventario (Excel)</button>
             </div>
           </div>
 
@@ -947,15 +920,8 @@
   </div>
 
   <style>
-    /* Forzar texto negro y fondo claro dentro del ticket independiente del modo oscuro o claro */
-    #factura-impresion, #factura-impresion *:not(.btn) {
-      color: #000 !important;
-    }
-
-    #factura-impresion th {
-      background-color: #f1f5f9 !important;
-      color: #000 !important;
-    }
+    #factura-impresion, #factura-impresion *:not(.btn) { color: #000 !important; }
+    #factura-impresion th { background-color: #f1f5f9 !important; color: #000 !important; }
   </style>
 
   <script>
@@ -980,7 +946,6 @@
 
     let modoFiltroReporte = 'mes';
 
-    // GESTIÓN DE TEMA / INTERFAZ
     function inicializarTema() {
       const temaGuardado = localStorage.getItem('pos_theme') || 'dark';
       document.body.setAttribute('data-theme', temaGuardado);
@@ -1445,7 +1410,6 @@
       }
     }
 
-    // Detectar pistola lectora USB / Teclado al presionar Enter en PC
     function detectarCodigoEnter(event) {
       if (event.key === 'Enter') {
         event.preventDefault();
@@ -1460,18 +1424,12 @@
 
         if (prod) {
           agregarAlCarrito(prod.id);
-          input.value = ''; // Limpiar buscador para el siguiente escaneo
+          input.value = '';
           renderProductosPOS();
         } else {
           alert('No se encontró ningún producto con: ' + codigoOTexto);
         }
       }
-    }
-
-    function agregarPorCodigoBarras(codigo) {
-      const prod = dbProductos.find(p => String(p.localId) === String(usuarioActual.localId) && p.codigo.trim() === codigo.trim());
-      if (!prod) return alert('Producto no encontrado con código: ' + codigo);
-      agregarAlCarrito(prod.id);
     }
 
     function obtenerPrecioSegunLista(prod) {
@@ -1699,7 +1657,6 @@
 
     async function procesarVenta(metodoPago) {
       const cart = obtenerCarritoActual();
-      
       const inputBuscarCliente = document.getElementById('pos-cliente-buscar')?.value.trim() || "";
 
       if (!clienteVentaSeleccionado && inputBuscarCliente !== "") {
@@ -2039,7 +1996,6 @@
     function renderContabilidadFlujo() {
       const localId = usuarioActual ? String(usuarioActual.localId).trim() : '';
       
-      // FILTRADO ESTRICTO POR LOCAL ACTUAL
       const ventasLocal = dbVentas.filter(v => String(v.localId || v.local_id).trim() === localId);
       const mermasLocal = (dbMermas || []).filter(m => String(m.localId || m.local_id || '').trim() === localId);
 
@@ -2130,66 +2086,74 @@
       descargarCSV("Historial_Ventas_BlackDiamond.csv", filas);
     }
 
-    // FUNCIÓN PARA IMPORTAR INVENTARIO DESDE CSV MASIVAMENTE
-    async function importarInventarioCSV(event) {
+    // FUNCIÓN PARA IMPORTAR INVENTARIO DESDE EXCEL DIRECTO (.xlsx / .xls)
+    async function importarInventarioExcelNativo(event) {
       const file = event.target.files[0];
       if (!file) return;
 
       const reader = new FileReader();
       reader.onload = async function(e) {
-        const text = e.target.result;
-        const lineas = text.split('\n');
-        let importadosCount = 0;
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          
+          const rows = XLSX.utils.sheet_to_json(worksheet);
+          let importadosCount = 0;
 
-        for (let i = 1; i < lineas.length; i++) {
-          const linea = lineas[i].trim();
-          if (!linea) continue;
+          for (let i = 0; i < rows.length; i++) {
+            const r = rows[i];
+            const codigo = String(r['Codigo'] || r['codigo'] || r['CÓDIGO'] || ('BAR-' + Math.floor(Math.random()*100000))).trim();
+            const nombre = String(r['Nombre'] || r['nombre'] || r['NOMBRE'] || 'Producto sin nombre').trim();
+            const unidad = String(r['Unidad'] || r['unidad'] || r['UNIDAD'] || 'unidad').trim();
+            const costo = parseFloat(r['Costo'] || r['costo'] || r['COSTO']) || 0;
+            const precio = parseFloat(r['Precio'] || r['precio'] || r['PRECIO'] || r['P. Normal'] || r['P.Normal']) || 0;
+            const stock = parseFloat(r['Stock'] || r['stock'] || r['STOCK']) || 0;
 
-          // Se asume formato CSV: codigo,nombre,unidad,costo,precio,stock
-          const cols = linea.split(',').map(c => c.replace(/^"|"$/g, '').trim());
-          if (cols.length < 5) continue;
+            const nuevoProd = {
+              id: 'PROD-' + Date.now() + '-' + i,
+              local_id: String(usuarioActual.localId).trim(),
+              codigo: codigo,
+              nombre: nombre,
+              costo: costo,
+              precio: precio,
+              precio_rovendedor: precio,
+              precio_proveedor: precio,
+              precio_familia: precio,
+              precio_mayorista: precio,
+              unidad: unidad,
+              stock: stock
+            };
 
-          const [codigo, nombre, unidad, costo, precio, stock] = cols;
-          const nuevoProd = {
-            id: 'PROD-' + Date.now() + '-' + i,
-            local_id: String(usuarioActual.localId).trim(),
-            codigo: codigo || ('BAR-' + Math.floor(Math.random()*100000)),
-            nombre: nombre || 'Producto sin nombre',
-            costo: parseFloat(costo) || 0,
-            precio: parseFloat(precio) || 0,
-            precio_rovendedor: parseFloat(precio) || 0,
-            precio_proveedor: parseFloat(precio) || 0,
-            precio_familia: parseFloat(precio) || 0,
-            precio_mayorista: parseFloat(precio) || 0,
-            unidad: unidad || 'unidad',
-            stock: parseFloat(stock) || 0
-          };
-
-          const { error } = await supabaseClient.from('productos').insert([nuevoProd]);
-          if (!error) {
-            dbProductos.push({
-              id: nuevoProd.id,
-              localId: nuevoProd.local_id,
-              codigo: nuevoProd.codigo,
-              nombre: nuevoProd.nombre,
-              costo: nuevoProd.costo,
-              precio: nuevoProd.precio,
-              precio_rovendedor: nuevoProd.precio_rovendedor,
-              precio_proveedor: nuevoProd.precio_proveedor,
-              precio_familia: nuevoProd.precio_familia,
-              precio_mayorista: nuevoProd.precio_mayorista,
-              unidad_medida: nuevoProd.unidad,
-              stock: nuevoProd.stock
-            });
-            importadosCount++;
+            const { error } = await supabaseClient.from('productos').insert([nuevoProd]);
+            if (!error) {
+              dbProductos.push({
+                id: nuevoProd.id,
+                localId: nuevoProd.local_id,
+                codigo: nuevoProd.codigo,
+                nombre: nuevoProd.nombre,
+                costo: nuevoProd.costo,
+                precio: nuevoProd.precio,
+                precio_rovendedor: nuevoProd.precio_rovendedor,
+                precio_proveedor: nuevoProd.precio_proveedor,
+                precio_familia: nuevoProd.precio_familia,
+                precio_mayorista: nuevoProd.precio_mayorista,
+                unidad_medida: nuevoProd.unidad,
+                stock: nuevoProd.stock
+              });
+              importadosCount++;
+            }
           }
-        }
 
-        alert(`¡Importación masiva completada! Se agregaron ${importadosCount} productos a tu inventario.`);
-        renderInventario();
-        event.target.value = ''; // Limpiar input file
+          alert(`¡Inventario de Excel importado con éxito! Se registraron ${importadosCount} productos.`);
+          renderInventario();
+        } catch (err) {
+          alert('Error al procesar el archivo Excel: ' + err.message);
+        }
+        event.target.value = '';
       };
-      reader.readAsText(file);
+      reader.readAsArrayBuffer(file);
     }
 
     async function consultarSRI() {
@@ -2298,7 +2262,7 @@
       });
 
       const mermasFiltradas = (dbMermas || []).filter(m => {
-          const perteneceAlLocal = !localActualId || String(m.localId || m.local_id).trim() === localActualId;
+          const perteneceAlLocal = !localActualId || String(m.localId || m.local_id || '').trim() === localActualId;
           if (!perteneceAlLocal) return false;
           if (!q) return true;
           return String(m.idFactura || '').toLowerCase().includes(q) || String(m.productoNombre || '').toLowerCase().includes(q);
