@@ -357,8 +357,8 @@
 
           <h4 style="font-size: 0.95rem; color: #0f172a; margin-top: 10px; margin-bottom: 4px;">Datos de Envío a Domicilio</h4>
           
-          <label style="color:#334155; font-size:0.75rem;">Teléfono / Celular de Contacto *</label>
-          <input type="text" id="web-cli-telefono" placeholder="Ej: 0991234567" style="border-radius: 8px; border: 1px solid #cbd5e1; padding: 8px 10px; font-size:0.9rem;">
+          <label style="color:#334155; font-size:0.75rem;">Número de WhatsApp (Obligatorio) *</label>
+          <input type="text" id="web-cli-whatsapp" placeholder="Ej: 0991234567" style="border-radius: 8px; border: 1px solid #cbd5e1; padding: 8px 10px; font-size:0.9rem;">
 
           <label style="color:#334155; font-size:0.75rem;">Dirección Exacta *</label>
           <input type="text" id="web-cli-direccion" placeholder="Calle principal y número de casa" style="border-radius: 8px; border: 1px solid #cbd5e1; padding: 8px 10px; font-size:0.9rem;">
@@ -2723,13 +2723,13 @@
             <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
               <span style="color:var(--primary); font-weight:800; font-size:1.25rem;">$${p.precio.toFixed(2)}</span>
             </div>
-            <button class="btn btn-primary btn-sm" style="width:100%; margin-top:12px; padding: 10px; border-radius: 10px; font-weight: 600;" onclick="agregarAlCarritoWeb('${p.id}')">Agregar al Pedido</button>
+            <button class="btn btn-primary btn-sm" style="width:100%; margin-top:12px; padding: 10px; border-radius: 10px; font-weight: 600;" onclick="agregarAlCarritoWeb('${p.id}', this)">Agregar al Pedido</button>
           </div>
         </div>
       `).join('');
     }
 
-    function agregarAlCarritoWeb(id) {
+    function agregarAlCarritoWeb(id, btnElem) {
       const prod = dbProductos.find(p => p.id === id);
       if (!prod) return;
       let item = carritoTiendaWeb.find(i => i.id === id);
@@ -2741,14 +2741,15 @@
       }
       document.getElementById('store-cart-count').innerText = carritoTiendaWeb.reduce((s, x) => s + x.cantidad, 0);
       
-      const btn = event.target;
-      const textoOrig = btn.innerText;
-      btn.innerText = '✓ Añadido';
-      btn.style.background = '#22c55e';
-      setTimeout(() => {
-        btn.innerText = textoOrig;
-        btn.style.background = '';
-      }, 800);
+      if (btnElem) {
+        const textoOrig = btnElem.innerText;
+        btnElem.innerText = '✓ Añadido';
+        btnElem.style.background = '#22c55e';
+        setTimeout(() => {
+          btnElem.innerText = textoOrig;
+          btnElem.style.background = '';
+        }, 800);
+      }
     }
 
     function abrirCarritoWebModal() {
@@ -2803,12 +2804,12 @@
       const correo = document.getElementById('web-cli-correo').value.trim();
       const nombre = document.getElementById('web-cli-nombre').value.trim();
       const apellido = document.getElementById('web-cli-apellido').value.trim();
-      const telefono = document.getElementById('web-cli-telefono').value.trim();
+      const whatsapp = document.getElementById('web-cli-whatsapp').value.trim();
       const direccion = document.getElementById('web-cli-direccion').value.trim();
       const referencia = document.getElementById('web-cli-referencia').value.trim();
 
-      if (!cedula || !correo || !nombre || !apellido || !telefono || !direccion) {
-        return alert('Por favor llena todos los campos obligatorios de facturación y envío.');
+      if (!cedula || !correo || !nombre || !apellido || !whatsapp || !direccion) {
+        return alert('Por favor llena todos los campos obligatorios, incluyendo tu número de WhatsApp.');
       }
 
       // Guardar o actualizar automáticamente en la base de datos de clientes
@@ -2833,7 +2834,7 @@
       let total = carritoTiendaWeb.reduce((s, x) => s + (x.precio * x.cantidad), 0);
       const pedidoId = 'WEB-' + Date.now().toString().slice(-5);
 
-      const detalleClienteTexto = `${nombre} ${apellido} (C.I/RUC: ${cedula}) - Tel: ${telefono} - Dir: ${direccion} [Ref: ${referencia || 'Ninguna'}]`;
+      const detalleClienteTexto = `${nombre} ${apellido} (C.I/RUC: ${cedula}) - WhatsApp: ${whatsapp} - Dir: ${direccion} [Ref: ${referencia || 'Ninguna'}]`;
 
       const nuevoPedidoSupabase = {
         id: pedidoId,
@@ -2853,7 +2854,7 @@
       const { error } = await supabaseClient.from('ventas').insert([nuevoPedidoSupabase]);
       if (error) return alert('Error al enviar el pedido: ' + error.message);
 
-      alert(`¡Pedido enviado con éxito!\n\nTu código de pedido es: ${pedidoId}\nEl local ha recibido la notificación en su panel de historial de ventas.`);
+      alert(`¡Pedido enviado con éxito!\n\nTu código de pedido es: ${pedidoId}\nTe contactaremos a tu WhatsApp (${whatsapp}) para coordinar la entrega.`);
       carritoTiendaWeb = [];
       cerrarCarritoWebModal();
       document.getElementById('store-cart-count').innerText = '0';
