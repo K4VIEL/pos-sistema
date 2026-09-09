@@ -1,15 +1,47 @@
 const { createClient } = require('@supabase/supabase-js');
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const path = require('path');
 const forge = require('node-forge');
 
 const app = express();
-app.use(cors());
+
+// Seguridad de Cabeceras HTTP
+app.use(helmet({
+    contentSecurityPolicy: false, // Permite la carga de scripts externos necesarios (Supabase, librerías de QR, etc.)
+}));
+
+// Limitador de peticiones para prevenir ataques de fuerza bruta / saturación
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutos
+    max: 100, // Límite de peticiones por IP
+    message: "Demasiadas peticiones desde esta IP, intenta más tarde."
+});
+app.use('/api/', limiter);
+
+// CORS restrictivo para tus subdominios oficiales y entorno de Render
+const allowedOrigins = ['https://app.multi-servicios.net', 'https://pedidos.multi-servicios.net'];
+app.use(cors({
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.indexOf(origin) !== -1 || origin.includes('onrender.com')) {
+            callback(null, true);
+        } else {
+            callback(new Error('Bloqueado por política CORS de seguridad'));
+        }
+    }
+}));
+
 app.use(express.json());
 
-const SUPABASE_URL = 'https://ycwuzqjwmzhynhjawnqd.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inljd3V6cWp3bXpoeW5oamF3bnFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcxNzUyNjQsImV4cCI6MjEwMjc1MTI2NH0.AuU9Us6BdYDTy2np4iJY9ltCFicVbIUtQ4D7FNDgIfM';
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+// Servir archivos estáticos del Frontend (index.html, assets, etc.)
+app.use(express.static(path.join(__dirname)));
+
+// Ruta raíz para solucionar el error "Cannot GET /" y cargar la app
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 app.post('/api/emitir-factura', async (req, res) => {
     try {
@@ -48,15 +80,11 @@ app.post('/api/emitir-factura', async (req, res) => {
             return res.json({ success: false, message: "La venta no cuenta con una clave de acceso válida." });
         }
 
-        // Limpiar la ruta del archivo por si contiene URLs completas de Supabase
         let rutaFirma = localInfo.firma_p12_url.trim();
         if (rutaFirma.includes('/storage/v1/object/public/firmas/')) {
             rutaFirma = rutaFirma.split('/storage/v1/object/public/firmas/')[1];
         }
-        // Remover barras iniciales si las hubiera
         rutaFirma = rutaFirma.replace(/^\/+/, '');
-
-        console.log(`[SRI] Descargando firma desde bucket 'firmas' con ruta: '${rutaFirma}'`);
 
         const { data: fileData, error: storageError } = await supabase.storage
             .from('firmas')
@@ -69,10 +97,9 @@ app.post('/api/emitir-factura', async (req, res) => {
         const arrayBuffer = await fileData.arrayBuffer();
         const p12Buffer = Buffer.from(arrayBuffer);
 
-        // Validar si el archivo descargado es HTML (error de ruta) en lugar de binario
         const contenidoTexto = p12Buffer.toString('utf8', 0, 50);
         if (contenidoTexto.includes('<!DOCTYPE html>') || contenidoTexto.includes('{"statusCode":404')) {
-            return res.json({ success: false, message: `El archivo en Supabase Storage ('${rutaFirma}') no existe o la ruta es incorrecta (se descargó un error HTML/404).` });
+            return res.json({ success: false, message: `El archivo en Supabase Storage ('${rutaFirma}') no existe o la ruta es incorrecta.` });
         }
 
         const p12Base64 = p12Buffer.toString('base64');
@@ -101,8 +128,6 @@ app.post('/api/emitir-factura', async (req, res) => {
             return res.json({ success: false, message: "No se pudo extraer la llave privada del certificado .p12." });
         }
 
-        console.log("[Firma Digital] Certificado validado y listo.");
-
         return res.json({
             success: true,
             mensaje: "Factura firmada con éxito",
@@ -115,7 +140,11 @@ app.post('/api/emitir-factura', async (req, res) => {
     }
 });
 
+const SUPABASE_URL = 'https://ycwuzqjwmzhynhjawnqd.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inljd3V6cWp3bXpoeW5oamF3bnFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcxNzUyNjQsImV4cCI6MjEwMjc1MTI2NH0.AuU9Us6BdYDTy2np4iJY9ltCFicVbIUtQ4D7FNDgIfM';
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
-    console.log(`Servidor corriendo en el puerto ${PORT}`);
+    console.log(`Servidor seguro corriendo en el puerto ${PORT}`);
 });
