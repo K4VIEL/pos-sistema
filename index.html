@@ -74,7 +74,7 @@
     .user-badge { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; }
     .badge { background: var(--border); color: var(--primary); padding: 4px 10px; border-radius: 20px; font-weight: 600; }
 
-    /* BARRA DE NAVEGACIÓN FLOTANTE POS */
+    /* BARRA DE NAVEGACIÓN FLOTANTE POS (DESLIZABLE CON RUEDA EN PC) */
     .nav-bar { 
       background: var(--nav-bg-dark); 
       border: 1px solid var(--nav-border-dark);
@@ -94,10 +94,11 @@
       box-shadow: 0 15px 35px rgba(0,0,0,0.4);
       overflow-x: auto;
       overflow-y: hidden;
-      scrollbar-width: none;
-      -ms-overflow-style: none;
+      scrollbar-width: thin;
+      -ms-overflow-style: auto;
     }
-    .nav-bar::-webkit-scrollbar { display: none; }
+    .nav-bar::-webkit-scrollbar { height: 6px; }
+    .nav-bar::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 4px; }
 
     [data-theme="light"] .nav-bar {
       background: var(--nav-bg-light);
@@ -152,7 +153,10 @@
     .page-section.active { display: block !important; }
 
     .card { background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border); padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
-    .grid-pos { display: grid; grid-template-columns: 1fr; gap: 16px; }
+    
+    /* PANTALLA DE VENTAS DIVIDIDA EN 2 COLUMNAS */
+    .grid-pos-dividida { display: grid; grid-template-columns: 1.2fr 1fr; gap: 16px; align-items: start; }
+    @media (max-width: 900px) { .grid-pos-dividida { grid-template-columns: 1fr; } }
 
     label { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); display: block; margin-top: 8px; }
     input, select, button, textarea { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text); font-size: 1rem; margin-top: 4px; margin-bottom: 8px; outline: none; }
@@ -186,12 +190,12 @@
     .kpi-card { background: var(--bg); border: 1px solid var(--border); padding: 16px; border-radius: 10px; text-align: center; }
     .kpi-card .kpi-val { font-size: 1.4rem; font-weight: 800; margin-top: 4px; }
 
-    .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; max-height: 400px; overflow-y: auto; }
+    .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; max-height: 480px; overflow-y: auto; padding-right: 4px; }
     .product-card { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px; text-align: center; cursor: pointer; transition: transform 0.2s; }
     .product-card:hover { transform: translateY(-2px); border-color: var(--primary); }
-    .product-title { font-weight: 600; font-size: 0.85rem; margin-bottom: 4px; color: var(--text); }
-    .product-price { color: var(--primary); font-weight: 700; font-size: 0.95rem; }
-    .product-stock { font-size: 0.75rem; color: var(--text-muted); }
+    .product-title { font-weight: 600; font-size: 0.82rem; margin-bottom: 4px; color: var(--text); }
+    .product-price { color: var(--primary); font-weight: 700; font-size: 0.9rem; }
+    .product-stock { font-size: 0.72rem; color: var(--text-muted); }
     .stock-negative { color: var(--danger) !important; font-weight: bold; }
 
     .table-responsive { width: 100%; overflow-x: auto; }
@@ -200,7 +204,7 @@
     th { color: var(--text-muted); font-weight: 600; background: var(--bg); }
     .text-success { color: var(--success); font-weight: bold; }
 
-    .cart-tabs { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 10px; padding-bottom: 4px; }
+    .cart-tabs { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 10px; padding-bottom: 4px; scrollbar-width: thin; }
     .cart-tab-btn { padding: 6px 12px; font-size: 0.8rem; background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 6px; cursor: pointer; white-space: nowrap; }
     .cart-tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); font-weight: bold; }
     
@@ -451,72 +455,72 @@
     <nav class="nav-bar no-print" id="app-nav-bar"></nav>
 
     <main>
-      <!-- VISTA POS -->
+      <!-- VISTA POS (DIVIDIDA EN 2 COLUMNAS) -->
       <section id="vista-pos" class="page-section active">
-        <div class="grid-pos">
-          <div>
-            <div class="card">
-              <div style="display:flex; gap:8px; margin-bottom:8px;">
-                <input type="text" id="pos-buscar" placeholder="🔍 Buscar por nombre o código (Enter para escanear)..." oninput="renderProductosPOS()" onkeydown="detectarCodigoEnter(event)" style="margin:0;">
-                <button class="btn btn-primary btn-sm" onclick="abrirCamaraPOS()" style="margin:0; white-space:nowrap;">📷 Escanear</button>
-              </div>
-              <div class="product-grid" id="pos-grid-productos"></div>
+        <div class="grid-pos-dividida">
+          <!-- Columna Izquierda: Buscador y Cuadrícula de Productos -->
+          <div class="card" style="margin: 0; display: flex; flex-direction: column; height: 100%;">
+            <h3 style="margin-bottom: 8px; font-size: 1rem;">Catálogo de Productos</h3>
+            <div style="display:flex; gap:8px; margin-bottom:10px;">
+              <input type="text" id="pos-buscar" placeholder="🔍 Buscar por nombre o código (Enter para escanear)..." oninput="renderProductosPOS()" onkeydown="detectarCodigoEnter(event)" style="margin:0;">
+              <button class="btn btn-primary btn-sm" onclick="abrirCamaraPOS()" style="margin:0; white-space:nowrap;">📷 Escanear</button>
             </div>
+            <div class="product-grid" id="pos-grid-productos"></div>
           </div>
-          <div>
-            <div class="card">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                <h3 style="margin:0;">Carrito Actual</h3>
-                <button class="btn btn-warning btn-sm" onclick="ponerCarritoEnEspera()">⏸ En espera</button>
+
+          <!-- Columna Derecha: Carrito y Opciones de Pago (Fijo / Visible sin bajar) -->
+          <div class="card" style="margin: 0; display: flex; flex-direction: column;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <h3 style="margin:0;">Carrito Actual</h3>
+              <button class="btn btn-warning btn-sm" onclick="ponerCarritoEnEspera()">⏸ En espera</button>
+            </div>
+
+            <div class="cart-tabs" id="pos-cart-tabs"></div>
+
+            <div class="form-row">
+              <div>
+                <label>Lista de Precio</label>
+                <select id="pos-tipo-precio" onchange="renderProductosPOS()" style="padding: 8px; font-size: 0.9rem;">
+                  <option value="normal">Normal / General</option>
+                  <option value="revendedor">Revendedor</option>
+                  <option value="proveedor">Proveedor</option>
+                  <option value="familia">Familia</option>
+                  <option value="mayorista">Mayorista</option>
+                </select>
               </div>
+              <div>
+                <label>Cliente</label>
+                <input type="text" id="pos-cliente-buscar" class="form-control" list="lista-clientes-opciones" placeholder="Cédula o nombre..." onchange="seleccionarClienteAutocomplete(this.value)" oninput="seleccionarClienteAutocomplete(this.value)" style="padding: 8px; font-size: 0.9rem;">
+                <datalist id="lista-clientes-opciones"></datalist>
+                <input type="hidden" id="pos-cliente-select" value="Consumidor Final">
+              </div>
+            </div>
 
-              <div class="cart-tabs" id="pos-cart-tabs"></div>
-
-              <div class="form-row">
-                <div>
-                  <label>Tipo de Lista de Precio</label>
-                  <select id="pos-tipo-precio" onchange="renderProductosPOS()">
-                    <option value="normal">Normal / Cliente General</option>
-                    <option value="revendedor">Revendedor</option>
-                    <option value="proveedor">Proveedor</option>
-                    <option value="familia">Familia</option>
-                    <option value="mayorista">Mayorista</option>
-                  </select>
+            <div class="table-responsive" style="max-height: 220px; overflow-y: auto; margin-top:5px; border: 1px solid var(--border); border-radius: 8px;">
+              <table>
+                <thead><tr><th>Prod</th><th>Cant</th><th>Total</th><th>Acción</th></tr></thead>
+                <tbody id="pos-tabla-carrito"></tbody>
+              </table>
+            </div>
+            <h2 style="margin-top:10px; text-align:right; font-size: 1.5rem;">Total: $<span id="pos-total">0.00</span></h2>
+            
+            <div class="d-flex justify-content-between align-items: center p-2 mb-2 rounded border" style="font-size: 0.8rem; margin-top: 5px; display:flex; justify-content:space-between; align-items:center; border-color:var(--border);">
+                <span class="text-muted fw-bold">Modo de Emisión:</span>
+                <div onclick="toggleModoSri()" id="contenedorModoSri" style="cursor: pointer; display: flex; align-items: center; gap: 6px; padding: 3px 10px; background: var(--bg); border-radius: 20px; transition: 0.3s; border: 1px solid var(--border);">
+                    <i id="iconoModoSeñal" class="fas fa-wifi"></i>
+                    <span id="textoModoSeñal" class="fw-bold" style="font-size: 0.75rem;">LOCAL</span>
+                    <input type="checkbox" id="checkModoSri" style="display: none;">
                 </div>
-                <div>
-                  <label>Buscar / Seleccionar Cliente</label>
-                  <input type="text" id="pos-cliente-buscar" class="form-control" list="lista-clientes-opciones" placeholder="Escribe cédula o nombre..." onchange="seleccionarClienteAutocomplete(this.value)" oninput="seleccionarClienteAutocomplete(this.value)">
-                  <datalist id="lista-clientes-opciones"></datalist>
-                  <input type="hidden" id="pos-cliente-select" value="Consumidor Final">
-                </div>
-              </div>
+            </div>
 
-              <div class="table-responsive" style="margin-top:10px;">
-                <table>
-                  <thead><tr><th>Prod</th><th>Cant / Medida</th><th>Total</th><th>Acción</th></tr></thead>
-                  <tbody id="pos-tabla-carrito"></tbody>
-                </table>
-              </div>
-              <h2 style="margin-top:15px; text-align:right;">Total: $<span id="pos-total">0.00</span></h2>
-              
-              <div class="d-flex justify-content-between align-items-center p-2 mb-2 rounded border" style="font-size: 0.85rem; margin-top: 10px; display:flex; justify-content:space-between; align-items:center; border-color:var(--border);">
-                  <span class="text-muted fw-bold">Modo de Emisión:</span>
-                  <div onclick="toggleModoSri()" id="contenedorModoSri" style="cursor: pointer; display: flex; align-items: center; gap: 6px; padding: 4px 12px; background: var(--bg); border-radius: 20px; transition: 0.3s; border: 1px solid var(--border);">
-                      <i id="iconoModoSeñal" class="fas fa-wifi"></i>
-                      <span id="textoModoSeñal" class="fw-bold" style="font-size: 0.8rem;">LOCAL</span>
-                      <input type="checkbox" id="checkModoSri" style="display: none;">
-                  </div>
-              </div>
-
-              <button class="btn btn-primary" onclick="abrirModalCobro()">Cobrar e Imprimir</button>
-              
-              <div class="mb-2 p-2 rounded border" style="font-size: 0.85rem; margin-top: 10px; border-color:var(--border);">
-                  <label for="punto-emision" class="form-label fw-bold text-muted mb-1">Punto de Emisión:</label>
-                  <select id="punto-emision" class="pos-punto-emision form-control form-control-sm">
-                      <option value="001-100">001-100 (Caja Principal)</option>
-                      <option value="001-002">001-002 (Caja Secundaria)</option>
-                  </select>
-              </div>
+            <button class="btn btn-primary" onclick="abrirModalCobro()" style="padding: 12px; font-size: 1.05rem;">Cobrar e Imprimir</button>
+            
+            <div style="font-size: 0.8rem; margin-top: 6px; display: flex; align-items: center; justify-content: space-between;">
+                <span class="text-muted fw-bold">Punto de Emisión:</span>
+                <select id="punto-emision" style="width: 150px; padding: 4px; margin: 0; font-size: 0.8rem;">
+                    <option value="001-100">001-100 (Principal)</option>
+                    <option value="001-002">001-002 (Secundaria)</option>
+                </select>
             </div>
           </div>
         </div>
@@ -722,7 +726,7 @@
         </div>
       </section>
 
-      <!-- VISTA INVENTARIO -->
+      <!-- VISTA INVENTARIO (CON BUSCADOR, ESCÁNER Y GESTIÓN DE FOTOS) -->
       <section id="vista-inventario" class="page-section">
         <div class="card">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
@@ -795,11 +799,18 @@
             <h3 style="margin: 0;">Inventario de tu Tienda</h3>
             <button class="btn btn-success btn-sm" onclick="exportarInventarioExcel()">📥 Exportar a Excel</button>
           </div>
+
+          <!-- BARRA DE BÚSQUEDA Y ESCÁNER EN STOCK PARA MODIFICAR PRECIOS AL INSTANTE -->
+          <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+            <input type="text" id="inv-buscar-stock" placeholder="🔍 Buscar producto en stock por nombre o escanear código..." oninput="renderInventario()" style="margin: 0;">
+            <button class="btn btn-primary btn-sm" onclick="abrirCamaraBusquedaStock()" style="margin: 0; white-space: nowrap;">📷 Escanear Stock</button>
+          </div>
+
           <div class="table-responsive">
             <table>
               <thead>
                 <tr>
-                  <th>Foto</th>
+                  <th>Foto (Clic para cambiar)</th>
                   <th>Código</th>
                   <th>Producto</th>
                   <th>Unidad</th>
@@ -965,6 +976,9 @@
     </main>
   </div>
 
+  <!-- INPUT OCULTO PARA SUBIR FOTO DE PRODUCTO EXISTENTE -->
+  <input type="file" id="input-archivo-foto-oculto" accept="image/*" style="display:none;" onchange="procesarCambioFotoExistente(event)">
+
   <!-- COMPROBANTE DE IMPRESIÓN -->
   <div id="factura-impresion" style="display:none; max-width: 300px; margin: 0 auto; font-family: monospace; font-size: 12px; color: #000; background: #fff; padding: 10px;">
     <div style="text-align: center; line-height: 1.3;">
@@ -1052,6 +1066,7 @@
     let carritoActivoId = 1;
     let html5QrCode = null;
     let clienteVentaSeleccionado = { cedula: '9999999999001', nombre: 'Consumidor Final' };
+    let productoEditandoFotoId = null;
 
     let modoFiltroReporte = 'mes';
 
@@ -1492,6 +1507,16 @@
           document.getElementById('inv-unidad').value = prodExistente.unidad_medida || 'unidad';
           document.getElementById('inv-stock').value = prodExistente.stock;
           document.getElementById('inv-visible-web').checked = prodExistente.visibleWeb || false;
+        }
+      });
+    }
+
+    function abrirCamaraBusquedaStock() {
+      abrirCamara(function(decodedText) {
+        const inputStock = document.getElementById('inv-buscar-stock');
+        if (inputStock) {
+          inputStock.value = decodedText;
+          renderInventario();
         }
       });
     }
@@ -2471,6 +2496,37 @@
       });
     }
 
+    function dispararSelectorFotoExistente(idProducto) {
+      productoEditandoFotoId = idProducto;
+      document.getElementById('input-archivo-foto-oculto').click();
+    }
+
+    async function procesarCambioFotoExistente(event) {
+      const fileInput = event.target;
+      if (!fileInput.files || fileInput.files.length === 0 || !productoEditandoFotoId) return;
+
+      try {
+        const nuevaUrl = await comprimirYSubirImagen(fileInput, usuarioActual.localId);
+        
+        const { error } = await supabaseClient
+          .from('productos')
+          .update({ imagen_url: nuevaUrl })
+          .eq('id', productoEditandoFotoId);
+
+        if (error) throw error;
+
+        const prod = dbProductos.find(p => String(p.id) === String(productoEditandoFotoId));
+        if (prod) prod.imagenUrl = nuevaUrl;
+
+        alert('¡Fotografía del producto actualizada con éxito!');
+        renderInventario();
+      } catch (err) {
+        alert('Error al actualizar la foto: ' + err.message);
+      }
+      fileInput.value = '';
+      productoEditandoFotoId = null;
+    }
+
     async function guardarProducto() {
       const codigo = document.getElementById('inv-codigo').value.trim();
       const nombre = document.getElementById('inv-nombre').value.trim();
@@ -2551,7 +2607,13 @@
 
     function renderInventario() {
       const localActual = usuarioActual ? String(usuarioActual.localId).trim() : '';
-      const lista = dbProductos.filter(p => !localActual || p.localId === localActual);
+      const qStock = (document.getElementById('inv-buscar-stock')?.value || '').toLowerCase();
+      
+      const lista = dbProductos.filter(p => {
+        if (localActual && p.localId !== localActual) return false;
+        if (!qStock) return true;
+        return p.nombre.toLowerCase().includes(qStock) || p.codigo.toLowerCase().includes(qStock);
+      });
       
       const linkTienda = window.location.origin + window.location.pathname + `?tienda=${localActual}`;
       const linkEl = document.getElementById('link-tienda-local');
@@ -2564,14 +2626,17 @@
       if (!tbody) return;
 
       if (lista.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="13" style="text-align:center; color:var(--danger);">No hay productos registrados para este local (${localActual}).</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="13" style="text-align:center; color:var(--danger);">No hay productos registrados o coincidentes para este local (${localActual}).</td></tr>`;
         return;
       }
 
       tbody.innerHTML = lista.map(p => `
         <tr>
-          <td style="text-align:center;">
-            <img src="${p.imagenUrl || 'https://via.placeholder.com/50?text=No+Img'}" alt="Foto" style="width: 40px; height: 40px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border);">
+          <td style="text-align:center; cursor:pointer;" onclick="dispararSelectorFotoExistente('${p.id}')" title="Haz clic para subir o cambiar la fotografía">
+            <div style="position:relative; display:inline-block;">
+              <img src="${p.imagenUrl || 'https://via.placeholder.com/50?text=Subir+Foto'}" alt="Foto" style="width: 45px; height: 45px; object-fit: cover; border-radius: 6px; border: 1px dashed var(--primary);">
+              <span style="position:absolute; bottom:0; right:0; background:var(--primary); color:#fff; font-size:9px; padding:1px 3px; border-radius:3px;">📷</span>
+            </div>
           </td>
           <td>${p.codigo || 'S/N'}</td>
           <td><b>${p.nombre}</b><br><small style="color:var(--text-muted);">Local: ${p.localId}</small></td>
@@ -2728,7 +2793,6 @@
         </div>
       `).join('');
 
-      // Enlace seguro de eventos para evitar fallos en móviles
       document.querySelectorAll('.btn-add-cart').forEach(btn => {
         btn.addEventListener('click', (e) => {
           const prodId = e.currentTarget.getAttribute('data-id');
@@ -2820,7 +2884,6 @@
         return alert('Por favor llena todos los campos obligatorios, incluyendo tu número de WhatsApp.');
       }
 
-      // Guardar o actualizar automáticamente en la base de datos de clientes
       try {
         const clienteExistente = dbClientes.find(c => c.cedula === cedula);
         if (!clienteExistente) {
