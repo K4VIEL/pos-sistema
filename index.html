@@ -83,7 +83,7 @@
       left: 50%;
       transform: translateX(-50%);
       width: 94%;
-      max-width: 650px;
+      max-width: 750px;
       display: flex; 
       justify-content: flex-start; 
       align-items: center;
@@ -95,7 +95,6 @@
       overflow-x: auto;
       overflow-y: hidden;
       scrollbar-width: thin;
-      -ms-overflow-style: auto;
     }
     .nav-bar::-webkit-scrollbar { height: 6px; }
     .nav-bar::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 4px; }
@@ -650,6 +649,54 @@
         </div>
       </section>
 
+      <!-- VISTA GASTOS / SALIDAS DE DINERO -->
+      <section id="vista-gastos" class="page-section">
+        <div class="card">
+          <h3>Registro de Salidas de Dinero y Gastos</h3>
+          <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:12px;">Registra pagos a proveedores, servicios básicos (luz, agua) u otros egresos para controlar tu ganancia real.</p>
+          
+          <div class="form-row">
+            <div>
+              <label>Concepto / Detalle *</label>
+              <input type="text" id="gasto-concepto" placeholder="Ej: Pago de luz o factura proveedor">
+            </div>
+            <div>
+              <label>Categoría</label>
+              <select id="gasto-categoria">
+                <option value="Proveedores">Pago a Proveedores</option>
+                <option value="Servicios">Servicios Básicos (Luz/Agua/Internet)</option>
+                <option value="Local">Alquiler / Local</option>
+                <option value="Otros">Otros Gastos Operativos</option>
+              </select>
+            </div>
+          </div>
+
+          <label>Monto a Retirar ($) *</label>
+          <input type="number" step="0.01" id="gasto-monto" placeholder="0.00">
+
+          <button class="btn btn-danger" onclick="registrarSalidaDinero()" style="margin-top:10px;">Registrar Salida de Caja</button>
+        </div>
+
+        <div class="card">
+          <h3>Historial de Egresos de este Local</h3>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>Fecha y Hora</th>
+                  <th>Concepto</th>
+                  <th>Categoría</th>
+                  <th>Usuario</th>
+                  <th>Monto</th>
+                  <th>Acción</th>
+                </tr>
+              </thead>
+              <tbody id="tabla-gastos-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
       <!-- VISTA CONTABILIDAD Y CAJA -->
       <section id="vista-contabilidad" class="page-section">
         <div class="card">
@@ -661,7 +708,7 @@
 
           <div class="kpi-grid" style="margin-bottom: 20px;">
             <div class="kpi-card"><label>Ingresos Totales (Entradas)</label><div class="kpi-val text-success" id="contab-val-ingresos">$0.00</div></div>
-            <div class="kpi-card"><label>Salidas / Mermas</label><div class="kpi-val" style="color:var(--danger);" id="contab-val-salidas">$0.00</div></div>
+            <div class="kpi-card"><label>Salidas / Mermas / Gastos</label><div class="kpi-val" style="color:var(--danger);" id="contab-val-salidas">$0.00</div></div>
             <div class="kpi-card"><label>Flujo Neto</label><div class="kpi-val" style="color:var(--primary);" id="contab-val-neto">$0.00</div></div>
           </div>
 
@@ -891,8 +938,8 @@
 
           <div class="kpi-grid">
             <div class="kpi-card"><label>Ventas Totales</label><div class="kpi-val text-success" id="rep-val-ventas">$0.00</div></div>
-            <div class="kpi-card"><label>Costo de Compras</label><div class="kpi-val" style="color:var(--danger);" id="rep-val-compras">$0.00</div></div>
-            <div class="kpi-card"><label>Ganancia Neta</label><div class="kpi-val" style="color:var(--primary);" id="rep-val-ganancia">$0.00</div></div>
+            <div class="kpi-card"><label>Costo de Compras + Gastos</label><div class="kpi-val" style="color:var(--danger);" id="rep-val-compras">$0.00</div></div>
+            <div class="kpi-card"><label>Ganancia Neta Real</label><div class="kpi-val" style="color:var(--primary);" id="rep-val-ganancia">$0.00</div></div>
           </div>
         </div>
       </section>
@@ -1059,6 +1106,7 @@
     let dbVentas = [];
     let dbArqueos = [];
     let dbMermas = [];
+    let dbGastos = [];
     
     let usuarioActual = JSON.parse(localStorage.getItem('usuarioActual')) || null;
     
@@ -1125,14 +1173,15 @@
 
     async function cargarDatosSupabase() {
       try {
-        const [resLoc, resUsr, resProd, resCli, resVen, resArq, resMer] = await Promise.all([
+        const [resLoc, resUsr, resProd, resCli, resVen, resArq, resMer, resGas] = await Promise.all([
           supabaseClient.from('locales').select('*'),
           supabaseClient.from('usuarios').select('*'),
           supabaseClient.from('productos').select('*'),
           supabaseClient.from('clientes').select('*'),
           supabaseClient.from('ventas').select('*'),
           supabaseClient.from('arqueos').select('*').order('fecha_apertura', { ascending: false }),
-          supabaseClient.from('mermas_auditoria').select('*').order('fecha_hora', { ascending: false })
+          supabaseClient.from('mermas_auditoria').select('*').order('fecha_hora', { ascending: false }),
+          supabaseClient.from('gastos_operativos').select('*').order('fecha_hora', { ascending: false })
         ]);
 
         if (resLoc.data) {
@@ -1216,6 +1265,18 @@
             motivo: m.motivo,
             fechaHora: m.fecha_hora,
             usuario: m.usuario
+          }));
+        }
+
+        if (resGas.data) {
+          dbGastos = resGas.data.map(g => ({
+            id: g.id,
+            localId: String(g.local_id || g.localId || '').trim(),
+            concepto: g.concepto,
+            categoria: g.categoria,
+            monto: parseFloat(g.monto) || 0,
+            fechaHora: g.fecha_hora,
+            usuario: g.usuario
           }));
         }
       } catch (err) {
@@ -1302,6 +1363,10 @@
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
                 <span>Firma</span>
             </button>
+            <button class="nav-btn" id="btn-nav-gastos" onclick="cambiarVista('gastos')">
+                <svg viewBox="0 0 24 24"><path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"></path></svg>
+                <span>Gastos</span>
+            </button>
             <button class="nav-btn" id="btn-nav-contabilidad" onclick="cambiarVista('contabilidad')">
                 <svg viewBox="0 0 24 24"><path d="M3 3v18h18V3H3zm16 16H5V5h14v14zM7 10h2v7H7zm4-3h2v10h-2zm4 5h2v5h-2z"></path></svg>
                 <span>Contable</span>
@@ -1358,7 +1423,7 @@
 
     async function cambiarVista(vista) {
       const esCajero = usuarioActual && (usuarioActual.rol === 'Cajero' || usuarioActual.rol === 'Encargado');
-      if (esCajero && (vista === 'contabilidad' || vista === 'kardex' || vista === 'inventario' || vista === 'historial' || vista === 'reportes' || vista === 'personal' || vista === 'locales' || vista === 'usuarios')) {
+      if (esCajero && (vista === 'contabilidad' || vista === 'kardex' || vista === 'inventario' || vista === 'historial' || vista === 'reportes' || vista === 'personal' || vista === 'locales' || vista === 'usuarios' || vista === 'gastos')) {
         return alert('Acceso denegado. Tu cuenta de Cajero solo permite procesar ventas, abrir/cerrar caja y registrar clientes.');
       }
 
@@ -1376,6 +1441,7 @@
 
       if (vista === 'pos') renderizarCarritosTabs();
       if (vista === 'arqueo') await prepararVistaArqueo();
+      if (vista === 'gastos') renderGastosLocales();
       if (vista === 'contabilidad') renderContabilidadFlujo();
       if (vista === 'kardex') renderKardex();
       if (vista === 'clientes') renderClientes();
@@ -2133,17 +2199,90 @@
       `).join('');
     }
 
+    async function registrarSalidaDinero() {
+      const concepto = document.getElementById('gasto-concepto').value.trim();
+      const categoria = document.getElementById('gasto-categoria').value;
+      const monto = parseFloat(document.getElementById('gasto-monto').value) || 0;
+
+      if (!concepto || monto <= 0) {
+        return alert('Por favor ingresa un concepto válido y un monto mayor a cero.');
+      }
+
+      const nuevoGasto = {
+        id: 'GASTO-' + Date.now(),
+        local_id: String(usuarioActual.localId),
+        concepto: concepto,
+        categoria: categoria,
+        monto: monto,
+        fecha_hora: new Date().toISOString(),
+        usuario: usuarioActual.user
+      };
+
+      const { error } = await supabaseClient.from('gastos_operativos').insert([nuevoGasto]);
+      if (error) return alert('Error al registrar la salida: ' + error.message);
+
+      dbGastos.push({
+        id: nuevoGasto.id,
+        localId: nuevoGasto.local_id,
+        concepto: nuevoGasto.concepto,
+        categoria: nuevoGasto.categoria,
+        monto: nuevoGasto.monto,
+        fechaHora: nuevoGasto.fecha_hora,
+        usuario: nuevoGasto.usuario
+      });
+
+      document.getElementById('gasto-concepto').value = '';
+      document.getElementById('gasto-monto').value = '';
+      renderGastosLocales();
+      alert('Salida de dinero registrada con éxito.');
+    }
+
+    function renderGastosLocales() {
+      const localId = usuarioActual ? String(usuarioActual.localId).trim() : '';
+      const lista = dbGastos.filter(g => String(g.localId || g.local_id).trim() === localId);
+
+      const tbody = document.getElementById('tabla-gastos-body');
+      if (!tbody) return;
+
+      if (lista.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">No hay salidas de dinero registradas.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = lista.map(g => `
+        <tr>
+          <td>${new Date(g.fechaHora).toLocaleString()}</td>
+          <td><b>${g.concepto}</b></td>
+          <td><span class="badge">${g.categoria}</span></td>
+          <td>${g.usuario}</td>
+          <td style="color:var(--danger); font-weight:bold;">-$${Number(g.monto).toFixed(2)}</td>
+          <td><button class="btn btn-danger btn-sm" onclick="eliminarGasto('${g.id}')">Eliminar</button></td>
+        </tr>
+      `).join('');
+    }
+
+    async function eliminarGasto(id) {
+      if (!confirm('¿Deseas eliminar este registro de salida de dinero?')) return;
+      const { error } = await supabaseClient.from('gastos_operativos').delete().eq('id', id);
+      if (error) return alert('Error al eliminar: ' + error.message);
+
+      dbGastos = dbGastos.filter(g => g.id !== id);
+      renderGastosLocales();
+    }
+
     function renderContabilidadFlujo() {
       const localId = usuarioActual ? String(usuarioActual.localId).trim() : '';
       
       const ventasLocal = dbVentas.filter(v => String(v.localId || v.local_id).trim() === localId);
       const mermasLocal = (dbMermas || []).filter(m => String(m.localId || m.local_id || '').trim() === localId);
+      const gastosLocal = (dbGastos || []).filter(g => String(g.localId || g.local_id).trim() === localId);
 
       let totalIngresos = 0;
       ventasLocal.forEach(v => { totalIngresos += Number(v.total || 0); });
 
       let totalSalidas = 0;
       mermasLocal.forEach(m => { totalSalidas += Number(m.montoTotal || 0); });
+      gastosLocal.forEach(g => { totalSalidas += Number(g.monto || 0); });
 
       let flujoNeto = totalIngresos - totalSalidas;
 
@@ -2175,6 +2314,19 @@
             <td>Salida de inventario / Anulación: ${m.motivo} (${m.productoName || m.productoNombre})</td>
             <td>$0.00</td>
             <td style="color:var(--danger);">+$${Number(m.montoTotal || 0).toFixed(2)}</td>
+          </tr>
+        `;
+      });
+
+      gastosLocal.forEach(g => {
+        const fechaFmt = new Date(g.fechaHora).toLocaleString();
+        htmlDiario += `
+          <tr style="background-color: var(--bg);">
+            <td>${fechaFmt}</td>
+            <td><span style="color:var(--danger); font-weight:bold;">[GASTO]</span> ${g.id}</td>
+            <td>Salida de caja / Egreso: ${g.concepto} (${g.categoria})</td>
+            <td>$0.00</td>
+            <td style="color:var(--danger);">+$${Number(g.monto || 0).toFixed(2)}</td>
           </tr>
         `;
       });
@@ -2991,9 +3143,37 @@
         (v.items || []).forEach(i => { if (!i.anulado) { totalCostoCompras += ((i.costo || 0) * i.cantidad); } });
       });
 
+      const gastosLocal = (dbGastos || []).filter(g => {
+        if (String(g.localId || g.local_id).trim() !== localActualId) return false;
+        const d = new Date(g.fechaHora);
+        if (isNaN(d.getTime())) return false;
+
+        if (modoFiltroReporte === 'mes') {
+          const anioSel = parseInt(document.getElementById('rep-anio').value);
+          const mesSel = document.getElementById('rep-mes').value;
+          return d.getFullYear() === anioSel && (mesSel === 'TODOS' || d.getMonth() === parseInt(mesSel));
+        } else if (modoFiltroReporte === 'dia') {
+          const diaSel = document.getElementById('rep-input-dia').value;
+          if (!diaSel) return false;
+          return d.toISOString().split('T')[0] === diaSel;
+        } else if (modoFiltroReporte === 'rango') {
+          const inicioStr = document.getElementById('rep-input-inicio').value;
+          const finStr = document.getElementById('rep-input-fin').value;
+          if (!inicioStr || !finStr) return false;
+          const fechaGastoStr = d.toISOString().split('T')[0];
+          return fechaGastoStr >= inicioStr && fechaGastoStr <= finStr;
+        }
+        return true;
+      });
+
+      let totalGastosOp = 0;
+      gastosLocal.forEach(g => { totalGastosOp += Number(g.monto || 0); });
+
+      const totalEgresos = totalCostoCompras + totalGastosOp;
+
       document.getElementById('rep-val-ventas').innerText = `$${totalVentas.toFixed(2)}`;
-      document.getElementById('rep-val-compras').innerText = `$${totalCostoCompras.toFixed(2)}`;
-      document.getElementById('rep-val-ganancia').innerText = `$${(totalVentas - totalCostoCompras).toFixed(2)}`;
+      document.getElementById('rep-val-compras').innerText = `$${totalEgresos.toFixed(2)}`;
+      document.getElementById('rep-val-ganancia').innerText = `$${(totalVentas - totalEgresos).toFixed(2)}`;
     }
 
     async function crearEmpleadoCajero() {
@@ -3351,4 +3531,3 @@
   </script>
 </body>
 </html>
-
