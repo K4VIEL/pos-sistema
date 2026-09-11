@@ -586,7 +586,7 @@
           </div>
       </section>
 
-      <!-- VISTA ARQUEO DE CAJA -->
+      <!-- VISTA ARQUEO DE CAJA Y SALIDAS DE DINERO -->
       <section id="vista-arqueo" class="page-section">
         <div class="card">
           <h3>Arqueo y Cierre de Caja (Turnos)</h3>
@@ -629,6 +629,53 @@
           </div>
         </div>
 
+        <!-- SECCIÓN DE SALIDAS DE DINERO INTEGRADA DENTRO DE ARQUEO -->
+        <div class="card">
+          <h3>Registro de Salidas de Dinero / Gastos de Caja</h3>
+          <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:12px;">Registra pagos a proveedores, luz o servicios sacando efectivo de la caja actual.</p>
+          
+          <div class="form-row">
+            <div>
+              <label>Concepto / Detalle *</label>
+              <input type="text" id="gasto-concepto" placeholder="Ej: Pago de luz o factura proveedor">
+            </div>
+            <div>
+              <label>Categoría *</label>
+              <input type="text" id="gasto-categoria" list="lista-categorias-sugeridas" placeholder="Selecciona o escribe otra...">
+              <datalist id="lista-categorias-sugeridas">
+                <option value="Pago a Proveedores">
+                <option value="Servicios Básicos (Luz/Agua/Internet)">
+                <option value="Alquiler / Local">
+                <option value="Otros Gastos Operativos">
+              </datalist>
+            </div>
+          </div>
+
+          <label>Monto a Retirar ($) *</label>
+          <input type="number" step="0.01" id="gasto-monto" placeholder="0.00">
+
+          <button class="btn btn-danger" onclick="registrarSalidaDinero()" style="margin-top:10px;">Registrar Salida de Caja</button>
+        </div>
+
+        <div class="card">
+          <h3>Historial de Egresos de este Turno / Local</h3>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>Fecha y Hora</th>
+                  <th>Concepto</th>
+                  <th>Categoría</th>
+                  <th>Usuario</th>
+                  <th>Monto</th>
+                  <th>Acción</th>
+                </tr>
+              </thead>
+              <tbody id="tabla-gastos-body"></tbody>
+            </table>
+          </div>
+        </div>
+
         <div class="card">
           <h3>Historial de Arqueos de Caja</h3>
           <div class="table-responsive">
@@ -644,54 +691,6 @@
                 </tr>
               </thead>
               <tbody id="arqueo-historial-tabla"></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <!-- VISTA GASTOS / SALIDAS DE DINERO -->
-      <section id="vista-gastos" class="page-section">
-        <div class="card">
-          <h3>Registro de Salidas de Dinero y Gastos</h3>
-          <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:12px;">Registra pagos a proveedores, servicios básicos (luz, agua) u otros egresos para controlar tu ganancia real.</p>
-          
-          <div class="form-row">
-            <div>
-              <label>Concepto / Detalle *</label>
-              <input type="text" id="gasto-concepto" placeholder="Ej: Pago de luz o factura proveedor">
-            </div>
-            <div>
-              <label>Categoría</label>
-              <select id="gasto-categoria">
-                <option value="Proveedores">Pago a Proveedores</option>
-                <option value="Servicios">Servicios Básicos (Luz/Agua/Internet)</option>
-                <option value="Local">Alquiler / Local</option>
-                <option value="Otros">Otros Gastos Operativos</option>
-              </select>
-            </div>
-          </div>
-
-          <label>Monto a Retirar ($) *</label>
-          <input type="number" step="0.01" id="gasto-monto" placeholder="0.00">
-
-          <button class="btn btn-danger" onclick="registrarSalidaDinero()" style="margin-top:10px;">Registrar Salida de Caja</button>
-        </div>
-
-        <div class="card">
-          <h3>Historial de Egresos de este Local</h3>
-          <div class="table-responsive">
-            <table>
-              <thead>
-                <tr>
-                  <th>Fecha y Hora</th>
-                  <th>Concepto</th>
-                  <th>Categoría</th>
-                  <th>Usuario</th>
-                  <th>Monto</th>
-                  <th>Acción</th>
-                </tr>
-              </thead>
-              <tbody id="tabla-gastos-body"></tbody>
             </table>
           </div>
         </div>
@@ -1363,10 +1362,6 @@
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
                 <span>Firma</span>
             </button>
-            <button class="nav-btn" id="btn-nav-gastos" onclick="cambiarVista('gastos')">
-                <svg viewBox="0 0 24 24"><path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"></path></svg>
-                <span>Gastos</span>
-            </button>
             <button class="nav-btn" id="btn-nav-contabilidad" onclick="cambiarVista('contabilidad')">
                 <svg viewBox="0 0 24 24"><path d="M3 3v18h18V3H3zm16 16H5V5h14v14zM7 10h2v7H7zm4-3h2v10h-2zm4 5h2v5h-2z"></path></svg>
                 <span>Contable</span>
@@ -1423,7 +1418,7 @@
 
     async function cambiarVista(vista) {
       const esCajero = usuarioActual && (usuarioActual.rol === 'Cajero' || usuarioActual.rol === 'Encargado');
-      if (esCajero && (vista === 'contabilidad' || vista === 'kardex' || vista === 'inventario' || vista === 'historial' || vista === 'reportes' || vista === 'personal' || vista === 'locales' || vista === 'usuarios' || vista === 'gastos')) {
+      if (esCajero && (vista === 'contabilidad' || vista === 'kardex' || vista === 'inventario' || vista === 'historial' || vista === 'reportes' || vista === 'personal' || vista === 'locales' || vista === 'usuarios')) {
         return alert('Acceso denegado. Tu cuenta de Cajero solo permite procesar ventas, abrir/cerrar caja y registrar clientes.');
       }
 
@@ -1440,8 +1435,10 @@
       if(btnNav) btnNav.classList.add('active');
 
       if (vista === 'pos') renderizarCarritosTabs();
-      if (vista === 'arqueo') await prepararVistaArqueo();
-      if (vista === 'gastos') renderGastosLocales();
+      if (vista === 'arqueo') {
+        await prepararVistaArqueo();
+        renderGastosLocales();
+      }
       if (vista === 'contabilidad') renderContabilidadFlujo();
       if (vista === 'kardex') renderKardex();
       if (vista === 'clientes') renderClientes();
@@ -2201,7 +2198,7 @@
 
     async function registrarSalidaDinero() {
       const concepto = document.getElementById('gasto-concepto').value.trim();
-      const categoria = document.getElementById('gasto-categoria').value;
+      const categoria = document.getElementById('gasto-categoria').value.trim() || 'General';
       const monto = parseFloat(document.getElementById('gasto-monto').value) || 0;
 
       if (!concepto || monto <= 0) {
@@ -2232,6 +2229,7 @@
       });
 
       document.getElementById('gasto-concepto').value = '';
+      document.getElementById('gasto-categoria').value = '';
       document.getElementById('gasto-monto').value = '';
       renderGastosLocales();
       alert('Salida de dinero registrada con éxito.');
