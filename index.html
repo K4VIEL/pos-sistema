@@ -1834,9 +1834,9 @@
       let vuelto = pago - total;
       
       const vueltoTxt = document.getElementById('modal-vuelto-txt');
-      if (vuelto >= 0) {
+      if (vuelto >= -0.01) {
         vueltoTxt.style.color = 'var(--success)';
-        vueltoTxt.innerText = `$${vuelto.toFixed(2)}`;
+        vueltoTxt.innerText = `$${Math.max(0, vuelto).toFixed(2)}`;
       } else {
         vueltoTxt.style.color = 'var(--danger)';
         vueltoTxt.innerText = `Faltan $${Math.abs(vuelto).toFixed(2)}`;
@@ -1851,7 +1851,10 @@
 
       if (metodo === 'Efectivo') {
         let pago = parseFloat(document.getElementById('modal-pago').value) || 0;
-        if (pago < total) return alert('El monto pagado es menor que el total de la venta.');
+        // VALIDACIÓN CORREGIDA: Permite montos exactos considerando pequeñas diferencias por decimales
+        if (pago < total && Math.abs(pago - total) > 0.01) {
+          return alert('El monto pagado es menor que el total de la venta.');
+        }
       }
 
       cerrarModalCobro();
