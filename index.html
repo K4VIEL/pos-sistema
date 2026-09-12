@@ -46,7 +46,7 @@
     body { background-color: var(--bg); color: var(--text); display: flex; flex-direction: column; min-height: 100vh; padding-bottom: 95px; }
 
     /* =========================================================
-       BARRAS DESLIZANTES (SCROLLBARS) MODERNAS Y MINIMALISTAS
+       DISEÑO MODERNO PARA LAS BARRAS DESLIZANTES (SCROLLBARS)
        ========================================================= */
     *::-webkit-scrollbar {
       width: 6px;
@@ -174,8 +174,7 @@
 
     .card { background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border); padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
     
-    /* VISTA POS INVERTIDA: CARRITO A LA IZQUIERDA, CATÁLOGO A LA DERECHA */
-    .grid-pos-dividida { display: grid; grid-template-columns: 1fr 1.2fr; gap: 16px; align-items: start; }
+    .grid-pos-dividida { display: grid; grid-template-columns: 1.2fr 1fr; gap: 16px; align-items: start; }
     @media (max-width: 900px) { .grid-pos-dividida { grid-template-columns: 1fr; } }
 
     label { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); display: block; margin-top: 8px; }
@@ -317,7 +316,7 @@
   <div id="vista-tienda-online">
     <div class="store-hero-banner">
       <h1 id="store-title" style="font-size: 2rem; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.5px;">Tienda Online</h1>
-      <p id="store-subtitle" style="font-size: 1rem; color: #94a3b8; max-width: 600px; margin: 0 auto;">Explora nuestro catálogo y haz tu pedido a domicilio.</p>
+      <p id="store-subtitle" style="font-size: 1rem; color: #94a3b8; max-width: 600px; margin: 0 auto;">Explora nuestro catálogo y haz tu pedido a domicilio de forma rápida y segura.</p>
     </div>
 
     <div class="store-main-container">
@@ -327,7 +326,7 @@
           <p style="font-size: 0.95px; color: #0f172a; font-weight: 600;" id="store-status-text">Abierto para pedidos</p>
         </div>
         <div style="display: flex; gap: 10px; align-items: center;">
-          <button class="btn btn-primary btn-sm" style="padding: 10px 18px; border-radius: 30px; font-weight: 700;" onclick="abrirCarritoWebModal()">🛒 Ver Mi Pedido (<span id="store-cart-count">0</span>)</button>
+          <button class="btn btn-primary btn-sm" style="padding: 10px 18px; border-radius: 30px; font-weight: 700; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);" onclick="abrirCarritoWebModal()">🛒 Ver Mi Pedido (<span id="store-cart-count">0</span>)</button>
         </div>
       </div>
 
@@ -337,7 +336,7 @@
     <div id="modal-carrito-web" class="modal-overlay">
       <div class="modal-box" style="padding: 25px; border-radius: 20px; max-width: 520px; width: 100%; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); max-height: 90vh; overflow-y: auto;">
         <h3 style="font-size: 1.3rem; margin-bottom: 5px; color: #0f172a;">Resumen de tu Pedido</h3>
-        <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 12px;">Completa tus datos de entrega a domicilio.</p>
+        <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 12px;">Completa tus datos de facturación y entrega a domicilio.</p>
         
         <div class="table-responsive" style="max-height: 180px; margin: 5px 0; border: 1px solid #e2e8f0; border-radius: 12px; padding: 5px;">
           <table>
@@ -370,20 +369,21 @@
               <input type="text" id="web-cli-nombre" placeholder="Ej: María" style="border-radius: 8px; border: 1px solid #cbd5e1; padding: 8px 10px; font-size:0.9rem;">
             </div>
             <div>
-              <label style="color:#334155; font-size:0.75rem;">Apellidos *</label>
+              <label style="color:#334155; font-size:0.75rem;">Apellidos / Razón Social *</label>
               <input type="text" id="web-cli-apellido" placeholder="Ej: López" style="border-radius: 8px; border: 1px solid #cbd5e1; padding: 8px 10px; font-size:0.9rem;">
             </div>
           </div>
 
           <h4 style="font-size: 0.95rem; color: #0f172a; margin-top: 10px; margin-bottom: 4px;">Datos de Envío a Domicilio</h4>
-          <label style="color:#334155; font-size:0.75rem;">WhatsApp *</label>
+          
+          <label style="color:#334155; font-size:0.75rem;">Número de WhatsApp (Obligatorio) *</label>
           <input type="text" id="web-cli-whatsapp" placeholder="Ej: 0991234567" style="border-radius: 8px; border: 1px solid #cbd5e1; padding: 8px 10px; font-size:0.9rem;">
 
           <label style="color:#334155; font-size:0.75rem;">Dirección Exacta *</label>
-          <input type="text" id="web-cli-direccion" placeholder="Calle principal y número" style="border-radius: 8px; border: 1px solid #cbd5e1; padding: 8px 10px; font-size:0.9rem;">
+          <input type="text" id="web-cli-direccion" placeholder="Calle principal y número de casa" style="border-radius: 8px; border: 1px solid #cbd5e1; padding: 8px 10px; font-size:0.9rem;">
 
-          <label style="color:#334155; font-size:0.75rem;">Referencias</label>
-          <textarea id="web-cli-referencia" placeholder="Casa blanca de dos pisos..." style="border-radius: 8px; border: 1px solid #cbd5e1; padding: 8px 10px; height: 55px; resize: none; font-size:0.9rem;"></textarea>
+          <label style="color:#334155; font-size:0.75rem;">Referencias de Ubicación / Coordenadas (Opcional)</label>
+          <textarea id="web-cli-referencia" placeholder="Ej: Casa color blanca de dos pisos..." style="border-radius: 8px; border: 1px solid #cbd5e1; padding: 8px 10px; height: 55px; resize: none; font-size:0.9rem;"></textarea>
         </div>
 
         <div style="display: flex; gap: 10px; margin-top: 15px;">
@@ -442,7 +442,7 @@
       </div>
 
       <div id="seccion-deuna-qr" style="display:none; text-align:center; margin-top:10px;">
-        <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:8px;">Escanea el código QR con la App de Deuna:</p>
+        <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:8px;">Escanea el código QR con la App de Deuna del local:</p>
         <div id="contenedor-qr-imagen" style="min-height:160px; display:flex; align-items:center; justify-content:center; background:var(--bg); border-radius:8px; border:1px dashed var(--border);">
           <span style="font-size:0.8rem; color:var(--text-muted);">Generando código QR...</span>
         </div>
@@ -470,10 +470,18 @@
     <nav class="nav-bar no-print" id="app-nav-bar"></nav>
 
     <main>
-      <!-- VISTA POS (INVERTIDA: CARRITO IZQUIERDA, CATÁLOGO DERECHA) -->
+      <!-- VISTA POS -->
       <section id="vista-pos" class="page-section active">
         <div class="grid-pos-dividida">
-          <!-- Columna Izquierda: Carrito y Opciones de Pago -->
+          <div class="card" style="margin: 0; display: flex; flex-direction: column; height: 100%;">
+            <h3 style="margin-bottom: 8px; font-size: 1rem;">Catálogo de Productos</h3>
+            <div style="display:flex; gap:8px; margin-bottom:10px;">
+              <input type="text" id="pos-buscar" placeholder="🔍 Buscar por nombre o código..." oninput="renderProductosPOS()" onkeydown="detectarCodigoEnter(event)" style="margin:0;">
+              <button class="btn btn-primary btn-sm" onclick="abrirCamaraPOS()" style="margin:0; white-space:nowrap;">📷 Escanear</button>
+            </div>
+            <div class="product-grid" id="pos-grid-productos"></div>
+          </div>
+
           <div class="card" style="margin: 0; display: flex; flex-direction: column;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
               <h3 style="margin:0;">Carrito Actual</h3>
@@ -528,16 +536,6 @@
                 </select>
             </div>
           </div>
-
-          <!-- Columna Derecha: Buscador y Cuadrícula de Productos -->
-          <div class="card" style="margin: 0; display: flex; flex-direction: column; height: 100%;">
-            <h3 style="margin-bottom: 8px; font-size: 1rem;">Catálogo de Productos</h3>
-            <div style="display:flex; gap:8px; margin-bottom:10px;">
-              <input type="text" id="pos-buscar" placeholder="🔍 Buscar por nombre o código..." oninput="renderProductosPOS()" onkeydown="detectarCodigoEnter(event)" style="margin:0;">
-              <button class="btn btn-primary btn-sm" onclick="abrirCamaraPOS()" style="margin:0; white-space:nowrap;">📷 Escanear</button>
-            </div>
-            <div class="product-grid" id="pos-grid-productos"></div>
-          </div>
         </div>
       </section>
 
@@ -545,7 +543,7 @@
       <div id="modal-firma-config" class="modal-overlay" style="display: none;">
           <div class="modal-box" style="padding: 24px; border-radius: 16px; width: 100%; max-width: 420px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);">
               <h3 style="font-size: 1.25rem; margin-bottom: 15px; color: var(--text); text-align: center;">Configuración de Firma Electrónica</h3>
-              <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">Sube tu archivo de firma digital (.p12 / .pfx) y contraseña.</p>
+              <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">Sube tu archivo de firma digital (.p12 / .pfx) y escribe su contraseña.</p>
               
               <div style="margin-bottom: 15px;">
                   <label style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 5px;">Archivo de Firma (.p12 / .pfx)</label>
@@ -598,7 +596,7 @@
           </div>
       </section>
 
-      <!-- VISTA ARQUEO DE CAJA Y MOVIMIENTOS (INGRESOS Y EGRESOS) -->
+      <!-- VISTA ARQUEO DE CAJA -->
       <section id="vista-arqueo" class="page-section">
         <div class="card">
           <h3>Arqueo y Cierre de Caja (Turnos)</h3>
@@ -641,38 +639,8 @@
           </div>
         </div>
 
-        <!-- SECCIÓN DE INGRESOS DE DINERO A CAJA -->
-        <div class="card">
-          <h3>Registro de Ingresos de Dinero a Caja</h3>
-          <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:12px;">Registra aportes de capital, cambio adicional u otros ingresos extraordinarios.</p>
-          
-          <div class="form-row">
-            <div>
-              <label>Concepto / Detalle *</label>
-              <input type="text" id="ingreso-concepto" placeholder="Ej: Inyección de cambio adicional">
-            </div>
-            <div>
-              <label>Categoría *</label>
-              <input type="text" id="ingreso-categoria" list="lista-ingresos-sugeridas" placeholder="Selecciona o escribe otra...">
-              <datalist id="lista-ingresos-sugeridas">
-                <option value="Aporte de Capital">
-                <option value="Cambio / Fondo Adicional">
-                <option value="Otros Ingresos de Caja">
-              </datalist>
-            </div>
-          </div>
-
-          <label>Monto a Ingresar ($) *</label>
-          <input type="number" step="0.01" id="ingreso-monto" placeholder="0.00">
-
-          <button class="btn btn-success" onclick="registrarIngresoDinero()" style="margin-top:10px;">Registrar Ingreso a Caja</button>
-        </div>
-
-        <!-- SECCIÓN DE SALIDAS DE DINERO (EGRESOS) -->
         <div class="card">
           <h3>Registro de Salidas de Dinero / Gastos de Caja</h3>
-          <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:12px;">Registra pagos a proveedores, luz o servicios sacando efectivo de la caja actual.</p>
-          
           <div class="form-row">
             <div>
               <label>Concepto / Detalle *</label>
@@ -692,7 +660,6 @@
 
           <label>Monto a Retirar ($) *</label>
           <input type="number" step="0.01" id="gasto-monto" placeholder="0.00">
-
           <button class="btn btn-danger" onclick="registrarSalidaDinero()" style="margin-top:10px;">Registrar Salida de Caja</button>
         </div>
 
@@ -1108,7 +1075,6 @@
     let dbArqueos = [];
     let dbMermas = [];
     let dbGastos = [];
-    let dbIngresos = [];
     
     let usuarioActual = JSON.parse(localStorage.getItem('usuarioActual')) || null;
     
@@ -1174,7 +1140,7 @@
 
     async function cargarDatosSupabase() {
       try {
-        const [resLoc, resUsr, resProd, resCli, resVen, resArq, resMer, resGas, resIng] = await Promise.all([
+        const [resLoc, resUsr, resProd, resCli, resVen, resArq, resMer, resGas] = await Promise.all([
           supabaseClient.from('locales').select('*'),
           supabaseClient.from('usuarios').select('*'),
           supabaseClient.from('productos').select('*'),
@@ -1182,8 +1148,7 @@
           supabaseClient.from('ventas').select('*'),
           supabaseClient.from('arqueos').select('*').order('fecha_apertura', { ascending: false }),
           supabaseClient.from('mermas_auditoria').select('*').order('fecha_hora', { ascending: false }),
-          supabaseClient.from('gastos_operativos').select('*').order('fecha_hora', { ascending: false }),
-          supabaseClient.from('ingresos_operativos').select('*').order('fecha_hora', { ascending: false }).catch(() => ({ data: [] }))
+          supabaseClient.from('gastos_operativos').select('*').order('fecha_hora', { ascending: false })
         ]);
 
         if (resLoc.data) {
@@ -1279,18 +1244,6 @@
             monto: parseFloat(g.monto) || 0,
             fechaHora: g.fecha_hora,
             usuario: g.usuario
-          }));
-        }
-
-        if (resIng && resIng.data) {
-          dbIngresos = resIng.data.map(i => ({
-            id: i.id,
-            localId: String(i.local_id || i.localId || '').trim(),
-            concepto: i.concepto,
-            categoria: i.categoria,
-            monto: parseFloat(i.monto) || 0,
-            fechaHora: i.fecha_hora,
-            usuario: i.usuario
           }));
         }
       } catch (err) {
@@ -1453,7 +1406,6 @@
       if (vista === 'arqueo') {
         await prepararVistaArqueo();
         renderGastosLocales();
-        renderIngresosLocales();
       }
       if (vista === 'contabilidad') renderContabilidadFlujo();
       if (vista === 'kardex') renderKardex();
@@ -2127,15 +2079,7 @@
       let tEfectivo = 0;
       ventasTurno.forEach(v => { if (!v.metodoPago || v.metodoPago === 'Efectivo') tEfectivo += v.total; });
 
-      const ingresosTurno = (dbIngresos || []).filter(i => String(i.localId || i.local_id).trim() === String(usuarioActual.localId) && new Date(i.fechaHora) >= new Date(arqueoAbierto.fechaApertura));
-      let totalIngresosCaja = 0;
-      ingresosTurno.forEach(i => { totalIngresosCaja += Number(i.monto || 0); });
-
-      const gastosTurno = (dbGastos || []).filter(g => String(g.localId || g.local_id).trim() === String(usuarioActual.localId) && new Date(g.fechaHora) >= new Date(arqueoAbierto.fechaApertura));
-      let totalGastosCaja = 0;
-      gastosTurno.forEach(g => { totalGastosCaja += Number(g.monto || 0); });
-
-      const esperado = arqueoAbierto.fondoInicial + tEfectivo + totalIngresosCaja - totalGastosCaja;
+      const esperado = arqueoAbierto.fondoInicial + tEfectivo;
       const fisico = parseFloat(document.getElementById('arq-conteo-fisico').value) || 0;
       const diferencia = fisico - esperado;
 
@@ -2175,43 +2119,6 @@
       `).join('') || `<tr><td colspan="6" style="text-align:center;">No hay arqueos registrados</td></tr>`;
     }
 
-    async function registrarIngresoDinero() {
-      const concepto = document.getElementById('ingreso-concepto').value.trim();
-      const categoria = document.getElementById('ingreso-categoria').value.trim() || 'Aporte General';
-      const monto = parseFloat(document.getElementById('ingreso-monto').value) || 0;
-
-      if (!concepto || monto <= 0) return alert('Ingresa un concepto válido y un monto mayor a cero.');
-
-      const nuevoIngreso = {
-        id: 'ING-' + Date.now(),
-        local_id: String(usuarioActual.localId),
-        concepto: concepto,
-        categoria: categoria,
-        monto: monto,
-        fecha_hora: new Date().toISOString(),
-        usuario: usuarioActual.user
-      };
-
-      const { error } = await supabaseClient.from('ingresos_operativos').insert([nuevoIngreso]);
-      if (error) return alert('Error al registrar ingreso: ' + error.message);
-
-      dbIngresos.push({
-        id: nuevoIngreso.id,
-        localId: nuevoIngreso.local_id,
-        concepto: nuevoIngreso.concepto,
-        categoria: nuevoIngreso.categoria,
-        monto: nuevoIngreso.monto,
-        fechaHora: nuevoIngreso.fecha_hora,
-        usuario: nuevoIngreso.usuario
-      });
-
-      document.getElementById('ingreso-concepto').value = '';
-      document.getElementById('ingreso-categoria').value = '';
-      document.getElementById('ingreso-monto').value = '';
-      calcularDiferenciaArqueo();
-      alert('Ingreso de dinero registrado con éxito.');
-    }
-
     async function registrarSalidaDinero() {
       const concepto = document.getElementById('gasto-concepto').value.trim();
       const categoria = document.getElementById('gasto-categoria').value.trim() || 'General';
@@ -2246,12 +2153,7 @@
       document.getElementById('gasto-categoria').value = '';
       document.getElementById('gasto-monto').value = '';
       renderGastosLocales();
-      calcularDiferenciaArqueo();
       alert('Salida registrada.');
-    }
-
-    function renderIngresosLocales() {
-      // Opcional por si deseas listar ingresos en tabla o mantenerlo dinámico en el arqueo
     }
 
     function renderGastosLocales() {
@@ -2277,7 +2179,6 @@
       await supabaseClient.from('gastos_operativos').delete().eq('id', id);
       dbGastos = dbGastos.filter(g => g.id !== id);
       renderGastosLocales();
-      calcularDiferenciaArqueo();
     }
 
     function renderContabilidadFlujo() {
@@ -2285,11 +2186,9 @@
       const ventasLocal = dbVentas.filter(v => String(v.localId || v.local_id).trim() === localId);
       const mermasLocal = (dbMermas || []).filter(m => String(m.localId || m.local_id || '').trim() === localId);
       const gastosLocal = (dbGastos || []).filter(g => String(g.localId || g.local_id).trim() === localId);
-      const ingresosLocal = (dbIngresos || []).filter(i => String(i.localId || i.local_id).trim() === localId);
 
       let totalIngresos = 0;
       ventasLocal.forEach(v => { totalIngresos += Number(v.total || 0); });
-      ingresosLocal.forEach(i => { totalIngresos += Number(i.monto || 0); });
 
       let totalSalidas = 0;
       mermasLocal.forEach(m => { totalSalidas += Number(m.montoTotal || 0); });
@@ -2310,18 +2209,6 @@
             <td><b>${v.id}</b></td>
             <td>Ingreso por Venta (${v.metodoPago || 'Efectivo'}) - Cliente: ${clienteLimpio}</td>
             <td class="text-success">+$${Number(v.total).toFixed(2)}</td>
-            <td>$0.00</td>
-          </tr>
-        `;
-      });
-
-      ingresosLocal.forEach(i => {
-        htmlDiario += `
-          <tr style="background-color: var(--bg);">
-            <td>${new Date(i.fechaHora).toLocaleString()}</td>
-            <td><span style="color:var(--success); font-weight:bold;">[INGRESO]</span> ${i.id}</td>
-            <td>Aporte / Ingreso extraordinario: ${i.concepto} (${i.categoria})</td>
-            <td class="text-success">+$${Number(i.monto || 0).toFixed(2)}</td>
             <td>$0.00</td>
           </tr>
         `;
