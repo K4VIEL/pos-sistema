@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Tienda Online - Pedidos a Domicilio</title>
+  <!-- LIBRERÍAS EXTERNAS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
@@ -94,7 +95,6 @@
 
     .card { background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border); padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
     
-    /* INTERCAMBIADO: Carrito a la Izquierda, Catálogo a la Derecha */
     .grid-pos-dividida { display: grid; grid-template-columns: 1fr 1.2fr; gap: 16px; align-items: start; }
     @media (max-width: 900px) { .grid-pos-dividida { grid-template-columns: 1fr; } }
 
@@ -110,9 +110,9 @@
     .btn-success { background: var(--success); color: white; }
     .btn-sm { padding: 6px 12px; font-size: 0.85rem; width: auto; margin: 0; }
 
-    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 12px; }
-    .kpi-card { background: var(--bg); border: 1px solid var(--border); padding: 14px; border-radius: 10px; text-align: center; }
-    .kpi-card .kpi-val { font-size: 1.25rem; font-weight: 800; margin-top: 4px; }
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-top: 12px; }
+    .kpi-card { background: var(--bg); border: 1px solid var(--border); padding: 16px; border-radius: 10px; text-align: center; }
+    .kpi-card .kpi-val { font-size: 1.4rem; font-weight: 800; margin-top: 4px; }
 
     .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; max-height: 480px; overflow-y: auto; padding-right: 4px; }
     .product-card { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px; text-align: center; cursor: pointer; }
@@ -149,7 +149,7 @@
 </head>
 <body data-theme="dark">
 
-  <!-- TIENDA ONLINE -->
+  <!-- VISTA TIENDA ONLINE -->
   <div id="vista-tienda-online">
     <div class="store-hero-banner">
       <h1 id="store-title" style="font-size: 2rem; font-weight: 800; margin-bottom: 8px;">Tienda Online</h1>
@@ -229,10 +229,9 @@
     <nav class="nav-bar no-print" id="app-nav-bar"></nav>
 
     <main>
-      <!-- VISTA POS (Carrito Izquierda / Catálogo Derecha) -->
+      <!-- VISTA POS -->
       <section id="vista-pos" class="page-section active">
         <div class="grid-pos-dividida">
-          <!-- Carrito Izquierda -->
           <div class="card" style="margin: 0; display: flex; flex-direction: column;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
               <h3 style="margin:0;">Carrito Actual</h3>
@@ -264,7 +263,6 @@
             <button class="btn btn-primary" onclick="abrirModalCobro()" style="padding: 12px; font-size: 1.05rem;">Cobrar e Imprimir</button>
           </div>
 
-          <!-- Catálogo Derecha -->
           <div class="card" style="margin: 0; display: flex; flex-direction: column; height: 100%;">
             <h3 style="margin-bottom: 8px; font-size: 1rem;">Catálogo de Productos</h3>
             <div style="display:flex; gap:8px; margin-bottom:10px;">
@@ -289,7 +287,7 @@
         </div>
       </section>
 
-      <!-- VISTA ARQUEO DE CAJA (Con Ingresos y Salidas integrados de forma interna) -->
+      <!-- VISTA ARQUEO DE CAJA (Con Ingresos y Salidas integrados internamente) -->
       <section id="vista-arqueo" class="page-section">
         <div class="card">
           <h3>Arqueo y Cierre de Caja (Turnos)</h3>
@@ -332,7 +330,7 @@
           </div>
         </div>
 
-        <!-- SECCIÓN DE INGRESOS Y SALIDAS DE DINERO INTERNAS (Sin tablas externas) -->
+        <!-- SECCIÓN DE INGRESOS Y SALIDAS INTERNAS -->
         <div class="card" id="card-movimientos-caja" style="display:none;">
           <h3>Registrar Ingreso o Salida de Efectivo</h3>
           <div class="form-row">
@@ -372,6 +370,32 @@
         </div>
       </section>
 
+      <!-- VISTA CONTABILIDAD -->
+      <section id="vista-contabilidad" class="page-section">
+        <div class="card">
+          <h3>Flujo de Caja y Asientos Automáticos</h3>
+          <div class="table-responsive">
+            <table>
+              <thead><tr><th>Fecha</th><th>ID</th><th>Detalle</th><th>Debe</th><th>Haber</th></tr></thead>
+              <tbody id="contab-tabla-diario"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- VISTA KARDEX -->
+      <section id="vista-kardex" class="page-section">
+        <div class="card">
+          <h3>Kardex de Facturación</h3>
+          <div class="table-responsive">
+            <table>
+              <thead><tr><th>Ticket</th><th>Fecha</th><th>Cliente</th><th>Total</th></tr></thead>
+              <tbody id="kardex-tabla"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
       <!-- VISTA CLIENTES -->
       <section id="vista-clientes" class="page-section">
         <div class="card">
@@ -385,7 +409,7 @@
         </div>
       </section>
 
-      <!-- VISTA INVENTARIO / STOCK -->
+      <!-- VISTA INVENTARIO -->
       <section id="vista-inventario" class="page-section">
         <div class="card">
           <h3>Gestión de Productos</h3>
@@ -423,6 +447,32 @@
             </table>
           </div>
         </div>
+      </section>
+
+      <!-- VISTA REPORTES -->
+      <section id="vista-reportes" class="page-section">
+        <div class="card">
+          <h3>Reporte de Desempeño</h3>
+          <div class="kpi-grid">
+            <div class="kpi-card"><label>Ventas Totales</label><div class="kpi-val text-success" id="rep-val-ventas">$0.00</div></div>
+            <div class="kpi-card"><label>Ganancia Neta</label><div class="kpi-val" style="color:var(--primary);" id="rep-val-ganancia">$0.00</div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VISTA PERSONAL -->
+      <section id="vista-personal" class="page-section">
+        <div class="card"><h3>Gestión de Personal</h3></div>
+      </section>
+
+      <!-- VISTA LOCALES -->
+      <section id="vista-locales" class="page-section">
+        <div class="card"><h3>Locales y Sucursales</h3></div>
+      </section>
+
+      <!-- VISTA USUARIOS -->
+      <section id="vista-usuarios" class="page-section">
+        <div class="card"><h3>Control de Usuarios</h3></div>
       </section>
     </main>
   </div>
@@ -557,26 +607,18 @@
     function construirMenuNavegacion() {
       const navBar = document.getElementById('app-nav-bar');
       navBar.innerHTML = `
-        <button class="nav-btn active" id="btn-nav-pos" onclick="cambiarVista('pos')">
-            <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.60 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"></path></svg>
-            <span>Ventas</span>
-        </button>
-        <button class="nav-btn" id="btn-nav-facturas" onclick="cambiarVista('facturas')">
-            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"></path></svg>
-            <span>Facturas</span>
-        </button>
-        <button class="nav-btn" id="btn-nav-arqueo" onclick="cambiarVista('arqueo')">
-            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 4h-2v2h2V7zM7 7h2v2H7V7zm10 4h-2v2h2v-2zm-4 0h-2v2h2v-2zm-4 0H7v2h2v-2zm4 4h-2v2h2v-2zm-4 0H7v2h2v-2zm10 4H7v2h10v-2z"></path></svg>
-            <span>Arqueo Caja</span>
-        </button>
-        <button class="nav-btn" id="btn-nav-inventario" onclick="cambiarVista('inventario')">
-            <svg viewBox="0 0 24 24"><path d="M20 13H4c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h16c.55 0 1-.45 1-1v-6c0-.55-.45-1-1-1zM7 19c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm10 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM20 9H4c-.55 0-1 .45-1 1v4c0 .55.45 1 1 1h16c.55 0 1-.45 1-1v-4c0-.55-.45-1-1-1zM7 13c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm10 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM12 3L2 8h20L12 3z"></path></svg>
-            <span>Stock</span>
-        </button>
-        <button class="nav-btn" id="btn-nav-historial" onclick="cambiarVista('historial')">
-            <svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.74-4.94-2.01-1.42 1.42-3.14 2.12-4.94 2.01C2.08 19.89 0 16.27 0 12c0-4.97 4.03-9 9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"></path></svg>
-            <span>Historial</span>
-        </button>
+        <button class="nav-btn active" id="btn-nav-pos" onclick="cambiarVista('pos')"><span>Ventas</span></button>
+        <button class="nav-btn" id="btn-nav-facturas" onclick="cambiarVista('facturas')"><span>Facturas</span></button>
+        <button class="nav-btn" id="btn-nav-arqueo" onclick="cambiarVista('arqueo')"><span>Arqueo</span></button>
+        <button class="nav-btn" id="btn-nav-contabilidad" onclick="cambiarVista('contabilidad')"><span>Contable</span></button>
+        <button class="nav-btn" id="btn-nav-kardex" onclick="cambiarVista('kardex')"><span>Kardex</span></button>
+        <button class="nav-btn" id="btn-nav-clientes" onclick="cambiarVista('clientes')"><span>Clientes</span></button>
+        <button class="nav-btn" id="btn-nav-inventario" onclick="cambiarVista('inventario')"><span>Stock</span></button>
+        <button class="nav-btn" id="btn-nav-historial" onclick="cambiarVista('historial')"><span>Historial</span></button>
+        <button class="nav-btn" id="btn-nav-reportes" onclick="cambiarVista('reportes')"><span>Reportes</span></button>
+        <button class="nav-btn" id="btn-nav-personal" onclick="cambiarVista('personal')"><span>Personal</span></button>
+        <button class="nav-btn" id="btn-nav-locales" onclick="cambiarVista('locales')"><span>Locales</span></button>
+        <button class="nav-btn" id="btn-nav-usuarios" onclick="cambiarVista('usuarios')"><span>Usuarios</span></button>
       `;
     }
 
@@ -589,8 +631,10 @@
     function cambiarVista(vista) {
       document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
-      document.getElementById(`vista-${vista}`).classList.add('active');
-      document.getElementById(`btn-nav-${vista}`).classList.add('active');
+      const sec = document.getElementById(`vista-${vista}`);
+      const btn = document.getElementById(`btn-nav-${vista}`);
+      if(sec) sec.classList.add('active');
+      if(btn) btn.classList.add('active');
 
       if (vista === 'pos') renderizarCarritosTabs();
       if (vista === 'arqueo') prepararVistaArqueo();
@@ -598,6 +642,9 @@
       if (vista === 'facturas') cargarFacturas();
       if (vista === 'historial') renderHistorial();
       if (vista === 'clientes') renderClientes();
+      if (vista === 'kardex') renderKardex();
+      if (vista === 'contabilidad') renderContabilidadFlujo();
+      if (vista === 'reportes') renderReportes();
     }
 
     function obtenerCarritoActual() {
@@ -936,6 +983,27 @@
       document.getElementById('cli-tabla').innerHTML = lista.map(c => `
         <tr><td>${c.cedula}</td><td>${c.nombre}</td><td>${c.apellido}</td></tr>
       `).join('');
+    }
+
+    function renderKardex() {
+      const lista = dbVentas.filter(v => String(v.localId) === String(usuarioActual.localId));
+      document.getElementById('kardex-tabla').innerHTML = lista.map(v => `
+        <tr><td>${v.id}</td><td>${new Date(v.fecha).toLocaleString()}</td><td>${v.clienteNombre}</td><td>$${v.total.toFixed(2)}</td></tr>
+      `).join('');
+    }
+
+    function renderContabilidadFlujo() {
+      const lista = dbVentas.filter(v => String(v.localId) === String(usuarioActual.localId));
+      document.getElementById('contab-tabla-diario').innerHTML = lista.map(v => `
+        <tr><td>${new Date(v.fecha).toLocaleString()}</td><td>${v.id}</td><td>Venta General</td><td class="text-success">+$${v.total.toFixed(2)}</td><td>$0.00</td></tr>
+      `).join('');
+    }
+
+    function renderReportes() {
+      const lista = dbVentas.filter(v => String(v.localId) === String(usuarioActual.localId));
+      let total = lista.reduce((s, x) => s + x.total, 0);
+      document.getElementById('rep-val-ventas').innerText = `$${total.toFixed(2)}`;
+      document.getElementById('rep-val-ganancia').innerText = `$${(total * 0.3).toFixed(2)}`;
     }
 
     function seleccionarClienteAutocomplete() {}
