@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Tienda Online - Pedidos a Domicilio</title>
-  <!-- LIBRERÍAS EXTERNAS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
@@ -56,18 +55,12 @@
     .login-box h2 { font-size: 1.5rem; margin-bottom: 8px; color: var(--text); }
 
     .modal-overlay { 
-      position: fixed !important; 
-      inset: 0 !important; 
-      background: rgba(15, 23, 42, 0.7) !important; 
-      z-index: 10000 !important; 
-      display: none; 
-      align-items: flex-start !important;
-      justify-content: center !important; 
-      padding-top: 20px !important; 
-      overflow-y: auto !important; 
+      position: fixed !important; inset: 0 !important; background: rgba(15, 23, 42, 0.7) !important; 
+      z-index: 10000 !important; display: none; align-items: flex-start !important;
+      justify-content: center !important; padding-top: 20px !important; overflow-y: auto !important; 
     }
-
     .modal-box { background: var(--card-bg) !important; color: var(--text) !important; }
+
     .app-container { display: flex; flex: 1; flex-direction: column; }
     
     header { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
@@ -76,38 +69,19 @@
     .badge { background: var(--border); color: var(--primary); padding: 4px 10px; border-radius: 20px; font-weight: 600; }
 
     .nav-bar { 
-      background: var(--nav-bg-dark); 
-      border: 1px solid var(--nav-border-dark);
-      position: fixed; 
-      bottom: 15px; 
-      left: 50%;
-      transform: translateX(-50%);
-      width: 94%;
-      max-width: 750px;
-      display: flex; 
-      justify-content: flex-start; 
-      align-items: center;
-      padding: 0 10px; 
-      height: 70px;
-      z-index: 1000; 
-      border-radius: 40px;
-      box-shadow: 0 15px 35px rgba(0,0,0,0.4);
-      overflow-x: auto;
-      overflow-y: hidden;
+      background: var(--nav-bg-dark); border: 1px solid var(--nav-border-dark);
+      position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%);
+      width: 94%; max-width: 750px; display: flex; justify-content: flex-start; align-items: center;
+      padding: 0 10px; height: 70px; z-index: 1000; border-radius: 40px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.4); overflow-x: auto; overflow-y: hidden;
     }
-
-    [data-theme="light"] .nav-bar {
-      background: var(--nav-bg-light);
-      border: 1px solid var(--nav-border-light);
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-    }
+    [data-theme="light"] .nav-bar { background: var(--nav-bg-light); border: 1px solid var(--nav-border-light); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
 
     .nav-btn { 
       border: none; background: none; color: var(--nav-color-dark); font-size: 0.7rem; 
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       gap: 3px; cursor: pointer; flex: 0 0 72px; height: 100%; position: relative; transition: color 0.3s ease; white-space: nowrap;
     }
-
     [data-theme="light"] .nav-btn { color: var(--nav-color-light); }
     .nav-btn svg { width: 20px; height: 20px; fill: currentColor; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
     .nav-btn.active { color: var(--nav-active-dark); font-weight: 700; }
@@ -119,6 +93,8 @@
     .page-section.active { display: block !important; }
 
     .card { background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border); padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+    
+    /* INTERCAMBIADO: Carrito a la Izquierda, Catálogo a la Derecha */
     .grid-pos-dividida { display: grid; grid-template-columns: 1fr 1.2fr; gap: 16px; align-items: start; }
     @media (max-width: 900px) { .grid-pos-dividida { grid-template-columns: 1fr; } }
 
@@ -134,15 +110,16 @@
     .btn-success { background: var(--success); color: white; }
     .btn-sm { padding: 6px 12px; font-size: 0.85rem; width: auto; margin: 0; }
 
-    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-top: 12px; }
-    .kpi-card { background: var(--bg); border: 1px solid var(--border); padding: 16px; border-radius: 10px; text-align: center; }
-    .kpi-card .kpi-val { font-size: 1.4rem; font-weight: 800; margin-top: 4px; }
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 12px; }
+    .kpi-card { background: var(--bg); border: 1px solid var(--border); padding: 14px; border-radius: 10px; text-align: center; }
+    .kpi-card .kpi-val { font-size: 1.25rem; font-weight: 800; margin-top: 4px; }
 
     .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; max-height: 480px; overflow-y: auto; padding-right: 4px; }
-    .product-card { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px; text-align: center; cursor: pointer; transition: transform 0.2s; }
+    .product-card { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px; text-align: center; cursor: pointer; }
     .product-title { font-weight: 600; font-size: 0.82rem; margin-bottom: 4px; color: var(--text); }
     .product-price { color: var(--primary); font-weight: 700; font-size: 0.9rem; }
     .product-stock { font-size: 0.72rem; color: var(--text-muted); }
+    .stock-negative { color: var(--danger) !important; font-weight: bold; }
 
     .table-responsive { width: 100%; overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; color: var(--text); }
@@ -153,10 +130,39 @@
     .cart-tabs { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 10px; padding-bottom: 4px; }
     .cart-tab-btn { padding: 6px 12px; font-size: 0.8rem; background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 6px; cursor: pointer; white-space: nowrap; }
     .cart-tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); font-weight: bold; }
-    .item-anulado { text-decoration: line-link; color: var(--danger); background-color: var(--bg); }
+    .item-anulado { text-decoration: line-through; color: var(--danger); background-color: var(--bg); }
+
+    #vista-tienda-online { position: fixed; inset: 0; background: #f1f5f9; z-index: 20000; overflow-y: auto; display: none; padding: 0; }
+    .store-hero-banner { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: #ffffff; padding: 40px 20px; text-align: center; border-bottom: 4px solid var(--primary); }
+    .store-main-container { max-width: 1100px; margin: -25px auto 40px auto; padding: 0 20px; }
+    .store-top-bar { display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 16px 24px; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08); margin-bottom: 25px; border: 1px solid #e2e8f0; }
+    .store-products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 20px; }
+    .store-item-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; }
+
+    @media print {
+      body * { visibility: hidden; }
+      #factura-impresion, #factura-impresion * { visibility: visible; }
+      #factura-impresion { position: absolute; left: 0; top: 0; width: 100%; max-width: 300px; padding: 10px; color: #000 !important; background: #fff !important; }
+      .no-print { display: none !important; }
+    }
   </style>
 </head>
 <body data-theme="dark">
+
+  <!-- TIENDA ONLINE -->
+  <div id="vista-tienda-online">
+    <div class="store-hero-banner">
+      <h1 id="store-title" style="font-size: 2rem; font-weight: 800; margin-bottom: 8px;">Tienda Online</h1>
+      <p style="font-size: 1rem; color: #94a3b8;">Explora nuestro catálogo y haz tu pedido a domicilio.</p>
+    </div>
+    <div class="store-main-container">
+      <div class="store-top-bar">
+        <div><span style="font-size: 0.85rem; font-weight: 700; color: #64748b;">Catálogo Activo</span></div>
+        <button class="btn btn-primary btn-sm" onclick="abrirCarritoWebModal()">🛒 Ver Mi Pedido (<span id="store-cart-count">0</span>)</button>
+      </div>
+      <div class="store-products-grid" id="store-grid-catalogo"></div>
+    </div>
+  </div>
 
   <!-- LOGIN -->
   <div id="login-screen">
@@ -167,6 +173,44 @@
       <input type="password" id="login-pass" placeholder="Contraseña">
       <button class="btn btn-primary" onclick="iniciarSesion()">Acceder</button>
       <p id="login-error" style="color:var(--danger); font-size:0.8rem; display:none; margin-top:10px;">Usuario o contraseña incorrectos</p>
+    </div>
+  </div>
+
+  <!-- MODAL CÁMARA -->
+  <div id="modal-camara" class="modal-overlay">
+    <div class="modal-box" style="text-align: center; padding: 20px; border-radius: 12px; max-width: 400px; width: 100%;">
+      <h3>Escanear Código de Barras</h3>
+      <div id="reader" style="width: 100%; border-radius: 8px; overflow: hidden;"></div>
+      <button class="btn btn-danger" style="margin-top: 15px;" onclick="cerrarCamara()">Cerrar Cámara</button>
+    </div>
+  </div>
+
+  <!-- MODAL COBRO -->
+  <div id="modal-cobro" class="modal-overlay">
+    <div class="modal-box" style="padding: 20px; border-radius: 12px; max-width: 400px; width: 100%;">
+      <h3>Confirmar Pago</h3>
+      <div style="background:var(--bg); padding:12px; border-radius:8px; margin-bottom:12px; text-align:center;">
+        <span style="font-size:0.85rem; color:var(--text-muted);">Total a pagar:</span>
+        <div style="font-size:1.8rem; font-weight:800; color:var(--primary);" id="modal-total-txt">$0.00</div>
+      </div>
+      <label>Método de Pago</label>
+      <select id="modal-metodo-pago" onchange="cambiarMetodoPago()">
+        <option value="Efectivo">Efectivo</option>
+        <option value="Tarjeta">Tarjeta</option>
+        <option value="Transferencia">Transferencia</option>
+      </select>
+      <div id="seccion-efectivo">
+        <label>Efectivo Recibido ($)</label>
+        <input type="number" step="0.01" id="modal-pago" placeholder="0.00" oninput="calcularVuelto()" style="font-size: 1.2rem; text-align: center;">
+        <div style="margin: 10px 0; text-align: center;">
+          <span style="font-size:0.9rem; color:var(--text-muted);">Cambio / Vuelto:</span>
+          <div style="font-size:1.4rem; font-weight:700; color:var(--success);" id="modal-vuelto-txt">$0.00</div>
+        </div>
+      </div>
+      <div style="display: flex; gap: 10px; margin-top: 15px;">
+        <button class="btn btn-danger" style="flex:1; margin:0;" onclick="cerrarModalCobro()">Cancelar</button>
+        <button class="btn btn-primary" style="flex:1; margin:0;" onclick="confirmarYProcesarVenta()">Confirmar Cobro</button>
+      </div>
     </div>
   </div>
 
@@ -185,18 +229,16 @@
     <nav class="nav-bar no-print" id="app-nav-bar"></nav>
 
     <main>
-      <!-- VISTA POS -->
+      <!-- VISTA POS (Carrito Izquierda / Catálogo Derecha) -->
       <section id="vista-pos" class="page-section active">
         <div class="grid-pos-dividida">
-          <!-- Carrito a la Izquierda -->
+          <!-- Carrito Izquierda -->
           <div class="card" style="margin: 0; display: flex; flex-direction: column;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
               <h3 style="margin:0;">Carrito Actual</h3>
               <button class="btn btn-warning btn-sm" onclick="ponerCarritoEnEspera()">⏸ En espera</button>
             </div>
-
             <div class="cart-tabs" id="pos-cart-tabs"></div>
-
             <div class="form-row">
               <div>
                 <label>Lista de Precio</label>
@@ -212,7 +254,6 @@
                 <input type="hidden" id="pos-cliente-select" value="Consumidor Final">
               </div>
             </div>
-
             <div class="table-responsive" style="max-height: 220px; overflow-y: auto; margin-top:5px; border: 1px solid var(--border); border-radius: 8px;">
               <table>
                 <thead><tr><th>Prod</th><th>Cant</th><th>Total</th><th>Acción</th></tr></thead>
@@ -223,16 +264,32 @@
             <button class="btn btn-primary" onclick="abrirModalCobro()" style="padding: 12px; font-size: 1.05rem;">Cobrar e Imprimir</button>
           </div>
 
-          <!-- Catálogo a la Derecha -->
+          <!-- Catálogo Derecha -->
           <div class="card" style="margin: 0; display: flex; flex-direction: column; height: 100%;">
             <h3 style="margin-bottom: 8px; font-size: 1rem;">Catálogo de Productos</h3>
-            <input type="text" id="pos-buscar" placeholder="🔍 Buscar por nombre o código..." oninput="renderProductosPOS()" style="margin:0;">
-            <div class="product-grid" id="pos-grid-productos" style="margin-top: 10px;"></div>
+            <div style="display:flex; gap:8px; margin-bottom:10px;">
+              <input type="text" id="pos-buscar" placeholder="🔍 Buscar por nombre o código..." oninput="renderProductosPOS()" style="margin:0;">
+              <button class="btn btn-primary btn-sm" onclick="abrirCamaraPOS()" style="margin:0; white-space:nowrap;">📷 Escanear</button>
+            </div>
+            <div class="product-grid" id="pos-grid-productos"></div>
           </div>
         </div>
       </section>
 
-      <!-- VISTA ARQUEO DE CAJA -->
+      <!-- VISTA FACTURAS -->
+      <section id="vista-facturas" class="page-section">
+        <div class="card">
+          <h3>Historial de Facturas</h3>
+          <div class="table-responsive">
+            <table>
+              <thead><tr><th>ID</th><th>Cliente</th><th>Fecha</th><th>Total</th><th>Método</th><th>Acción</th></tr></thead>
+              <tbody id="tabla-facturas-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- VISTA ARQUEO DE CAJA (Con Ingresos y Salidas integrados de forma interna) -->
       <section id="vista-arqueo" class="page-section">
         <div class="card">
           <h3>Arqueo y Cierre de Caja (Turnos)</h3>
@@ -252,8 +309,8 @@
 
             <div class="kpi-grid" style="margin-top: 15px;">
               <div class="kpi-card"><label>Fondo Inicial</label><div class="kpi-val" id="arq-lbl-fondo">$0.00</div></div>
-              <div class="kpi-card"><label>Ventas en Efectivo</label><div class="kpi-val text-success" id="arq-lbl-efectivo">$0.00</div></div>
-              <div class="kpi-card"><label>Ingresos Extra (+)</label><div class="kpi-val text-success" id="arq-lbl-ingresos">$0.00</div></div>
+              <div class="kpi-card"><label>Ventas Efectivo</label><div class="kpi-val text-success" id="arq-lbl-efectivo">$0.00</div></div>
+              <div class="kpi-card"><label>Ingresos (+)</label><div class="kpi-val text-success" id="arq-lbl-ingresos">$0.00</div></div>
               <div class="kpi-card"><label>Salidas / Gastos (-)</label><div class="kpi-val" style="color:var(--danger);" id="arq-lbl-salidas">$0.00</div></div>
             </div>
 
@@ -275,7 +332,7 @@
           </div>
         </div>
 
-        <!-- SECCIÓN DE MOVIMIENTOS INTERNOS DE CAJA -->
+        <!-- SECCIÓN DE INGRESOS Y SALIDAS DE DINERO INTERNAS (Sin tablas externas) -->
         <div class="card" id="card-movimientos-caja" style="display:none;">
           <h3>Registrar Ingreso o Salida de Efectivo</h3>
           <div class="form-row">
@@ -292,7 +349,7 @@
             </div>
           </div>
           <label>Motivo o Concepto</label>
-          <input type="text" id="mov-concepto" placeholder="Ej: Pago a proveedor / Vuelto extra">
+          <input type="text" id="mov-concepto" placeholder="Ej: Pago a proveedor / Ingreso extra">
           <button class="btn btn-primary" onclick="registrarMovimientoCaja()" style="margin-top:5px;">Registrar Movimiento</button>
 
           <h4 style="margin-top: 15px; font-size: 0.95rem;">Movimientos de este Turno</h4>
@@ -303,25 +360,95 @@
             </table>
           </div>
         </div>
+
+        <div class="card">
+          <h3>Historial de Arqueos de Caja</h3>
+          <div class="table-responsive">
+            <table>
+              <thead><tr><th>Usuario</th><th>Apertura</th><th>Cierre</th><th>Fondo</th><th>Físico</th><th>Estado</th></tr></thead>
+              <tbody id="arqueo-historial-tabla"></tbody>
+            </table>
+          </div>
+        </div>
       </section>
 
-      <!-- VISTA INVENTARIO -->
+      <!-- VISTA CLIENTES -->
+      <section id="vista-clientes" class="page-section">
+        <div class="card">
+          <h3>Clientes Registrados</h3>
+          <div class="table-responsive">
+            <table>
+              <thead><tr><th>Cédula</th><th>Nombre</th><th>Apellido</th></tr></thead>
+              <tbody id="cli-tabla"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- VISTA INVENTARIO / STOCK -->
       <section id="vista-inventario" class="page-section">
         <div class="card">
           <h3>Gestión de Productos</h3>
           <div class="form-row">
             <div><label>Código</label><input type="text" id="inv-codigo" placeholder="Ej: 001"></div>
-            <div><label>Stock</label><input type="number" id="inv-stock" placeholder="10"></div>
+            <div><label>Stock</label><input type="number" step="0.01" id="inv-stock" placeholder="10"></div>
           </div>
-          <label>Nombre</label><input type="text" id="inv-nombre" placeholder="Producto">
+          <label>Nombre del Producto</label>
+          <input type="text" id="inv-nombre" placeholder="Nombre">
           <div class="form-row">
             <div><label>Costo ($)</label><input type="number" step="0.01" id="inv-costo" placeholder="0.00"></div>
             <div><label>Precio ($)</label><input type="number" step="0.01" id="inv-precio" placeholder="0.00"></div>
           </div>
           <button class="btn btn-primary" onclick="guardarProducto()">Guardar Producto</button>
         </div>
+        <div class="card">
+          <h3>Inventario Actual</h3>
+          <div class="table-responsive">
+            <table>
+              <thead><tr><th>Código</th><th>Producto</th><th>Costo</th><th>Precio</th><th>Stock</th></tr></thead>
+              <tbody id="inv-tabla-catalogo"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- VISTA HISTORIAL -->
+      <section id="vista-historial" class="page-section">
+        <div class="card">
+          <h3>Historial General de Ventas</h3>
+          <div class="table-responsive">
+            <table>
+              <thead><tr><th>Ticket</th><th>Cliente</th><th>Total</th><th>Método</th><th>Fecha</th></tr></thead>
+              <tbody id="historial-tabla"></tbody>
+            </table>
+          </div>
+        </div>
       </section>
     </main>
+  </div>
+
+  <!-- COMPROBANTE DE IMPRESIÓN -->
+  <div id="factura-impresion" style="display:none; max-width: 300px; margin: 0 auto; font-family: monospace; font-size: 12px; color: #000; background: #fff; padding: 10px;">
+    <div style="text-align: center;">
+        <h3 id="fac-local-nombre" style="margin: 0; font-size: 14px;"></h3>
+        <p style="margin: 2px 0;">RUC: <span id="fac-ruc"></span></p>
+    </div>
+    <hr style="border: none; border-top: 1px dashed #000; margin: 6px 0;">
+    <p style="margin: 2px 0;"><b>Ticket #:</b> <span id="fac-id"></span></p>
+    <p style="margin: 2px 0;"><b>Cliente:</b> <span id="fac-cliente">CONSUMIDOR FINAL</span></p>
+    <hr style="border: none; border-top: 1px dashed #000; margin: 6px 0;">
+    <table style="width: 100%; font-size: 11px;">
+        <thead><tr><th>Cant.</th><th>Descripción</th><th style="text-align: right;">Total</th></tr></thead>
+        <tbody id="fac-items"></tbody>
+    </table>
+    <hr style="border: none; border-top: 1px dashed #000; margin: 6px 0;">
+    <div style="text-align: right; font-size: 12px;">
+        <p style="margin: 2px 0; font-weight: bold;">TOTAL: $<span id="fac-total">0.00</span></p>
+    </div>
+    <div class="no-print" style="margin-top: 15px; text-align: center;">
+      <button class="btn btn-primary" onclick="window.print()">Imprimir Ticket</button>
+      <button class="btn btn-danger" onclick="document.getElementById('factura-impresion').style.display='none'">Cerrar</button>
+    </div>
   </div>
 
   <script>
@@ -329,38 +456,51 @@
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inljd3V6cWp3bXpoeW5oamF3bnFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcxNzUyNjQsImV4cCI6MjEwMjc1MTI2NH0.AuU9Us6BdYDTy2np4iJY9ltCFicVbIUtQ4D7FNDgIfM';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    let usuarioActual = JSON.parse(localStorage.getItem('usuarioActual')) || { user: 'admin', localId: 'LOC-001', rol: 'Administrador' };
+    let dbLocales = [];
+    let dbUsuarios = [];
     let dbProductos = [];
     let dbClientes = [];
     let dbVentas = [];
     let dbArqueos = [];
+    
+    let usuarioActual = JSON.parse(localStorage.getItem('usuarioActual')) || null;
     let carritos = [{ id: 1, nombre: 'Principal 1', items: [] }];
     let carritoActivoId = 1;
+    let html5QrCode = null;
     let clienteVentaSeleccionado = { cedula: '9999999999001', nombre: 'Consumidor Final' };
 
     function inicializarTema() {
       const temaGuardado = localStorage.getItem('pos_theme') || 'dark';
       document.body.setAttribute('data-theme', temaGuardado);
+      const btnTema = document.getElementById('btn-tema');
+      if (btnTema) btnTema.innerText = temaGuardado === 'dark' ? '☀️' : '🌙';
     }
+
     function toggleTema() {
       const actual = document.body.getAttribute('data-theme');
       const nuevo = actual === 'dark' ? 'light' : 'dark';
       document.body.setAttribute('data-theme', nuevo);
       localStorage.setItem('pos_theme', nuevo);
+      const btnTema = document.getElementById('btn-tema');
+      if (btnTema) btnTema.innerText = nuevo === 'dark' ? '☀️' : '🌙';
     }
 
     async function cargarDatosSupabase() {
       try {
-        const [resProd, resCli, resVen, resArq] = await Promise.all([
+        const [resLoc, resUsr, resProd, resCli, resVen, resArq] = await Promise.all([
+          supabaseClient.from('locales').select('*'),
+          supabaseClient.from('usuarios').select('*'),
           supabaseClient.from('productos').select('*'),
           supabaseClient.from('clientes').select('*'),
           supabaseClient.from('ventas').select('*'),
           supabaseClient.from('arqueos').select('*').order('fecha_apertura', { ascending: false })
         ]);
 
+        if (resLoc.data) dbLocales = resLoc.data.map(l => ({ id: l.id, nombre: l.nombre, ruc: l.ruc || '' }));
+        if (resUsr.data) dbUsuarios = resUsr.data.map(u => ({ id: u.id, user: u.user || u.usuario, pass: u.pass || u.password, rol: u.rol, localId: String(u.local_id || u.localId || '') }));
         if (resProd.data) dbProductos = resProd.data.map(p => ({ id: p.id, localId: String(p.local_id || ''), codigo: p.codigo || '', nombre: p.nombre || '', costo: parseFloat(p.costo) || 0, precio: parseFloat(p.precio) || 0, stock: parseFloat(p.stock) || 0 }));
         if (resCli.data) dbClientes = resCli.data.map(c => ({ id: c.id, localId: String(c.local_id || ''), cedula: c.cedula || '', nombre: c.nombre || '', apellido: c.apellido || '' }));
-        if (resVen.data) dbVentas = resVen.data.map(v => ({ id: v.id, localId: String(v.local_id || ''), metodoPago: v.metodo_pago || 'Efectivo', fecha: v.fecha, total: v.total, items: v.items || [] }));
+        if (resVen.data) dbVentas = resVen.data.map(v => ({ id: v.id, localId: String(v.local_id || ''), clienteNombre: v.cliente_nombre, metodoPago: v.metodo_pago || 'Efectivo', fecha: v.fecha, total: v.total, items: v.items || [] }));
         
         if (resArq.data) {
           dbArqueos = resArq.data.map(a => ({
@@ -378,13 +518,72 @@
       } catch (err) { console.error(err); }
     }
 
+    async function iniciarSesion() {
+      await cargarDatosSupabase();
+      const u = document.getElementById('login-user').value.trim();
+      const p = document.getElementById('login-pass').value.trim();
+      
+      let user = dbUsuarios.find(x => (x.user === u || x.usuario === u) && (x.pass === p || x.password === p));
+
+      if (user) {
+        const usuarioEstandarizado = {
+          id: user.id,
+          user: user.user || user.usuario,
+          pass: user.pass || user.password,
+          rol: user.rol,
+          localId: String(user.localId || user.local_id || '')
+        };
+
+        usuarioActual = usuarioEstandarizado;
+        localStorage.setItem('usuarioActual', JSON.stringify(usuarioEstandarizado));
+        aplicarSesionActiva();
+      } else {
+        document.getElementById('login-error').innerText = 'Usuario o contraseña incorrectos';
+        document.getElementById('login-error').style.display = 'block';
+      }
+    }
+
+    function aplicarSesionActiva() {
+      document.getElementById('login-error').style.display = 'none';
+      document.getElementById('login-screen').style.setProperty('display', 'none', 'important');
+      document.getElementById('session-user').innerText = usuarioActual.user;
+      const loc = dbLocales.find(l => String(l.id) === String(usuarioActual.localId));
+      document.getElementById('session-local').innerText = loc ? loc.nombre : 'Mi Tienda';
+
+      construirMenuNavegacion();
+      cambiarVista('pos');
+    }
+
     function construirMenuNavegacion() {
       const navBar = document.getElementById('app-nav-bar');
       navBar.innerHTML = `
-        <button class="nav-btn active" id="btn-nav-pos" onclick="cambiarVista('pos')"><span>Ventas</span></button>
-        <button class="nav-btn" id="btn-nav-arqueo" onclick="cambiarVista('arqueo')"><span>Arqueo Caja</span></button>
-        <button class="nav-btn" id="btn-nav-inventario" onclick="cambiarVista('inventario')"><span>Stock</span></button>
+        <button class="nav-btn active" id="btn-nav-pos" onclick="cambiarVista('pos')">
+            <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.60 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"></path></svg>
+            <span>Ventas</span>
+        </button>
+        <button class="nav-btn" id="btn-nav-facturas" onclick="cambiarVista('facturas')">
+            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"></path></svg>
+            <span>Facturas</span>
+        </button>
+        <button class="nav-btn" id="btn-nav-arqueo" onclick="cambiarVista('arqueo')">
+            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 4h-2v2h2V7zM7 7h2v2H7V7zm10 4h-2v2h2v-2zm-4 0h-2v2h2v-2zm-4 0H7v2h2v-2zm4 4h-2v2h2v-2zm-4 0H7v2h2v-2zm10 4H7v2h10v-2z"></path></svg>
+            <span>Arqueo Caja</span>
+        </button>
+        <button class="nav-btn" id="btn-nav-inventario" onclick="cambiarVista('inventario')">
+            <svg viewBox="0 0 24 24"><path d="M20 13H4c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h16c.55 0 1-.45 1-1v-6c0-.55-.45-1-1-1zM7 19c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm10 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM20 9H4c-.55 0-1 .45-1 1v4c0 .55.45 1 1 1h16c.55 0 1-.45 1-1v-4c0-.55-.45-1-1-1zM7 13c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm10 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM12 3L2 8h20L12 3z"></path></svg>
+            <span>Stock</span>
+        </button>
+        <button class="nav-btn" id="btn-nav-historial" onclick="cambiarVista('historial')">
+            <svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.74-4.94-2.01-1.42 1.42-3.14 2.12-4.94 2.01C2.08 19.89 0 16.27 0 12c0-4.97 4.03-9 9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"></path></svg>
+            <span>Historial</span>
+        </button>
       `;
+    }
+
+    function cerrarSesion() {
+      usuarioActual = null;
+      localStorage.removeItem('usuarioActual');
+      document.getElementById('login-screen').style.display = 'flex';
     }
 
     function cambiarVista(vista) {
@@ -393,9 +592,147 @@
       document.getElementById(`vista-${vista}`).classList.add('active');
       document.getElementById(`btn-nav-${vista}`).classList.add('active');
 
+      if (vista === 'pos') renderizarCarritosTabs();
       if (vista === 'arqueo') prepararVistaArqueo();
-      if (vista === 'pos') renderProductosPOS();
       if (vista === 'inventario') renderInventario();
+      if (vista === 'facturas') cargarFacturas();
+      if (vista === 'historial') renderHistorial();
+      if (vista === 'clientes') renderClientes();
+    }
+
+    function obtenerCarritoActual() {
+      return carritos.find(c => c.id === carritoActivoId) || carritos[0];
+    }
+
+    function renderizarCarritosTabs() {
+      const container = document.getElementById('pos-cart-tabs');
+      container.innerHTML = carritos.map(c => `
+        <button class="cart-tab-btn ${c.id === carritoActivoId ? 'active' : ''}" onclick="cambiarCarritoActivo(${c.id})">
+          ${c.nombre} (${c.items.filter(i => !i.anulado).length})
+        </button>
+      `).join('') + `<button class="cart-tab-btn" onclick="crearNuevoCarrito()">+ Carrito</button>`;
+      renderProductosPOS();
+      renderCarrito();
+    }
+
+    function cambiarCarritoActivo(id) { carritoActivoId = id; renderizarCarritosTabs(); }
+    function crearNuevoCarrito() {
+      const nuevoId = Date.now();
+      carritos.push({ id: nuevoId, nombre: `Ticket ${carritos.length + 1}`, items: [] });
+      cambiarCarritoActivo(nuevoId);
+    }
+    function ponerCarritoEnEspera() { crearNuevoCarrito(); }
+
+    function abrirCamaraPOS() {
+      document.getElementById('modal-camara').style.display = 'flex';
+      html5QrCode = new Html5Qrcode("reader");
+      html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
+        const prod = dbProductos.find(p => p.localId === usuarioActual.localId && p.codigo === text);
+        if (prod) agregarAlCarrito(prod.id);
+        cerrarCamara();
+      }, () => {});
+    }
+    function cerrarCamara() {
+      if (html5QrCode) html5QrCode.stop().then(() => document.getElementById('modal-camara').style.display = 'none');
+      else document.getElementById('modal-camara').style.display = 'none';
+    }
+
+    function renderProductosPOS() {
+      const q = (document.getElementById('pos-buscar')?.value || '').toLowerCase();
+      const productos = dbProductos.filter(p => String(p.localId) === String(usuarioActual.localId) && p.nombre.toLowerCase().includes(q));
+      document.getElementById('pos-grid-productos').innerHTML = productos.map(p => `
+        <div class="product-card" onclick="agregarAlCarrito('${p.id}')">
+          <div class="product-title">${p.nombre}</div>
+          <div class="product-price">$${p.precio.toFixed(2)}</div>
+          <div class="product-stock ${p.stock <= 0 ? 'stock-negative' : ''}">Stock: ${p.stock}</div>
+        </div>
+      `).join('');
+    }
+
+    function agregarAlCarrito(id) {
+      const prod = dbProductos.find(p => p.id === id);
+      if (!prod) return;
+      const cart = obtenerCarritoActual();
+      cart.items.push({ id: prod.id, nombre: prod.nombre, precio: prod.precio, cantidad: 1, anulado: false });
+      renderizarCarritosTabs();
+    }
+
+    function renderCarrito() {
+      const cart = obtenerCarritoActual();
+      let total = 0;
+      document.getElementById('pos-tabla-carrito').innerHTML = cart.items.map((item, idx) => {
+        const sub = item.precio * item.cantidad;
+        if (!item.anulado) total += sub;
+        return `
+          <tr class="${item.anulado ? 'item-anulado' : ''}">
+            <td>${item.nombre}</td>
+            <td>${item.cantidad}</td>
+            <td>$${sub.toFixed(2)}</td>
+            <td><button class="btn btn-danger btn-sm" onclick="item.anulado = true; renderizarCarritosTabs();">X</button></td>
+          </tr>`;
+      }).join('');
+      document.getElementById('pos-total').innerText = total.toFixed(2);
+    }
+
+    function abrirModalCobro() {
+      const cart = obtenerCarritoActual();
+      let total = cart.items.filter(i => !i.anulado).reduce((s, x) => s + (x.precio * x.cantidad), 0);
+      if (total <= 0) return alert('El carrito está vacío');
+      document.getElementById('modal-total-txt').innerText = `$${total.toFixed(2)}`;
+      document.getElementById('modal-pago').value = total.toFixed(2);
+      document.getElementById('modal-cobro').style.display = 'flex';
+    }
+    function cerrarModalCobro() { document.getElementById('modal-cobro').style.display = 'none'; }
+    function cambiarMetodoPago() {}
+    function calcularVuelto() {}
+
+    async function confirmarYProcesarVenta() {
+      const metodo = document.getElementById('modal-metodo-pago').value;
+      const cart = obtenerCarritoActual();
+      let activos = cart.items.filter(i => !i.anulado);
+      let total = Number(activos.reduce((s, x) => s + (x.precio * x.cantidad), 0).toFixed(2));
+
+      cerrarModalCobro();
+
+      for (const i of activos) {
+        const p = dbProductos.find(x => x.id === i.id);
+        if (p) {
+          p.stock -= i.cantidad;
+          await supabaseClient.from('productos').update({ stock: p.stock }).eq('id', p.id);
+        }
+      }
+
+      const ventaId = 'FAC-' + Date.now().toString().slice(-5);
+      const nuevaVenta = {
+        id: ventaId,
+        local_id: String(usuarioActual.localId),
+        cliente_nombre: 'Consumidor Final',
+        metodo_pago: metodo,
+        fecha: new Date().toISOString(),
+        items: [...cart.items],
+        total: total
+      };
+
+      await supabaseClient.from('ventas').insert([nuevaVenta]);
+      dbVentas.push({ ...nuevaVenta, localId: nuevaVenta.local_id, clienteNombre: nuevaVenta.cliente_nombre, metodoPago: nuevaVenta.metodo_pago });
+
+      mostrarFactura(nuevaVenta);
+      carritos = [{ id: Date.now(), nombre: 'Principal 1', items: [] }];
+      carritoActivoId = carritos[0].id;
+      renderizarCarritosTabs();
+    }
+
+    function mostrarFactura(v) {
+      const localInfo = dbLocales.find(l => String(l.id) === String(v.localId)) || {};
+      document.getElementById('fac-local-nombre').innerText = localInfo.nombre || 'SUCURSAL';
+      document.getElementById('fac-ruc').innerText = localInfo.ruc || 'S/N';
+      document.getElementById('fac-id').innerText = v.id;
+      document.getElementById('fac-cliente').innerText = v.clienteNombre || 'Consumidor Final';
+      document.getElementById('fac-items').innerHTML = (v.items || []).map(i => `
+        <tr><td>${i.cantidad}</td><td>${i.nombre}</td><td style="text-align: right;">$${(i.cantidad * i.precio).toFixed(2)}</td></tr>
+      `).join('');
+      document.getElementById('fac-total').innerText = Number(v.total).toFixed(2);
+      document.getElementById('factura-impresion').style.display = 'block';
     }
 
     async function prepararVistaArqueo() {
@@ -409,7 +746,6 @@
         document.getElementById('arq-fondo').value = arqueoAbierto.fondoInicial;
         
         const ventasTurno = dbVentas.filter(v => String(v.localId) === String(usuarioActual.localId) && new Date(v.fecha) >= new Date(arqueoAbierto.fechaApertura));
-        
         let tEfectivo = 0;
         ventasTurno.forEach(v => { if (v.metodoPago === 'Efectivo') tEfectivo += v.total; });
 
@@ -424,8 +760,8 @@
         document.getElementById('arq-lbl-ingresos').innerText = `$${tIngresosExtra.toFixed(2)}`;
         document.getElementById('arq-lbl-salidas').innerText = `$${tSalidasExtra.toFixed(2)}`;
 
-        const efectivoEsperado = arqueoAbierto.fondoInicial + tEfectivo + tIngresosExtra - tSalidasExtra;
-        document.getElementById('arq-conteo-fisico').value = efectivoEsperado.toFixed(2);
+        const esperado = arqueoAbierto.fondoInicial + tEfectivo + tIngresosExtra - tSalidasExtra;
+        document.getElementById('arq-conteo-fisico').value = esperado.toFixed(2);
         
         renderTablaMovimientosTurno(arqueoAbierto);
         calcularDiferenciaArqueo();
@@ -434,6 +770,7 @@
         document.getElementById('arqueo-estado-cerrado').style.display = 'block';
         document.getElementById('card-movimientos-caja').style.display = 'none';
       }
+      renderHistorialArqueos();
     }
 
     async function iniciarNuevoTurno() {
@@ -451,8 +788,15 @@
         movimientos: []
       };
 
-      const { error } = await supabaseClient.from('arqueos').insert([nuevoArqueo]);
-      if (error) return alert("Error al abrir caja: " + error.message);
+      await supabaseClient.from('arqueos').insert([nuevoArqueo]);
+      await prepararVistaArqueo();
+    }
+
+    async function guardarFondoCaja() {
+      const arqueoAbierto = dbArqueos.find(a => String(a.localId) === String(usuarioActual.localId) && a.estado === 'Abierto');
+      if (!arqueoAbierto) return;
+      const nuevoFondo = parseFloat(document.getElementById('arq-fondo').value) || 0;
+      await supabaseClient.from('arqueos').update({ fondo_inicial: nuevoFondo }).eq('id', arqueoAbierto.id);
       await prepararVistaArqueo();
     }
 
@@ -461,7 +805,7 @@
       const monto = parseFloat(document.getElementById('mov-monto').value) || 0;
       const concepto = document.getElementById('mov-concepto').value.trim();
 
-      if (monto <= 0 || !concepto) return alert("Ingresa un monto válido y un concepto.");
+      if (monto <= 0 || !concepto) return alert("Ingresa monto y concepto.");
 
       const arqueoAbierto = dbArqueos.find(a => String(a.localId) === String(usuarioActual.localId) && a.estado === 'Abierto');
       if (!arqueoAbierto) return;
@@ -469,9 +813,7 @@
       if (!arqueoAbierto.movimientos) arqueoAbierto.movimientos = [];
       arqueoAbierto.movimientos.push({ id: Date.now(), tipo, monto, concepto });
 
-      const { error } = await supabaseClient.from('arqueos').update({ movimientos: arqueoAbierto.movimientos }).eq('id', arqueoAbierto.id);
-      if (error) return alert("Error al registrar movimiento: " + error.message);
-
+      await supabaseClient.from('arqueos').update({ movimientos: arqueoAbierto.movimientos }).eq('id', arqueoAbierto.id);
       document.getElementById('mov-monto').value = '';
       document.getElementById('mov-concepto').value = '';
       await prepararVistaArqueo();
@@ -489,7 +831,6 @@
     function renderTablaMovimientosTurno(arqueo) {
       const tbody = document.getElementById('tabla-movimientos-turno');
       if (!tbody) return;
-
       tbody.innerHTML = (arqueo.movimientos || []).map((m, idx) => `
         <tr>
           <td><span class="badge" style="background:${m.tipo === 'ingreso' ? 'var(--success)' : 'var(--danger)'}; color:white;">${m.tipo.toUpperCase()}</span></td>
@@ -539,35 +880,18 @@
       await prepararVistaArqueo();
     }
 
-    function renderProductosPOS() {
-      const q = (document.getElementById('pos-buscar')?.value || '').toLowerCase();
-      const productos = dbProductos.filter(p => String(p.localId) === String(usuarioActual.localId) && p.nombre.toLowerCase().includes(q));
-      document.getElementById('pos-grid-productos').innerHTML = productos.map(p => `
-        <div class="product-card" onclick="agregarAlCarrito('${p.id}')">
-          <div class="product-title">${p.nombre}</div>
-          <div class="product-price">$${p.precio.toFixed(2)}</div>
-          <div class="product-stock">Stock: ${p.stock}</div>
-        </div>
+    function renderHistorialArqueos() {
+      const lista = dbArqueos.filter(a => String(a.localId) === String(usuarioActual.localId));
+      document.getElementById('arqueo-historial-tabla').innerHTML = lista.map(a => `
+        <tr>
+          <td>${a.usuario}</td>
+          <td>${new Date(a.fechaApertura).toLocaleString()}</td>
+          <td>${a.fechaCierre ? new Date(a.fechaCierre).toLocaleString() : 'En curso'}</td>
+          <td>$${a.fondoInicial.toFixed(2)}</td>
+          <td>$${a.efectivoFisico !== null ? a.efectivoFisico.toFixed(2) : '-'}</td>
+          <td>${a.estado}</td>
+        </tr>
       `).join('');
-    }
-
-    function agregarAlCarrito(id) {
-      const prod = dbProductos.find(p => p.id === id);
-      if (!prod) return;
-      const cart = carritos.find(c => c.id === carritoActivoId);
-      cart.items.push({ id: prod.id, nombre: prod.nombre, precio: prod.precio, cantidad: 1, anulado: false });
-      renderCarrito();
-    }
-
-    function renderCarrito() {
-      const cart = carritos.find(c => c.id === carritoActivoId);
-      let total = 0;
-      document.getElementById('pos-tabla-carrito').innerHTML = cart.items.map((item, idx) => {
-        const sub = item.precio * item.cantidad;
-        total += sub;
-        return `<tr><td>${item.nombre}</td><td>${item.cantidad}</td><td>$${sub.toFixed(2)}</td><td><button class="btn btn-danger btn-sm" onclick="cart.items.splice(${idx},1); renderCarrito();">X</button></td></tr>`;
-      }).join('');
-      document.getElementById('pos-total').innerText = total.toFixed(2);
     }
 
     async function guardarProducto() {
@@ -577,25 +901,53 @@
       const precio = parseFloat(document.getElementById('inv-precio').value) || 0;
       const stock = parseFloat(document.getElementById('inv-stock').value) || 0;
 
-      if (!nombre || !precio) return alert('Completa los campos');
+      if (!nombre || !precio) return alert('Completa los campos requeridos');
 
       const nuevo = { id: 'P-' + Date.now(), local_id: String(usuarioActual.localId), codigo, nombre, costo, precio, stock };
       await supabaseClient.from('productos').insert([nuevo]);
       dbProductos.push({ ...nuevo, localId: nuevo.local_id });
-      alert('Guardado');
+      alert('Producto guardado');
       renderInventario();
     }
 
-    function renderInventario() {}
-    function iniciarSesion() {}
-    function cerrarSesion() {}
+    function renderInventario() {
+      const lista = dbProductos.filter(p => String(p.localId) === String(usuarioActual.localId));
+      document.getElementById('inv-tabla-catalogo').innerHTML = lista.map(p => `
+        <tr><td>${p.codigo}</td><td><b>${p.nombre}</b></td><td>$${p.costo.toFixed(2)}</td><td>$${p.precio.toFixed(2)}</td><td>${p.stock}</td></tr>
+      `).join('');
+    }
+
+    function cargarFacturas() {
+      const lista = dbVentas.filter(v => String(v.localId) === String(usuarioActual.localId));
+      document.getElementById('tabla-facturas-body').innerHTML = lista.map(v => `
+        <tr><td><b>${v.id}</b></td><td>${v.clienteNombre}</td><td>${new Date(v.fecha).toLocaleString()}</td><td>$${v.total.toFixed(2)}</td><td>${v.metodoPago}</td><td><button class="btn btn-primary btn-sm" onclick='mostrarFactura(${JSON.stringify(v)})'>Ver</button></td></tr>
+      `).join('');
+    }
+
+    function renderHistorial() {
+      const lista = dbVentas.filter(v => String(v.localId) === String(usuarioActual.localId));
+      document.getElementById('historial-tabla').innerHTML = lista.map(v => `
+        <tr><td>${v.id}</td><td>${v.clienteNombre}</td><td>$${v.total.toFixed(2)}</td><td>${v.metodoPago}</td><td>${new Date(v.fecha).toLocaleString()}</td></tr>
+      `).join('');
+    }
+
+    function renderClientes() {
+      const lista = dbClientes.filter(c => String(c.localId) === String(usuarioActual.localId));
+      document.getElementById('cli-tabla').innerHTML = lista.map(c => `
+        <tr><td>${c.cedula}</td><td>${c.nombre}</td><td>${c.apellido}</td></tr>
+      `).join('');
+    }
+
     function seleccionarClienteAutocomplete() {}
 
     window.addEventListener('DOMContentLoaded', async () => {
       inicializarTema();
-      construirMenuNavegacion();
       await cargarDatosSupabase();
-      cambiarVista('pos');
+      if (usuarioActual) {
+        aplicarSesionActiva();
+      } else {
+        document.getElementById('login-screen').style.display = 'flex';
+      }
     });
   </script>
 </body>
