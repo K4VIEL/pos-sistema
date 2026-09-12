@@ -46,8 +46,8 @@
     body { background-color: var(--bg); color: var(--text); display: flex; flex-direction: column; min-height: 100vh; padding-bottom: 95px; }
 
     /* =========================================================
-       DISEÑO MODERNO PARA LAS BARRAS DESLIZANTES (SCROLLBARS)
-       ========================================================= */
+        DISEÑO MODERNO PARA LAS BARRAS DESLIZANTES (SCROLLBARS)
+        ========================================================= */
     *::-webkit-scrollbar {
       width: 6px;
       height: 6px;
@@ -174,7 +174,7 @@
 
     .card { background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border); padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
     
-    .grid-pos-dividida { display: grid; grid-template-columns: 1.2fr 1fr; gap: 16px; align-items: start; }
+    .grid-pos-dividida { display: grid; grid-template-columns: 1fr 1.2fr; gap: 16px; align-items: start; }
     @media (max-width: 900px) { .grid-pos-dividida { grid-template-columns: 1fr; } }
 
     label { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); display: block; margin-top: 8px; }
@@ -473,15 +473,7 @@
       <!-- VISTA POS -->
       <section id="vista-pos" class="page-section active">
         <div class="grid-pos-dividida">
-          <div class="card" style="margin: 0; display: flex; flex-direction: column; height: 100%;">
-            <h3 style="margin-bottom: 8px; font-size: 1rem;">Catálogo de Productos</h3>
-            <div style="display:flex; gap:8px; margin-bottom:10px;">
-              <input type="text" id="pos-buscar" placeholder="🔍 Buscar por nombre o código..." oninput="renderProductosPOS()" onkeydown="detectarCodigoEnter(event)" style="margin:0;">
-              <button class="btn btn-primary btn-sm" onclick="abrirCamaraPOS()" style="margin:0; white-space:nowrap;">📷 Escanear</button>
-            </div>
-            <div class="product-grid" id="pos-grid-productos"></div>
-          </div>
-
+          <!-- Carrito a la Izquierda -->
           <div class="card" style="margin: 0; display: flex; flex-direction: column;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
               <h3 style="margin:0;">Carrito Actual</h3>
@@ -535,6 +527,16 @@
                     <option value="001-002">001-002 (Secundaria)</option>
                 </select>
             </div>
+          </div>
+
+          <!-- Catálogo a la Derecha -->
+          <div class="card" style="margin: 0; display: flex; flex-direction: column; height: 100%;">
+            <h3 style="margin-bottom: 8px; font-size: 1rem;">Catálogo de Productos</h3>
+            <div style="display:flex; gap:8px; margin-bottom:10px;">
+              <input type="text" id="pos-buscar" placeholder="🔍 Buscar por nombre o código..." oninput="renderProductosPOS()" onkeydown="detectarCodigoEnter(event)" style="margin:0;">
+              <button class="btn btn-primary btn-sm" onclick="abrirCamaraPOS()" style="margin:0; white-space:nowrap;">📷 Escanear</button>
+            </div>
+            <div class="product-grid" id="pos-grid-productos"></div>
           </div>
         </div>
       </section>
@@ -639,17 +641,22 @@
           </div>
         </div>
 
+        <!-- SECCIÓN DE INGRESOS Y SALIDAS DE DINERO (CAJA) -->
         <div class="card">
-          <h3>Registro de Salidas de Dinero / Gastos de Caja</h3>
+          <h3>Registro de Ingresos / Salidas de Dinero (Caja)</h3>
           <div class="form-row">
             <div>
-              <label>Concepto / Detalle *</label>
-              <input type="text" id="gasto-concepto" placeholder="Ej: Pago de luz o factura proveedor">
+              <label>Tipo de Movimiento</label>
+              <select id="mov-caja-tipo" style="padding: 8px;">
+                <option value="ingreso">Ingreso de Dinero (+)</option>
+                <option value="salida">Salida / Gasto (-)</option>
+              </select>
             </div>
             <div>
               <label>Categoría *</label>
               <input type="text" id="gasto-categoria" list="lista-categorias-sugeridas" placeholder="Selecciona o escribe otra...">
               <datalist id="lista-categorias-sugeridas">
+                <option value="Ingreso de Efectivo Adicional">
                 <option value="Pago a Proveedores">
                 <option value="Servicios Básicos (Luz/Agua/Internet)">
                 <option value="Alquiler / Local">
@@ -658,13 +665,21 @@
             </div>
           </div>
 
-          <label>Monto a Retirar ($) *</label>
-          <input type="number" step="0.01" id="gasto-monto" placeholder="0.00">
-          <button class="btn btn-danger" onclick="registrarSalidaDinero()" style="margin-top:10px;">Registrar Salida de Caja</button>
+          <div class="form-row">
+            <div>
+              <label>Concepto / Detalle *</label>
+              <input type="text" id="gasto-concepto" placeholder="Ej: Cambio inicial extra o pago de luz">
+            </div>
+            <div>
+              <label>Monto ($) *</label>
+              <input type="number" step="0.01" id="gasto-monto" placeholder="0.00">
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="registrarMovimientoDineroCaja()" style="margin-top:10px;">Registrar Movimiento de Caja</button>
         </div>
 
         <div class="card">
-          <h3>Historial de Egresos de este Turno / Local</h3>
+          <h3>Historial de Egresos / Ingresos de este Turno / Local</h3>
           <div class="table-responsive">
             <table>
               <thead><tr><th>Fecha y Hora</th><th>Concepto</th><th>Categoría</th><th>Usuario</th><th>Monto</th><th>Acción</th></tr></thead>
@@ -1779,9 +1794,9 @@
 
     function calcularVuelto() {
       const cart = obtenerCarritoActual();
-      let total = cart.items.filter(i => !i.anulado).reduce((s, x) => s + (x.precio * x.cantidad), 0);
-      let pago = parseFloat(document.getElementById('modal-pago').value) || 0;
-      let vuelto = pago - total;
+      let total = Number(cart.items.filter(i => !i.anulado).reduce((s, x) => s + (x.precio * x.cantidad), 0).toFixed(2));
+      let pago = Number((parseFloat(document.getElementById('modal-pago').value) || 0).toFixed(2));
+      let vuelto = Number((pago - total).toFixed(2));
       
       const vueltoTxt = document.getElementById('modal-vuelto-txt');
       if (vuelto >= -0.01) {
@@ -1797,11 +1812,11 @@
       const metodo = document.getElementById('modal-metodo-pago').value;
       const cart = obtenerCarritoActual();
       let activos = cart.items.filter(i => !i.anulado);
-      let total = activos.reduce((s, x) => s + (x.precio * x.cantidad), 0);
+      let total = Number(activos.reduce((s, x) => s + (x.precio * x.cantidad), 0).toFixed(2));
 
       if (metodo === 'Efectivo') {
-        let pago = parseFloat(document.getElementById('modal-pago').value) || 0;
-        if (pago < total && Math.abs(pago - total) > 0.01) {
+        let pago = Number((parseFloat(document.getElementById('modal-pago').value) || 0).toFixed(2));
+        if (pago < total) {
           return alert('El monto pagado es menor que el total de la venta.');
         }
       }
@@ -2119,15 +2134,22 @@
       `).join('') || `<tr><td colspan="6" style="text-align:center;">No hay arqueos registrados</td></tr>`;
     }
 
-    async function registrarSalidaDinero() {
+    async function registrarMovimientoDineroCaja() {
+      const tipo = document.getElementById('mov-caja-tipo').value;
       const concepto = document.getElementById('gasto-concepto').value.trim();
-      const categoria = document.getElementById('gasto-categoria').value.trim() || 'General';
-      const monto = parseFloat(document.getElementById('gasto-monto').value) || 0;
+      const categoria = document.getElementById('gasto-categoria').value.trim() || (tipo === 'ingreso' ? 'Ingreso de Efectivo' : 'General');
+      let monto = parseFloat(document.getElementById('gasto-monto').value) || 0;
 
       if (!concepto || monto <= 0) return alert('Ingresa un concepto y monto válido.');
 
+      if (tipo === 'ingreso') {
+        monto = Math.abs(monto);
+      } else {
+        monto = -Math.abs(monto);
+      }
+
       const nuevoGasto = {
-        id: 'GASTO-' + Date.now(),
+        id: 'MOV-' + Date.now(),
         local_id: String(usuarioActual.localId),
         concepto: concepto,
         categoria: categoria,
@@ -2153,7 +2175,7 @@
       document.getElementById('gasto-categoria').value = '';
       document.getElementById('gasto-monto').value = '';
       renderGastosLocales();
-      alert('Salida registrada.');
+      alert('Movimiento registrado con éxito.');
     }
 
     function renderGastosLocales() {
@@ -2162,16 +2184,22 @@
       const tbody = document.getElementById('tabla-gastos-body');
       if (!tbody) return;
 
-      tbody.innerHTML = lista.map(g => `
-        <tr>
-          <td>${new Date(g.fechaHora).toLocaleString()}</td>
-          <td><b>${g.concepto}</b></td>
-          <td><span class="badge">${g.categoria}</span></td>
-          <td>${g.usuario}</td>
-          <td style="color:var(--danger); font-weight:bold;">-$${Number(g.monto).toFixed(2)}</td>
-          <td><button class="btn btn-danger btn-sm" onclick="eliminarGasto('${g.id}')">Eliminar</button></td>
-        </tr>
-      `).join('') || `<tr><td colspan="6" style="text-align:center;">No hay salidas registradas.</td></tr>`;
+      tbody.innerHTML = lista.map(g => {
+        const esIngreso = Number(g.monto) > 0;
+        const montoFormateado = esIngreso ? `+$${Number(g.monto).toFixed(2)}` : `-$${Math.abs(Number(g.monto)).toFixed(2)}`;
+        const colorEstilo = esIngreso ? 'color:var(--success); font-weight:bold;' : 'color:var(--danger); font-weight:bold;';
+
+        return `
+          <tr>
+            <td>${new Date(g.fechaHora).toLocaleString()}</td>
+            <td><b>${g.concepto}</b></td>
+            <td><span class="badge">${g.categoria}</span></td>
+            <td>${g.usuario}</td>
+            <td style="${colorEstilo}">${montoFormateado}</td>
+            <td><button class="btn btn-danger btn-sm" onclick="eliminarGasto('${g.id}')">Eliminar</button></td>
+          </tr>
+        `;
+      }).join('') || `<tr><td colspan="6" style="text-align:center;">No hay movimientos registrados.</td></tr>`;
     }
 
     async function eliminarGasto(id) {
@@ -2189,10 +2217,15 @@
 
       let totalIngresos = 0;
       ventasLocal.forEach(v => { totalIngresos += Number(v.total || 0); });
+      gastosLocal.forEach(g => {
+        if (Number(g.monto) > 0) totalIngresos += Number(g.monto);
+      });
 
       let totalSalidas = 0;
       mermasLocal.forEach(m => { totalSalidas += Number(m.montoTotal || 0); });
-      gastosLocal.forEach(g => { totalSalidas += Number(g.monto || 0); });
+      gastosLocal.forEach(g => {
+        if (Number(g.monto) < 0) totalSalidas += Math.abs(Number(g.monto));
+      });
 
       let flujoNeto = totalIngresos - totalSalidas;
 
@@ -2227,13 +2260,15 @@
       });
 
       gastosLocal.forEach(g => {
+        const esIngreso = Number(g.monto) > 0;
+        const valAbs = Math.abs(Number(g.monto || 0));
         htmlDiario += `
           <tr style="background-color: var(--bg);">
             <td>${new Date(g.fechaHora).toLocaleString()}</td>
-            <td><span style="color:var(--danger); font-weight:bold;">[GASTO]</span> ${g.id}</td>
-            <td>Egreso: ${g.concepto} (${g.categoria})</td>
-            <td>$0.00</td>
-            <td style="color:var(--danger);">+$${Number(g.monto || 0).toFixed(2)}</td>
+            <td><span style="${esIngreso ? 'color:var(--success);' : 'color:var(--danger);'} font-weight:bold;">[${esIngreso ? 'INGRESO' : 'GASTO'}]</span> ${g.id}</td>
+            <td>${esIngreso ? 'Ingreso' : 'Egreso'}: ${g.concepto} (${g.categoria})</td>
+            <td>${esIngreso ? `+$${valAbs.toFixed(2)}` : '$0.00'}</td>
+            <td>${!esIngreso ? `+$${valAbs.toFixed(2)}` : '$0.00'}</td>
           </tr>
         `;
       });
@@ -2945,7 +2980,11 @@
       });
 
       let totalGastosOp = 0;
-      gastosLocal.forEach(g => { totalGastosOp += Number(g.monto || 0); });
+      gastosLocal.forEach(g => { 
+        if (Number(g.monto) < 0) {
+          totalGastosOp += Math.abs(Number(g.monto || 0));
+        }
+      });
 
       const totalEgresos = totalCostoCompras + totalGastosOp;
       document.getElementById('rep-val-ventas').innerText = `$${totalVentas.toFixed(2)}`;
@@ -3202,3 +3241,4 @@
   </script>
 </body>
 </html>
+
