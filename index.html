@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -45,6 +44,24 @@
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; transition: background-color 0.2s, color 0.2s, border-color 0.2s; }
     body { background-color: var(--bg); color: var(--text); display: flex; flex-direction: column; min-height: 100vh; padding-bottom: 95px; }
+
+    /* =========================================================
+       BARRAS DE DESPLAZAMIENTO ESTÉTICAS Y MODERNAS
+       ========================================================= */
+    *::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    *::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    *::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 10px;
+    }
+    *::-webkit-scrollbar-thumb:hover {
+      background: var(--primary);
+    }
 
     /* LOGIN MODAL */
     #login-screen { position: fixed; inset: 0; background: #0f172a; z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; }
@@ -95,11 +112,7 @@
       box-shadow: 0 15px 35px rgba(0,0,0,0.4);
       overflow-x: auto;
       overflow-y: hidden;
-      scrollbar-width: thin;
-      -ms-overflow-style: auto;
     }
-    .nav-bar::-webkit-scrollbar { height: 6px; }
-    .nav-bar::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 4px; }
 
     [data-theme="light"] .nav-bar {
       background: var(--nav-bg-light);
@@ -205,7 +218,7 @@
     th { color: var(--text-muted); font-weight: 600; background: var(--bg); }
     .text-success { color: var(--success); font-weight: bold; }
 
-    .cart-tabs { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 10px; padding-bottom: 4px; scrollbar-width: thin; }
+    .cart-tabs { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 10px; padding-bottom: 4px; }
     .cart-tab-btn { padding: 6px 12px; font-size: 0.8rem; background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 6px; cursor: pointer; white-space: nowrap; }
     .cart-tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); font-weight: bold; }
     
@@ -398,6 +411,17 @@
       <h3>Escanear Código de Barras</h3>
       <div id="reader" style="width: 100%; border-radius: 8px; overflow: hidden;"></div>
       <button class="btn btn-danger" style="margin-top: 15px;" onclick="cerrarCamara()">Cerrar Cámara</button>
+    </div>
+  </div>
+
+  <!-- MODAL DE DETALLE DE ARQUEO / CAJA -->
+  <div id="modal-detalle-arqueo" class="modal-overlay">
+    <div class="modal-box" style="padding: 24px; border-radius: 16px; max-width: 650px; width: 100%; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); max-height: 90vh; overflow-y: auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <h3 style="font-size: 1.2rem; margin:0; color: var(--text);">Detalle del Arqueo / Turno de Caja</h3>
+        <button class="btn btn-danger btn-sm" onclick="cerrarModalDetalleArqueo()" style="margin:0;">✕ Cerrar</button>
+      </div>
+      <div id="contenido-detalle-arqueo" style="font-size: 0.9rem; line-height: 1.5;"></div>
     </div>
   </div>
 
@@ -613,6 +637,40 @@
               <div class="kpi-card"><label>Ventas Transferencia</label><div class="kpi-val" id="arq-lbl-transferencia">$0.00</div></div>
             </div>
 
+            <!-- SECCIÓN DESPLEGABLE DE INGRESOS Y EGRESOS / GASTOS -->
+            <div style="margin-top: 20px; background:var(--bg); border: 1px solid var(--border); border-radius: 8px; overflow: hidden;">
+              <button type="button" onclick="toggleAcordeonGastos()" style="width: 100%; background: var(--card-bg); border: none; padding: 12px 15px; text-align: left; font-weight: bold; color: var(--text); cursor: pointer; display: flex; justify-content: space-between; align-items: center; margin:0;">
+                <span>📂 Registrar Gastos, Servicios o Ingresos Extra</span>
+                <span id="icono-acordeon" style="font-size: 1.1rem;">▼</span>
+              </button>
+              
+              <div id="contenido-acordeon-gastos" style="display: none; padding: 15px; border-top: 1px solid var(--border);">
+                <div class="form-row">
+                  <div>
+                    <label>Tipo de Movimiento</label>
+                    <select id="arq-mov-tipo" style="padding: 8px; font-size: 0.9rem;">
+                      <option value="Egreso">Egreso (Gasto: Agua, Luz, etc.)</option>
+                      <option value="Ingreso">Ingreso Extra</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label>Monto ($)</label>
+                    <input type="number" step="0.01" id="arq-mov-monto" placeholder="0.00" style="padding: 8px; font-size: 0.9rem;">
+                  </div>
+                </div>
+                <label>Descripción / Concepto</label>
+                <input type="text" id="arq-mov-concepto" placeholder="Ej: Pago de luz, compra de agua, etc." style="padding: 8px; font-size: 0.9rem;">
+                <button class="btn btn-success btn-sm" style="margin-top: 5px;" onclick="registrarMovimientoCaja()">Registrar Movimiento</button>
+                
+                <div class="table-responsive" style="margin-top: 10px; max-height: 140px; overflow-y: auto;">
+                  <table style="font-size: 0.8rem;">
+                    <thead><tr><th>Tipo</th><th>Concepto</th><th>Monto</th><th>Acción</th></tr></thead>
+                    <tbody id="arq-tabla-movimientos"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
             <div style="margin-top: 20px; background:var(--bg); padding:15px; border-radius:8px;">
               <h4>Cierre de Turno</h4>
               <label>Conteo Físico de Efectivo en Caja ($)</label>
@@ -643,6 +701,7 @@
                   <th>Fondo Inicial</th>
                   <th>Efectivo Físico</th>
                   <th>Estado</th>
+                  <th>Acción Detalle</th>
                 </tr>
               </thead>
               <tbody id="arqueo-historial-tabla"></tbody>
@@ -1060,6 +1119,7 @@
     let dbVentas = [];
     let dbArqueos = [];
     let dbMermas = [];
+    let dbMovimientosCaja = []; 
     
     let usuarioActual = JSON.parse(localStorage.getItem('usuarioActual')) || null;
     
@@ -2041,6 +2101,7 @@
         document.getElementById('arq-lbl-tarjeta').innerText = `$${tTarjeta.toFixed(2)}`;
         document.getElementById('arq-lbl-transferencia').innerText = `$${tTransferencia.toFixed(2)}`;
         document.getElementById('arq-conteo-fisico').value = (arqueoAbierto.fondoInicial + tEfectivo).toFixed(2);
+        renderMovimientosCaja(); 
         calcularDiferenciaArqueo();
       } else {
         document.getElementById('arqueo-estado-abierto').style.display = 'none';
@@ -2048,6 +2109,76 @@
       }
 
       renderHistorialArqueos();
+    }
+
+    function toggleAcordeonGastos() {
+      const contenido = document.getElementById('contenido-acordeon-gastos');
+      const icono = document.getElementById('icono-acordeon');
+      if (contenido.style.display === 'none' || contenido.style.display === '') {
+        contenido.style.display = 'block';
+        icono.innerText = '▲';
+      } else {
+        contenido.style.display = 'none';
+        icono.innerText = '▼';
+      }
+    }
+
+    function registrarMovimientoCaja() {
+      const tipo = document.getElementById('arq-mov-tipo').value;
+      const monto = parseFloat(document.getElementById('arq-mov-monto').value) || 0;
+      const concepto = document.getElementById('arq-mov-concepto').value.trim();
+
+      if (monto <= 0 || !concepto) {
+        return alert('Por favor ingresa un monto válido y una descripción.');
+      }
+
+      const arqueoAbierto = dbArqueos.find(a => String(a.localId) === String(usuarioActual.localId) && a.estado === 'Abierto');
+      if (!arqueoAbierto) return alert('No hay un turno de caja abierto.');
+
+      dbMovimientosCaja.push({
+        id: Date.now(),
+        localId: usuarioActual.localId,
+        arqueoId: arqueoAbierto.id,
+        tipo: tipo,
+        monto: monto,
+        concepto: concepto,
+        fecha: new Date().toISOString()
+      });
+
+      document.getElementById('arq-mov-monto').value = '';
+      document.getElementById('arq-mov-concepto').value = '';
+      renderMovimientosCaja();
+      calcularDiferenciaArqueo();
+      alert('Movimiento registrado con éxito en el turno.');
+    }
+
+    function renderMovimientosCaja() {
+      const arqueoAbierto = dbArqueos.find(a => String(a.localId) === String(usuarioActual.localId) && a.estado === 'Abierto');
+      if (!arqueoAbierto) {
+        const tablaMovs = document.getElementById('arq-tabla-movimientos');
+        if (tablaMovs) tablaMovs.innerHTML = '';
+        return;
+      }
+
+      const movsDelTurno = dbMovimientosCaja.filter(m => String(m.arqueoId) === String(arqueoAbierto.id));
+      
+      const tablaMovs = document.getElementById('arq-tabla-movimientos');
+      if (tablaMovs) {
+        tablaMovs.innerHTML = movsDelTurno.map((m, idx) => `
+          <tr>
+            <td><span style="color: ${m.tipo === 'Ingreso' ? 'var(--success)' : 'var(--danger)'}; font-weight:bold;">${m.tipo}</span></td>
+            <td>${m.concepto}</td>
+            <td>$${m.monto.toFixed(2)}</td>
+            <td><button class="btn btn-danger btn-sm" style="padding:2px 6px; font-size:0.7rem;" onclick="eliminarMovimientoCaja(${m.id})">X</button></td>
+          </tr>
+        `).join('') || `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Sin gastos o ingresos extras en este turno</td></tr>`;
+      }
+    }
+
+    function eliminarMovimientoCaja(id) {
+      dbMovimientosCaja = dbMovimientosCaja.filter(m => m.id !== id);
+      renderMovimientosCaja();
+      calcularDiferenciaArqueo();
     }
 
     async function iniciarNuevoTurno() {
@@ -2089,7 +2220,14 @@
       let tEfectivo = 0;
       ventasTurno.forEach(v => { if (!v.metodoPago || v.metodoPago === 'Efectivo') tEfectivo += v.total; });
 
-      const esperado = arqueoAbierto.fondoInicial + tEfectivo;
+      const movsTurno = dbMovimientosCaja.filter(m => String(m.arqueoId) === String(arqueoAbierto.id));
+      let totalMovimientos = 0;
+      movsTurno.forEach(m => {
+        if (m.tipo === 'Ingreso') totalMovimientos += m.monto;
+        else if (m.tipo === 'Egreso') totalMovimientos -= m.monto;
+      });
+
+      const esperado = arqueoAbierto.fondoInicial + tEfectivo + totalMovimientos;
       const fisico = parseFloat(document.getElementById('arq-conteo-fisico').value) || 0;
       const diferencia = fisico - esperado;
 
@@ -2118,7 +2256,7 @@
     function renderHistorialArqueos() {
       const lista = dbArqueos.filter(a => String(a.localId) === String(usuarioActual.localId));
       if (!lista || lista.length === 0) {
-        document.getElementById('arqueo-historial-tabla').innerHTML = `<tr><td colspan="6" style="text-align:center;">No hay arqueos registrados</td></tr>`;
+        document.getElementById('arqueo-historial-tabla').innerHTML = `<tr><td colspan="7" style="text-align:center;">No hay arqueos registrados</td></tr>`;
         return;
       }
 
@@ -2130,8 +2268,112 @@
           <td>$${(a.fondoInicial || 0).toFixed(2)}</td>
           <td>$${a.efectivoFisico !== null ? a.efectivoFisico.toFixed(2) : '-'}</td>
           <td>${a.estado === 'Abierto' ? '<span style="color: var(--success); font-weight: bold;">Abierto</span>' : '<span style="color: var(--danger); font-weight: bold;">Cerrado</span>'}</td>
+          <td><button class="btn btn-primary btn-sm" onclick="verDetalleArqueo('${a.id}')">🔍 Ver Detalle</button></td>
         </tr>
       `).join('');
+    }
+
+    function verDetalleArqueo(arqueoId) {
+      const arqueo = dbArqueos.find(a => String(a.id) === String(arqueoId));
+      if (!arqueo) return alert('No se encontró el registro de caja.');
+
+      const fechaFin = arqueo.fechaCierre ? new Date(arqueo.fechaCierre) : new Date();
+      const ventasTurno = dbVentas.filter(v => {
+        const vFecha = new Date(v.fecha);
+        return String(v.localId) === String(arqueo.localId) && vFecha >= new Date(arqueo.fechaApertura) && vFecha <= fechaFin;
+      });
+
+      let tEfectivo = 0, tTarjeta = 0, tTransferencia = 0;
+      ventasTurno.forEach(v => {
+        if (v.metodoPago === 'Tarjeta') tTarjeta += v.total;
+        else if (v.metodoPago === 'Transferencia') tTransferencia += v.total;
+        else tEfectivo += v.total;
+      });
+
+      const movsTurno = dbMovimientosCaja.filter(m => String(m.arqueoId) === String(arqueo.id));
+      let totalIngresosExtras = 0, totalEgresosGastos = 0;
+      movsTurno.forEach(m => {
+        if (m.tipo === 'Ingreso') totalIngresosExtras += m.monto;
+        else if (m.tipo === 'Egreso') totalEgresosGastos += m.monto;
+      });
+
+      const esperado = arqueo.fondoInicial + tEfectivo + totalIngresosExtras - totalEgresosGastos;
+      const fisico = arqueo.efectivoFisico !== null ? arqueo.efectivoFisico : esperado;
+      const diferencia = fisico - esperado;
+
+      const contenidoHtml = `
+        <div style="margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">
+          <p><b>Cajero / Usuario:</b> ${arqueo.usuario || 'N/A'}</p>
+          <p><b>Apertura:</b> ${new Date(arqueo.fechaApertura).toLocaleString('es-EC')}</p>
+          <p><b>Cierre:</b> ${arqueo.fechaCierre ? new Date(arqueo.fechaCierre).toLocaleString('es-EC') : 'Turno en curso'}</p>
+          <p><b>Estado:</b> <span style="font-weight:bold; color:${arqueo.estado === 'Abierto' ? 'var(--success)' : 'var(--danger)'};">${arqueo.estado}</span></p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+          <div style="background:var(--bg); padding:10px; border-radius:8px;">
+            <p style="font-size:0.75rem; color:var(--text-muted);">Fondo Inicial:</p>
+            <p style="font-size:1.1rem; font-weight:bold;">$${arqueo.fondoInicial.toFixed(2)}</p>
+          </div>
+          <div style="background:var(--bg); padding:10px; border-radius:8px;">
+            <p style="font-size:0.75rem; color:var(--text-muted);">Ventas Efectivo:</p>
+            <p style="font-size:1.1rem; font-weight:bold; color:var(--success);">+$${tEfectivo.toFixed(2)}</p>
+          </div>
+          <div style="background:var(--bg); padding:10px; border-radius:8px;">
+            <p style="font-size:0.75rem; color:var(--text-muted);">Ventas Tarjeta / Transf:</p>
+            <p style="font-size:1.1rem; font-weight:bold;">$${(tTarjeta + tTransferencia).toFixed(2)}</p>
+          </div>
+          <div style="background:var(--bg); padding:10px; border-radius:8px;">
+            <p style="font-size:0.75rem; color:var(--text-muted);">Ingresos / Egresos Extra:</p>
+            <p style="font-size:1.1rem; font-weight:bold; color:${totalIngresosExtras - totalEgresosGastos >= 0 ? 'var(--success)' : 'var(--danger)'};">+$${totalIngresosExtras.toFixed(2)} / -$${totalEgresosGastos.toFixed(2)}</p>
+          </div>
+        </div>
+
+        <div style="background:var(--bg); padding:12px; border-radius:8px; margin-bottom:12px;">
+          <p><b>Efectivo Esperado en Caja:</b> $${esperado.toFixed(2)}</p>
+          <p><b>Efectivo Físico Contado:</b> $${arqueo.efectivoFisico !== null ? arqueo.efectivoFisico.toFixed(2) : 'No registrado'}</p>
+          <p><b>Diferencia / Descuadré:</b> <span style="font-weight:bold; color:${diferencia === 0 ? 'var(--success)' : (diferencia > 0 ? 'var(--primary)' : 'var(--danger)')};">$${diferencia.toFixed(2)}</span></p>
+        </div>
+
+        <h4 style="margin-bottom:6px; font-size:0.95rem;">Listado de Ventas en este Turno (${ventasTurno.length})</h4>
+        <div class="table-responsive" style="max-height: 150px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:4px; margin-bottom:12px;">
+          <table style="font-size:0.8rem;">
+            <thead><tr><th>ID</th><th>Cliente</th><th>Método</th><th>Total</th></tr></thead>
+            <tbody>
+              ${ventasTurno.map(v => `
+                <tr>
+                  <td><b>${v.id}</b></td>
+                  <td>${v.clienteNombre || 'Consumidor Final'}</td>
+                  <td>${v.metodoPago || 'Efectivo'}</td>
+                  <td>$${Number(v.total).toFixed(2)}</td>
+                </tr>
+              `).join('') || `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Sin ventas registradas en este turno</td></tr>`}
+            </tbody>
+          </table>
+        </div>
+
+        <h4 style="margin-bottom:6px; font-size:0.95rem;">Movimientos Registrados (Gastos / Ingresos Extra)</h4>
+        <div class="table-responsive" style="max-height: 120px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:4px;">
+          <table style="font-size:0.8rem;">
+            <thead><tr><th>Tipo</th><th>Concepto</th><th>Monto</th></tr></thead>
+            <tbody>
+              ${movsTurno.map(m => `
+                <tr>
+                  <td><span style="color:${m.tipo === 'Ingreso' ? 'var(--success)' : 'var(--danger)'}; font-weight:bold;">${m.tipo}</span></td>
+                  <td>${m.concepto}</td>
+                  <td>$${m.monto.toFixed(2)}</td>
+                </tr>
+              `).join('') || `<tr><td colspan="3" style="text-align:center; color:var(--text-muted);">Sin movimientos adicionales en este turno</td></tr>`}
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      document.getElementById('contenido-detalle-arqueo').innerHTML = contenidoHtml;
+      document.getElementById('modal-detalle-arqueo').style.display = 'flex';
+    }
+
+    function cerrarModalDetalleArqueo() {
+      document.getElementById('modal-detalle-arqueo').style.display = 'none';
     }
 
     function renderContabilidadFlujo() {
