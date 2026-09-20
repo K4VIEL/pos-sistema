@@ -1680,30 +1680,20 @@
 
       const cart = obtenerCarritoActual();
       
-      // VERIFICAMOS SI EL PRODUCTO YA ESTÁ EN EL CARRITO
-      const indexExistente = cart.items.findIndex(item => String(item.id) === String(prod.id));
-
-      if (indexExistente !== -1) {
-        // Si ya existe, sumamos la cantidad y lo movemos hacia arriba (unshift)
-        cart.items[indexExistente].cantidad = Number(cart.items[indexExistente].cantidad) + cantidad;
-        const [itemMovido] = cart.items.splice(indexExistente, 1);
-        cart.items.unshift(itemMovido);
-      } else {
-        // Si es un producto NUEVO, lo ponemos al INICIO de la lista usando unshift()
-        cart.items.unshift({ 
-          id: prod.id, 
-          nombre: prod.nombre, 
-          precio: precioAplicado, 
-          costo: prod.costo || 0, 
-          cantidad: cantidad,
-          unidad: unidad,
-          anulado: false 
-        });
-      }
+      // USAMOS UNSHIFT PARA QUE CADA ESCANEO CREE UNA NUEVA LÍNEA Y APAREZCA ARRIBA
+      cart.items.unshift({ 
+        id: prod.id, 
+        nombre: prod.nombre, 
+        precio: precioAplicado, 
+        costo: prod.costo || 0, 
+        cantidad: cantidad,
+        unidad: unidad,
+        anulado: false 
+      });
 
       renderizarCarritosTabs();
 
-      // FORZAMOS EL SCROLL HACIA ARRIBA PARA QUE EL CAJERO VEA EL PRODUCTO AL INSTANTE
+      // FORZAMOS EL SCROLL AUTOMÁTICO HACIA ARRIBA PARA VER EL NUEVO ESCANEO AL INSTANTE
       const contenedorTabla = document.getElementById('contenedor-tabla-carrito');
       if (contenedorTabla) {
         contenedorTabla.scrollTop = 0;
