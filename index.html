@@ -414,16 +414,16 @@
         </div>
       </section>
 
-      <!-- SECCIÓN NUEVA: RECARGAS BEMOVIL (INTEGRADA) -->
+      <!-- SECCIÓN NUEVA: RECARGAS BEMOVIL (ENLACE SEGURO EXTERNO) -->
       <section id="vista-bemovil" class="page-section">
-        <div class="card" style="padding: 10px; height: 80vh; display: flex; flex-direction: column;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 0 5px;">
-            <h3 style="margin: 0;">Plataforma de Recargas Bemovil</h3>
-            <span style="font-size: 0.8rem; color: var(--text-muted);">Usa tus mismas credenciales de distribuidor o punto</span>
-          </div>
-          <div style="flex: 1; width: 100%; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); background: #ffffff;">
-            <iframe src="https://sirse.bemovil.net/" style="width: 100%; height: 100%; border: none;" title="Bemovil Recargas"></iframe>
-          </div>
+        <div class="card" style="padding: 35px; text-align: center; max-width: 600px; margin: 40px auto; border-radius: 16px;">
+          <h3 style="margin-bottom: 12px; font-size: 1.5rem;">Plataforma de Recargas Bemovil</h3>
+          <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 25px; line-height: 1.5;">
+            Para operar con total seguridad y estabilidad, abre la plataforma oficial de recargas en una pestaña independiente usando tus credenciales de distribuidor o punto.
+          </p>
+          <a href="https://sirse.bemovil.net/" target="_blank" class="btn btn-primary" style="padding: 14px 28px; font-size: 1.1rem; text-decoration: none; display: inline-block; border-radius: 8px;">
+            🚀 Abrir Plataforma Bemovil
+          </a>
         </div>
       </section>
 
@@ -2089,7 +2089,7 @@
     async function crearUsuario() {
       const user = document.getElementById('usr-user').value.trim();
       const pass = document.getElementById('usr-pass').value.trim();
-      if (!user || !pass) return alert('Completa les campos');
+      if (!user || !pass) return alert('Completa los campos');
       await supabaseClient.from('usuarios').insert([{ id: Date.now().toString(), user, pass, rol: document.getElementById('usr-rol').value, local_id: document.getElementById('usr-local-select').value }]);
       alert('Usuario creado');
       renderUsuarios();
