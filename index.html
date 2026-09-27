@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Tienda Online - Pedidos a Domicilio</title>
+  <title>POS Pro System - Multi Sucursal</title>
   <!-- LIBRERÍAS EXTERNAS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -68,6 +68,38 @@
 
     .modal-box { background: var(--card-bg) !important; color: var(--text) !important; }
 
+    /* NOTIFICACIÓN FLOTANTE DERECHA COMPACTA Y NO INVASIVA */
+    #notificacion-pedido-flotante {
+      position: fixed;
+      top: 15px;
+      right: 15px;
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      z-index: 30000;
+      display: none;
+      align-items: center;
+      gap: 10px;
+      max-width: 320px;
+      width: auto;
+      border: 1px solid rgba(255,255,255,0.3);
+      font-size: 0.8rem;
+    }
+
+    .punto-notif-badge {
+      position: absolute;
+      top: 6px;
+      right: 14px;
+      width: 10px;
+      height: 10px;
+      background-color: #ef4444;
+      border-radius: 50%;
+      display: none;
+      box-shadow: 0 0 6px #ef4444;
+    }
+
     .app-container { display: flex; flex: 1; flex-direction: column; }
     
     header { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
@@ -83,7 +115,7 @@
       left: 50%;
       transform: translateX(-50%);
       width: 94%;
-      max-width: 650px;
+      max-width: 720px;
       display: flex; 
       justify-content: flex-start; 
       align-items: center;
@@ -178,14 +210,13 @@
     
     .item-anulado { text-decoration: line-through; color: var(--danger); background-color: var(--bg); }
 
-    #vista-tienda-online { position: fixed; inset: 0; background: #f1f5f9; z-index: 20000; overflow-y: auto; display: none; padding: 0; }
+    #vista-tienda-online { position: fixed; inset: 0; background: #f1f5f9; z-index: 20000; overflow-y: auto; display: none; padding: 0; color: #0f172a; }
     .store-hero-banner { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: #ffffff; padding: 40px 20px; text-align: center; border-bottom: 4px solid var(--primary); box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
     .store-main-container { max-width: 1100px; margin: -25px auto 40px auto; padding: 0 20px; }
     .store-top-bar { display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 16px 24px; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08); margin-bottom: 25px; border: 1px solid #e2e8f0; }
     .store-products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 20px; }
     .store-item-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); transition: all 0.3s; }
     .store-item-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); border-color: #cbd5e1; }
-    .store-item-badge { background: #eff6ff; color: #2563eb; font-size: 0.7rem; font-weight: 700; padding: 4px 10px; border-radius: 20px; display: inline-block; margin-bottom: 10px; text-transform: uppercase; }
 
     @media print {
       body * { visibility: hidden; }
@@ -197,6 +228,16 @@
 </head>
 <body data-theme="dark">
 
+  <!-- NOTIFICACIÓN FLOTANTE DERECHA -->
+  <div id="notificacion-pedido-flotante">
+    <div style="font-size: 1.1rem;">🛒</div>
+    <div style="flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+      <span style="font-weight: 800; display: block;" id="notif-titulo-ped">¡Pedido en línea!</span>
+      <span style="font-size: 0.75rem; opacity: 0.9;" id="notif-desc-ped">Nuevo pendiente</span>
+    </div>
+    <button class="btn btn-sm" style="background: #fff; color: #d97706; font-weight: 800; padding: 4px 8px; margin:0;" onclick="irAPedidosWebDesdeNotif()">Ver</button>
+  </div>
+
   <!-- VISTA TIENDA ONLINE -->
   <div id="vista-tienda-online">
     <div class="store-hero-banner">
@@ -207,7 +248,7 @@
       <div class="store-top-bar">
         <div>
           <span style="font-size: 0.85rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Catálogo Activo</span>
-          <p style="font-size: 0.95px; color: #0f172a; font-weight: 600;" id="store-status-text">Abierto para pedidos</p>
+          <p style="font-size: 0.95rem; color: #0f172a; font-weight: 600;" id="store-status-text">Abierto para pedidos</p>
         </div>
         <div>
           <button class="btn btn-primary btn-sm" style="padding: 10px 18px; border-radius: 30px; font-weight: 700;" onclick="abrirCarritoWebModal()">🛒 Ver Mi Pedido (<span id="store-cart-count">0</span>)</button>
@@ -232,17 +273,26 @@
         <div style="border-top: 1px solid #e2e8f0; padding-top: 10px; margin-top: 5px;">
           <h4 style="font-size: 0.95rem; color: #0f172a; margin-bottom: 4px;">Datos para Facturación</h4>
           <div class="form-row">
-            <div><label style="color:#334155; font-size:0.75rem;">Cédula o RUC *</label><input type="text" id="web-cli-cedula" placeholder="Ej: 0912345678" onchange="buscarClienteWebSri()" style="padding: 8px;"></div>
-            <div><label style="color:#334155; font-size:0.75rem;">Correo Electrónico *</label><input type="email" id="web-cli-correo" placeholder="correo@ejemplo.com" style="padding: 8px;"></div>
+            <div>
+              <label style="color:#334155; font-size:0.75rem;">Cédula o RUC *</label>
+              <input type="text" id="web-cli-cedula" placeholder="Ej: 0912345678" style="padding: 8px; margin:0;" maxlength="13">
+            </div>
+            <div>
+              <label style="color:#334155; font-size:0.75rem;">Correo Electrónico (Opcional)</label>
+              <input type="email" id="web-cli-correo" placeholder="correo@ejemplo.com" style="padding: 8px;">
+            </div>
           </div>
           <div class="form-row">
             <div><label style="color:#334155; font-size:0.75rem;">Nombres *</label><input type="text" id="web-cli-nombre" placeholder="Ej: María" style="padding: 8px;"></div>
             <div><label style="color:#334155; font-size:0.75rem;">Apellidos *</label><input type="text" id="web-cli-apellido" placeholder="Ej: López" style="padding: 8px;"></div>
           </div>
-          <h4 style="font-size: 0.95rem; color: #0f172a; margin-top: 10px; margin-bottom: 4px;">Datos de Envío</h4>
-          <label style="color:#334155; font-size:0.75rem;">WhatsApp *</label><input type="text" id="web-cli-whatsapp" placeholder="Ej: 0991234567" style="padding: 8px;">
-          <label style="color:#334155; font-size:0.75rem;">Dirección Exacta *</label><input type="text" id="web-cli-direccion" placeholder="Calle principal y número" style="padding: 8px;">
-          <label style="color:#334155; font-size:0.75rem;">Referencias (Opcional)</label><textarea id="web-cli-referencia" placeholder="Casa color blanca..." style="padding: 8px; height: 50px; resize: none;"></textarea>
+          <h4 style="font-size: 0.95rem; color: #0f172a; margin-top: 10px; margin-bottom: 4px;">Datos de Envío a Domicilio</h4>
+          <label style="color:#334155; font-size:0.75rem;">WhatsApp de Contacto *</label><input type="text" id="web-cli-whatsapp" placeholder="Ej: 0991234567" style="padding: 8px;">
+          <div class="form-row">
+            <div><label style="color:#334155; font-size:0.75rem;">Calle Principal *</label><input type="text" id="web-cli-calle" placeholder="Ej: Av. Principal y 9 de Octubre" style="padding: 8px;"></div>
+            <div><label style="color:#334155; font-size:0.75rem;">Sector / Barrio *</label><input type="text" id="web-cli-sector" placeholder="Ej: Norte / Centro" style="padding: 8px;"></div>
+          </div>
+          <label style="color:#334155; font-size:0.75rem;">Referencia Exacta *</label><textarea id="web-cli-referencia" placeholder="Casa color blanca, timbre azul, frente al parque..." style="padding: 8px; height: 50px; resize: none;"></textarea>
         </div>
         <div style="display: flex; gap: 10px; margin-top: 15px;">
           <button class="btn btn-danger" style="flex:1; margin:0; background: #f1f5f9; color: #475569;" onclick="cerrarCarritoWebModal()">Seguir Comprando</button>
@@ -260,7 +310,7 @@
       <input type="text" id="login-user" placeholder="Usuario">
       <input type="password" id="login-pass" placeholder="Contraseña">
       <button class="btn btn-primary" onclick="iniciarSesion()">Acceder</button>
-      <p id="login-error" style="color:var(--danger); font-size:0.8rem; display:none; margin-top:10px;">Usuario o contraseña incorrectos</p>
+      <p id="login-error" style="color:var(--danger); font-size:0.8rem; display:none; margin-top:10px;">Usuario or contraseña incorrectos</p>
     </div>
   </div>
 
@@ -270,6 +320,29 @@
       <h3>Escanear Código de Barras</h3>
       <div id="reader" style="width: 100%; border-radius: 8px; overflow: hidden;"></div>
       <button class="btn btn-danger" style="margin-top: 15px;" onclick="cerrarCamara()">Cerrar Cámara</button>
+    </div>
+  </div>
+
+  <!-- MODAL DETALLE DE PEDIDO WEB -->
+  <div id="modal-detalle-pedido-web" class="modal-overlay">
+    <div class="modal-box" style="padding: 24px; border-radius: 16px; max-width: 550px; width: 100%; max-height: 90vh; overflow-y: auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h3 style="font-size: 1.2rem; margin:0;" id="modal-ped-titulo">Detalle del Pedido</h3>
+        <button class="btn btn-danger btn-sm" onclick="cerrarModalDetallePedidoWeb()" style="margin:0;">✕ Cerrar</button>
+      </div>
+      <div id="modal-ped-info-cliente" style="font-size: 0.85rem; margin-bottom: 12px; background: var(--bg); padding: 10px; border-radius: 8px;"></div>
+      <h4 style="font-size: 0.95rem; margin-bottom: 6px;">Productos Solicitados:</h4>
+      <div class="table-responsive" style="max-height: 200px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; padding: 4px;">
+        <table>
+          <thead><tr><th>Producto</th><th>Cant</th><th>Subtotal</th></tr></thead>
+          <tbody id="modal-ped-tabla-items"></tbody>
+        </table>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; font-weight:bold; font-size: 1.1rem;">
+        <span>Total Pedido:</span>
+        <span style="color:var(--primary);" id="modal-ped-total">$0.00</span>
+      </div>
+      <div style="display: flex; gap: 10px; margin-top: 15px;" id="modal-ped-acciones"></div>
     </div>
   </div>
 
@@ -416,6 +489,32 @@
           </div>
         </div>
       </div>
+
+      <!-- VISTA PEDIDOS WEB -->
+      <section id="vista-pedidos-web" class="page-section" style="display: none;">
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h3 style="margin: 0;">🌐 Lista de Pedidos en Línea</h3>
+            <button class="btn btn-primary btn-sm" onclick="renderPedidosWebAdmin()">🔄 Actualizar Lista</button>
+          </div>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">Haz clic en "📦 Ver Pedido" para desplegar la lista exacta de productos que pidió el cliente y verificarlo antes de aprobar o rechazar.</p>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID Pedido</th>
+                  <th>Cliente & Contacto</th>
+                  <th>Fecha</th>
+                  <th>Total</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="tabla-pedidos-web-admin"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
 
       <!-- VISTA FACTURAS -->
       <section id="vista-facturas" class="page-section" style="display: none;">
@@ -678,7 +777,7 @@
                   <th>Costo</th>
                   <th>P. Normal</th>
                   <th>Stock</th>
-                  <th>Web</th>
+                  <th>Web (Activo/Inactivo)</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
@@ -761,7 +860,7 @@
         </div>
       </section>
 
-      <!-- VISTA LOCALES -->
+      <!-- VISTA LOCALES CON SUSCRIPCIÓN Y VENCIMIENTO -->
       <section id="vista-locales" class="page-section">
         <div class="card">
           <h3>Crear Nueva Sucursal</h3>
@@ -769,6 +868,16 @@
           <input type="text" id="loc-propietario" placeholder="Propietario / Emisor">
           <input type="text" id="loc-ruc" placeholder="RUC (13 dígitos)">
           <input type="text" id="loc-direccion" placeholder="Dirección">
+          <div class="form-row">
+            <div>
+              <label>¿Suscripción Activa?</label>
+              <select id="loc-suscripcion"><option value="SI">SÍ</option><option value="NO">NO</option></select>
+            </div>
+            <div>
+              <label>Fecha de Vencimiento</label>
+              <input type="date" id="loc-vencimiento">
+            </div>
+          </div>
           <label>¿Obligado a llevar contabilidad?</label>
           <select id="loc-contabilidad"><option value="NO">NO</option><option value="SI">SÍ</option></select>
           <h4 style="margin-top:15px; font-size:0.95rem; color:var(--primary);">Credenciales Deuna Business (API)</h4>
@@ -816,53 +925,54 @@
   </div>
 
   <!-- COMPROBANTE DE IMPRESIÓN -->
-  <div id="factura-impresion" style="display:none; max-width: 300px; margin: 0 auto; font-family: monospace; font-size: 12px; color: #000; background: #fff; padding: 10px;">
-    <div style="text-align: center; line-height: 1.3;">
-      <h3 id="fac-local-nombre" style="margin: 0; font-size: 14px; font-weight: bold;"></h3>
-      <p style="margin: 2px 0;" id="fac-propietario"></p>
-      <p style="margin: 2px 0;">RUC: <span id="fac-ruc"></span></p>
-      <p style="margin: 2px 0; font-size: 11px;" id="fac-dir"></p>
-      <p style="margin: 2px 0; font-size: 11px;">Obligado contabilidad: <span id="fac-contabilidad">NO</span></p>
-      <p style="margin: 2px 0;">Usuario Venta: <span id="fac-usuario"></span></p>
-    </div>
-    <div style="margin-top: 8px; border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 5px 0; line-height: 1.3;">
-      <p style="margin: 2px 0; font-weight: bold;">Comprobante #: <span id="fac-id"></span></p>
-      <p style="margin: 2px 0; font-size: 11px;">Fecha Emisión: <span id="fac-fecha"></span></p>
-      <p style="margin: 2px 0; font-size: 10px;" id="contenedor-etiqueta-aut">Nro. de autorización:<br><span id="fac-autorizacion" style="word-break: break-all; font-size: 9px;"></span></p>
-    </div>
-    <div style="margin-top: 5px; line-height: 1.3; font-size: 11px;">
-      <p style="margin: 2px 0;"><b>Cliente:</b> <span id="fac-cliente">CONSUMIDOR FINAL</span></p>
-      <p style="margin: 2px 0;"><b>RUC/CI:</b> <span id="fac-cedula">9999999999999</span></p>
-    </div>
-    <hr style="border: none; border-top: 1px dashed #000; margin: 6px 0;">
-    <table style="width: 100%; font-size: 11px; border-collapse: collapse;">
-      <thead>
-        <tr style="border-bottom: 1px solid #000;">
-          <th style="text-align: left; padding-bottom: 3px;">Cant.</th>
-          <th style="text-align: left; padding-bottom: 3px;">Descripción</th>
-          <th style="text-align: right; padding-bottom: 3px;">P.Unit</th>
-          <th style="text-align: right; padding-bottom: 3px;">Total</th>
-        </tr>
-      </thead>
-      <tbody id="fac-items"></tbody>
-    </table>
-    <hr style="border: none; border-top: 1px dashed #000; margin: 6px 0;">
-    <div style="text-align: right; font-size: 12px; line-height: 1.4;">
-      <p style="margin: 2px 0;">Subtotal: $<span id="fac-subtotal">0.00</span></p>
-      <p style="margin: 2px 0; font-weight: bold; font-size: 13px;">TOTAL: $<span id="fac-total">0.00</span></p>
-    </div>
-    <hr style="border: none; border-top: 1px dashed #000; margin: 6px 0;">
-    <div style="font-size: 11px; line-height: 1.3;">
-      <p style="margin: 2px 0; font-weight: bold;">FORMA DE PAGO:</p>
-      <p style="margin: 2px 0;">Pago <span id="fac-metodo">Efectivo</span></p>
-    </div>
-    <div style="text-align: center; margin-top: 10px; font-size: 10px;">
-      <p style="margin: 2px 0;">Gracias por su compra</p>
-      <p style="margin: 2px 0;" id="fac-leyenda-doc">Documento electrónico autorizado</p>
-    </div>
-    <div class="no-print" style="margin-top: 15px; text-align: center;">
-      <button class="btn btn-primary" onclick="window.print()">Imprimir Ticket</button>
-      <button class="btn btn-danger" onclick="document.getElementById('factura-impresion').style.display='none'">Cerrar</button>
+  <div id="factura-impresion" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:30000; align-items:center; justify-content:center; overflow-y:auto; padding:20px;">
+    <div style="max-width: 320px; width: 100%; margin: auto; font-family: monospace; font-size: 12px; color: #000 !important; background: #fff !important; padding: 15px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+      <div style="text-align: center; line-height: 1.3; color: #000;">
+        <h3 id="fac-local-nombre" style="margin: 0; font-size: 14px; font-weight: bold; color: #000;"></h3>
+        <p style="margin: 2px 0; color: #000;" id="fac-propietario"></p>
+        <p style="margin: 2px 0; color: #000;">RUC: <span id="fac-ruc"></span></p>
+        <p style="margin: 2px 0; font-size: 11px; color: #000;" id="fac-dir"></p>
+        <p style="margin: 2px 0; font-size: 11px; color: #000;">Obligado contabilidad: <span id="fac-contabilidad">NO</span></p>
+        <p style="margin: 2px 0; color: #000;">Usuario Venta: <span id="fac-usuario"></span></p>
+      </div>
+      <div style="margin-top: 8px; border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 5px 0; line-height: 1.3; color: #000;">
+        <p style="margin: 2px 0; font-weight: bold; color: #000;">Comprobante #: <span id="fac-id"></span></p>
+        <p style="margin: 2px 0; font-size: 11px; color: #000;">Fecha Emisión: <span id="fac-fecha"></span></p>
+      </div>
+      <div style="margin-top: 5px; line-height: 1.3; font-size: 11px; color: #000;">
+        <p style="margin: 2px 0; color: #000;"><b>Cliente:</b> <span id="fac-cliente">CONSUMIDOR FINAL</span></p>
+        <p style="margin: 2px 0; color: #000;"><b>RUC/CI:</b> <span id="fac-cedula">9999999999999</span></p>
+      </div>
+      <hr style="border: none; border-top: 1px dashed #000; margin: 6px 0;">
+      <table style="width: 100%; font-size: 11px; border-collapse: collapse; color: #000;">
+        <thead>
+          <tr style="border-bottom: 1px solid #000;">
+            <th style="text-align: left; padding-bottom: 3px; color: #000; background: #fff;">Cant.</th>
+            <th style="text-align: left; padding-bottom: 3px; color: #000; background: #fff;">Descripción</th>
+            <th style="text-align: right; padding-bottom: 3px; color: #000; background: #fff;">P.Unit</th>
+            <th style="text-align: right; padding-bottom: 3px; color: #000; background: #fff;">Total</th>
+          </tr>
+        </thead>
+        <tbody id="fac-items"></tbody>
+      </table>
+      <hr style="border: none; border-top: 1px dashed #000; margin: 6px 0;">
+      <div style="text-align: right; font-size: 12px; line-height: 1.4; color: #000;">
+        <p style="margin: 2px 0; color: #000;">Subtotal: $<span id="fac-subtotal">0.00</span></p>
+        <p style="margin: 2px 0; font-weight: bold; font-size: 13px; color: #000;">TOTAL: $<span id="fac-total">0.00</span></p>
+      </div>
+      <hr style="border: none; border-top: 1px dashed #000; margin: 6px 0;">
+      <div style="font-size: 11px; line-height: 1.3; color: #000;">
+        <p style="margin: 2px 0; font-weight: bold; color: #000;">FORMA DE PAGO:</p>
+        <p style="margin: 2px 0; color: #000;">Pago <span id="fac-metodo">Efectivo</span></p>
+      </div>
+      <div style="text-align: center; margin-top: 10px; font-size: 10px; color: #000;">
+        <p style="margin: 2px 0; color: #000;">Gracias por su compra</p>
+        <p style="margin: 2px 0; color: #000;" id="fac-leyenda-doc">Documento electrónico autorizado</p>
+      </div>
+      <div class="no-print" style="margin-top: 15px; display: flex; gap: 8px;">
+        <button class="btn btn-primary" style="flex:1; margin:0;" onclick="window.print()">Imprimir</button>
+        <button class="btn btn-danger" style="flex:1; margin:0;" onclick="document.getElementById('factura-impresion').style.display='none'">Cerrar</button>
+      </div>
     </div>
   </div>
 
@@ -888,6 +998,8 @@
     let modoFiltroReporte = 'mes';
     let carritoTiendaWeb = [];
     let localTiendaIdActual = null;
+    let intervaloMonitoreoPedidos = null;
+    let ultimaCantidadPendientes = -1;
 
     function inicializarTema() {
       const temaGuardado = localStorage.getItem('pos_theme') || 'dark';
@@ -945,8 +1057,8 @@
           supabaseClient.from('productos').select('*'),
           supabaseClient.from('clientes').select('*'),
           supabaseClient.from('ventas').select('*'),
-          supabaseClient.from('arqueos').select('*').order('fecha_apertura', { ascending: false }),
-          supabaseClient.from('mermas_auditoria').select('*').order('fecha_hora', { ascending: false })
+          supabaseClient.from('arqueos').select('*'),
+          supabaseClient.from('mermas_auditoria').select('*')
         ]);
 
         if (resLoc.data) {
@@ -954,7 +1066,7 @@
             id: l.id, nombre: l.nombre, direccion: l.direccion, ruc: l.ruc || '',
             propietario: l.propietario || '', obligadoContabilidad: l.obligado_contabilidad || 'NO',
             deuna_api_key: l.deuna_api_key || '', deuna_secret: l.deuna_secret || '',
-            suscripcionActiva: l.suscripcion_activa !== false, fechaVencimiento: l.fecha_vencimiento || null
+            suscripcionActiva: l.suscripcion_active !== false && l.suscripcion_activa !== false, fechaVencimiento: l.fecha_vencimiento || null
           }));
         }
 
@@ -971,19 +1083,21 @@
             precio_mayorista: parseFloat(p.precio_mayorista) || parseFloat(p.precio) || 0,
             unidad_medida: p.unidad || p.unidad_medida || 'unidad',
             stock: parseFloat(p.stock) || 0, visibleWeb: p.visible_web === true, imagenUrl: p.imagen_url || ''
-          }));
+          })).reverse();
         }
 
-        if (resCli.data) dbClientes = resCli.data.map(c => ({ id: c.id, localId: String(c.local_id || c.localId || '').trim(), cedula: c.cedula || c.cliente_cedula, nombre: c.nombre, apellido: c.apellido, correo: c.correo }));
+        if (resCli.data) dbClientes = resCli.data.map(c => ({ id: c.id, localId: String(c.local_id || c.localId || '').trim(), cedula: c.cedula || c.cliente_cedula, nombre: c.nombre, apellido: c.apellido, correo: c.correo })).reverse();
         
         if (resVen.data) {
           dbVentas = resVen.data.map(v => ({
             id: v.id, localId: String(v.local_id || v.localId || '').trim(), localNombre: v.local_nombre || v.localNombre,
-            clienteNombre: v.cliente_nombre || v.clienteNombre, clienteCedula: v.cliente_cedula || v.clienteCedula,
+            clienteNombre: v.cliente_nombre || v.clienteNombre, 
+            clienteCedula: v.cliente_cedula || v.clientecedula || v.clienteCedula || '',
+            cliente_cedula: v.cliente_cedula || v.clientecedula || v.clienteCedula || '',
             metodoPago: v.metodo_pago || v.metodoPago, fecha: v.fecha, items: v.items || [], total: v.total,
             usuario: v.usuario || '', tipo_comprobante: v.tipo_comprobante || '', estado_sri: v.estado_sri || '',
             punto_emision: v.punto_emision || '', claveAcceso: v.clave_acceso || v.claveAcceso || ''
-          }));
+          })).sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
         }
 
         if (resArq.data) {
@@ -992,7 +1106,7 @@
             fechaApertura: a.fecha_apertura || a.fechaApertura, fondoInicial: parseFloat(a.fondo_inicial || a.fondoInicial || 0),
             estado: a.estado, fechaCierre: a.fecha_cierre || a.fechaCierre,
             efectivoFisico: a.efectivo_fisico !== null && a.efectivo_fisico !== undefined ? parseFloat(a.efectivo_fisico) : null
-          }));
+          })).sort((a, b) => new Date(b.fechaApertura) - new Date(a.fechaApertura));
         }
 
         if (resMer.data) {
@@ -1000,9 +1114,85 @@
             id: m.id, localId: String(m.local_id || m.local_id || '').trim(), idFactura: m.id_factura,
             productoNombre: m.producto_nombre, cantidad: m.cantidad, montoTotal: m.monto_total,
             motivo: m.motivo, fechaHora: m.fecha_hora, usuario: m.usuario
-          }));
+          })).sort((a, b) => new Date(b.fechaHora) - new Date(a.fechaHora));
         }
+
+        verificarPedidosNuevosFondo();
       } catch (err) { console.error(err); }
+    }
+
+    // --- SISTEMA DE ALERTA SONORA Y NOTIFICACIÓN FLOTANTE ---
+    function reproducirSonidoAlerta() {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.4);
+      } catch (e) { console.log("Audio bloqueado por navegador", e); }
+    }
+
+    async function verificarPedidosNuevosFondo() {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('tienda')) return;
+      if (!usuarioActual) return;
+
+      const localIdActual = String(usuarioActual.localId).trim();
+      
+      const { data: ventasRemotas } = await supabaseClient.from('ventas').select('*');
+      if (ventasRemotas) {
+        dbVentas = ventasRemotas.map(v => ({
+          id: v.id, localId: String(v.local_id || '').trim(), localNombre: v.local_nombre || '',
+          clienteNombre: v.cliente_nombre || '', 
+          clienteCedula: v.cliente_cedula || v.clientecedula || '',
+          cliente_cedula: v.cliente_cedula || v.clientecedula || '',
+          metodoPago: v.metodo_pago || '', fecha: v.fecha, items: v.items || [], total: v.total,
+          usuario: v.usuario || '', tipo_comprobante: v.tipo_comprobante || '', estado_sri: v.estado_sri || '',
+          punto_emision: v.punto_emision || ''
+        })).sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+      }
+
+      const pedidosPendientes = dbVentas.filter(v => v.localId === localIdActual && v.tipo_comprobante === 'PEDIDO_WEB_DOMICILIO' && v.estado_sri === 'PENDIENTE');
+      const cantActual = pedidosPendientes.length;
+
+      const notifEl = document.getElementById('notificacion-pedido-flotante');
+      const puntoNavBadge = document.getElementById('punto-notif-pedidos');
+
+      if (cantActual > 0) {
+        document.getElementById('notif-titulo-ped').innerText = `¡Tienes ${cantActual} pedido(s) en línea!`;
+        document.getElementById('notif-desc-ped').innerText = `Pendiente: ${pedidosPendientes[0].clienteNombre.split('(')[0]}`;
+        notifEl.style.display = 'flex';
+        if (puntoNavBadge) puntoNavBadge.style.display = 'block';
+
+        if (ultimaCantidadPendientes !== -1 && cantActual > ultimaCantidadPendientes) {
+          reproducirSonidoAlerta();
+        }
+      } else {
+        notifEl.style.display = 'none';
+        if (puntoNavBadge) puntoNavBadge.style.display = 'none';
+      }
+      ultimaCantidadPendientes = cantActual;
+    }
+
+    function iniciarMonitoreoContinuoPedidos() {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('tienda')) return;
+      if (intervaloMonitoreoPedidos) clearInterval(intervaloMonitoreoPedidos);
+      intervaloMonitoreoPedidos = setInterval(() => {
+        if (usuarioActual) {
+          verificarPedidosNuevosFondo();
+        }
+      }, 8000);
+    }
+
+    function irAPedidosWebDesdeNotif() {
+      cambiarVista('pedidos-web');
+      document.getElementById('notificacion-pedido-flotante').style.display = 'none';
     }
 
     async function iniciarSesion() {
@@ -1039,6 +1229,8 @@
       construirMenuNavegacion();
       poblardropdowns();
       cambiarVista('pos');
+      iniciarMonitoreoContinuoPedidos();
+      verificarPedidosNuevosFondo();
     }
 
     function construirMenuNavegacion() {
@@ -1048,12 +1240,17 @@
             <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.60 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"></path></svg>
             <span>Ventas</span>
         </button>
+        <button class="nav-btn" id="btn-nav-pedidos-web" onclick="cambiarVista('pedidos-web')">
+            <div class="punto-notif-badge" id="punto-notif-pedidos"></div>
+            <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"></path></svg>
+            <span>Pedidos Web</span>
+        </button>
         <button class="nav-btn" id="btn-nav-facturas" onclick="cambiarVista('facturas')">
             <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"></path></svg>
             <span>Facturas</span>
         </button>
         <button class="nav-btn" id="btn-nav-arqueo" onclick="cambiarVista('arqueo')">
-            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 4h-2v2h2V7zM7 7h2v2H7V7zm10 4h-2v2h2v-2zm-4 0h-2v2h2v-2zm-4 0H7v2h2v-2zm4 4h-2v2h2v-2zm-4 0H7v2h2v-2zm10 4H7v2h10v-2z"></path></svg>
+            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 4h-2v2h2v-2zM7 7h2v2H7V7zm10 4h-2v2h2v-2zm-4 0h-2v2h2v-2zm-4 0H7v2h2v-2zm4 4h-2v2h2v-2zm-4 0H7v2h2v-2zm10 4H7v2h10v-2z"></path></svg>
             <span>Arqueo</span>
         </button>
         <button class="nav-btn" id="btn-nav-clientes" onclick="cambiarVista('clientes')">
@@ -1105,6 +1302,7 @@
     function cerrarSesion() {
       usuarioActual = null;
       localStorage.removeItem('usuarioActual');
+      if (intervaloMonitoreoPedidos) clearInterval(intervaloMonitoreoPedidos);
       document.getElementById('login-screen').style.display = 'flex';
     }
 
@@ -1117,6 +1315,7 @@
       if(btnNav) btnNav.classList.add('active');
 
       if (vista === 'pos') renderizarCarritosTabs();
+      if (vista === 'pedidos-web') renderPedidosWebAdmin();
       if (vista === 'arqueo') await prepararVistaArqueo();
       if (vista === 'contabilidad') renderContabilidadFlujo();
       if (vista === 'kardex') renderKardex();
@@ -1419,7 +1618,7 @@
       };
 
       await supabaseClient.from('ventas').insert([ventaSupabase]);
-      dbVentas.push(ventaSupabase);
+      dbVentas.unshift(ventaSupabase);
       mostrarFactura(ventaSupabase);
 
       carritos = carritos.filter(c => c.id !== cart.id);
@@ -1444,16 +1643,124 @@
       
       document.getElementById('fac-items').innerHTML = (v.items || []).map(i => `
         <tr class="${i.anulado ? 'item-anulado' : ''}">
-          <td>${i.cantidad} ${i.unidad ? i.unidad.substring(0,2) : ''}</td>
-          <td>${i.nombre} ${i.anulado ? '<small><b>[ANULADO]</b></small>' : ''}</td>
-          <td style="text-align: right;">$${Number(i.precio).toFixed(2)}</td>
-          <td style="text-align: right;">$${(i.cantidad * i.precio).toFixed(2)}</td>
+          <td style="color:#000;">${i.cantidad} ${i.unidad ? i.unidad.substring(0,2) : ''}</td>
+          <td style="color:#000;">${i.nombre} ${i.anulado ? '<small><b>[ANULADO]</b></small>' : ''}</td>
+          <td style="text-align: right; color:#000;">$${Number(i.precio).toFixed(2)}</td>
+          <td style="text-align: right; color:#000;">$${(i.cantidad * i.precio).toFixed(2)}</td>
         </tr>
       `).join('');
 
       document.getElementById('fac-total').innerText = Number(v.total).toFixed(2);
       document.getElementById('fac-subtotal').innerText = Number(v.total).toFixed(2);
-      document.getElementById('factura-impresion').style.display = 'block';
+      document.getElementById('factura-impresion').style.display = 'flex';
+    }
+
+    // --- GESTIÓN DE PEDIDOS WEB (VER, APROBAR, RECHAZAR) ---
+    async function renderPedidosWebAdmin() {
+      await cargarDatosSupabase();
+      const localIdActual = usuarioActual ? String(usuarioActual.localId).trim() : '';
+      const pedidosWeb = dbVentas
+        .filter(v => v.localId === localIdActual && (v.tipo_comprobante === 'PEDIDO_WEB_DOMICILIO' || v.tipo_comprobante === 'PEDIDO_APROBADO' || v.tipo_comprobante === 'PEDIDO_RECHAZADO'))
+        .sort((a, b) => new Date(b.fecha) - new Date(a.fecha)); // LO MÁS NUEVO ARRIBA
+      
+      document.getElementById('tabla-pedidos-web-admin').innerHTML = pedidosWeb.map(p => {
+        let badgeColor = 'var(--warning)';
+        let estadoTexto = 'PENDIENTE';
+        if (p.estado_sri === 'APROBADO') { badgeColor = 'var(--success)'; estadoTexto = 'APROBADO & FACTURADO'; }
+        else if (p.estado_sri === 'RECHAZADO') { badgeColor = 'var(--danger)'; estadoTexto = 'RECHAZADO'; }
+
+        return `
+          <tr>
+            <td><b>${p.id}</b></td>
+            <td>${p.cliente_nombre || p.clienteNombre}</td>
+            <td>${new Date(p.fecha).toLocaleString()}</td>
+            <td><b>$${Number(p.total).toFixed(2)}</b></td>
+            <td><span style="padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; background: ${badgeColor}; color: #fff;">${estadoTexto}</span></td>
+            <td>
+              <button class="btn btn-primary btn-sm" onclick="verDetallePedidoWeb('${p.id}')">📦 Ver Pedido</button>
+            </td>
+          </tr>
+        `;
+      }).join('') || `<tr><td colspan="6" style="text-align:center;">No hay pedidos web recibidos aún.</td></tr>`;
+    }
+
+    function verDetallePedidoWeb(idPedido) {
+      const pedido = dbVentas.find(v => String(v.id) === String(idPedido));
+      if (!pedido) return alert('Pedido no encontrado.');
+
+      const cedulaMostrada = pedido.cliente_cedula || pedido.clienteCedula || 'S/N';
+
+      document.getElementById('modal-ped-titulo').innerText = `Pedido: ${pedido.id}`;
+      document.getElementById('modal-ped-info-cliente').innerHTML = `
+        <p><b>Cliente / Envío:</b> ${pedido.cliente_nombre || pedido.clienteNombre}</p>
+        <p><b>Cédula/RUC:</b> <span style="color:var(--text); font-weight:bold;">${cedulaMostrada}</span></p>
+        <p><b>Fecha:</b> ${new Date(pedido.fecha).toLocaleString()}</p>
+        <p><b>Estado Actual:</b> <b>${pedido.estado_sri || 'PENDIENTE'}</b></p>
+      `;
+
+      document.getElementById('modal-ped-tabla-items').innerHTML = (pedido.items || []).map(i => `
+        <tr>
+          <td>${i.nombre}</td>
+          <td>${i.cantidad} ${i.unidad || ''}</td>
+          <td>$${(i.precio * i.cantidad).toFixed(2)}</td>
+        </tr>
+      `).join('');
+
+      document.getElementById('modal-ped-total').innerText = `$${Number(pedido.total).toFixed(2)}`;
+
+      const accionesContainer = document.getElementById('modal-ped-acciones');
+      if (pedido.estado_sri === 'PENDIENTE') {
+        accionesContainer.innerHTML = `
+          <button class="btn btn-success" style="flex:1; margin:0;" onclick="aprobarYDescontarPedidoWebDesdeModal('${pedido.id}')">✓ Aprobar, Facturar y Descontar Stock</button>
+          <button class="btn btn-danger" style="flex:1; margin:0;" onclick="rechazarPedidoWebDesdeModal('${pedido.id}')">✕ Rechazar Pedido</button>
+        `;
+      } else {
+        accionesContainer.innerHTML = `<p style="text-align:center; width:100%; color:var(--text-muted); font-weight:bold;">Este pedido ya fue ${pedido.estado_sri.toLowerCase()}.</p>`;
+      }
+
+      document.getElementById('modal-detalle-pedido-web').style.display = 'flex';
+    }
+
+    function cerrarModalDetallePedidoWeb() {
+      document.getElementById('modal-detalle-pedido-web').style.display = 'none';
+    }
+
+    async function aprobarYDescontarPedidoWebDesdeModal(idPedido) {
+      if (!confirm("¿Aprobar este pedido? Esto generará la factura oficial, descontará el stock y sumará a los ingresos/ganancias del local.")) return;
+      const pedido = dbVentas.find(v => String(v.id) === String(idPedido));
+      if (!pedido) return alert('Pedido no encontrado.');
+
+      for (const i of (pedido.items || [])) {
+        const prod = dbProductos.find(x => String(x.id) === String(i.id));
+        if (prod) {
+          prod.stock -= i.cantidad;
+          await supabaseClient.from('productos').update({ stock: prod.stock }).eq('id', prod.id);
+        }
+      }
+
+      await supabaseClient.from('ventas').update({ estado_sri: 'APROBADO', tipo_comprobante: 'PEDIDO_APROBADO' }).eq('id', idPedido);
+      pedido.estado_sri = 'APROBADO';
+      pedido.tipo_comprobante = 'PEDIDO_APROBADO';
+
+      alert('¡Pedido aprobado, facturado y registrado con éxito en ingresos!');
+      cerrarModalDetallePedidoWeb();
+      renderPedidosWebAdmin();
+      verificarPedidosNuevosFondo();
+    }
+
+    async function rechazarPedidoWebDesdeModal(idPedido) {
+      if (!confirm("¿Estás seguro de rechazar este pedido web? No generará ninguna factura ni ingreso.")) return;
+      const pedido = dbVentas.find(v => String(v.id) === String(idPedido));
+      if (!pedido) return alert('Pedido no encontrado.');
+
+      await supabaseClient.from('ventas').update({ estado_sri: 'RECHAZADO', tipo_comprobante: 'PEDIDO_RECHAZADO' }).eq('id', idPedido);
+      pedido.estado_sri = 'RECHAZADO';
+      pedido.tipo_comprobante = 'PEDIDO_RECHAZADO';
+
+      alert('Pedido rechazado correctamente. No afectará la contabilidad.');
+      cerrarModalDetallePedidoWeb();
+      renderPedidosWebAdmin();
+      verificarPedidosNuevosFondo();
     }
 
     async function prepararVistaArqueo() {
@@ -1463,7 +1770,15 @@
         document.getElementById('arqueo-estado-abierto').style.display = 'block';
         document.getElementById('arqueo-estado-cerrado').style.display = 'none';
         document.getElementById('arq-fondo').value = arqueoAbierto.fondoInicial;
-        const ventasTurno = dbVentas.filter(v => String(v.localId) === String(usuarioActual.localId) && new Date(v.fecha) >= new Date(arqueoAbierto.fechaApertura));
+        
+        // SOLO VENTAS EFECTIVAS O PEDIDOS APROBADOS
+        const ventasTurno = dbVentas.filter(v => {
+          if (String(v.localId) !== String(usuarioActual.localId)) return false;
+          if (new Date(v.fecha) < new Date(arqueoAbierto.fechaApertura)) return false;
+          const esValida = v.tipo_comprobante !== 'PEDIDO_WEB_DOMICILIO' && v.tipo_comprobante !== 'PEDIDO_RECHAZADO';
+          return esValida;
+        });
+
         let tEfectivo = 0, tTarjeta = 0, tTransferencia = 0;
         ventasTurno.forEach(v => {
           if (v.metodoPago === 'Tarjeta') tTarjeta += v.total;
@@ -1498,7 +1813,7 @@
       if (monto <= 0 || !concepto) return alert('Ingresa monto y descripción.');
       const arqueoAbierto = dbArqueos.find(a => String(a.localId) === String(usuarioActual.localId) && a.estado === 'Abierto');
       if (!arqueoAbierto) return;
-      dbMovimientosCaja.push({ id: Date.now(), localId: usuarioActual.localId, arqueoId: arqueoAbierto.id, tipo, monto, concepto, fecha: new Date().toISOString() });
+      dbMovimientosCaja.unshift({ id: Date.now(), localId: usuarioActual.localId, arqueoId: arqueoAbierto.id, tipo, monto, concepto, fecha: new Date().toISOString() });
       document.getElementById('arq-mov-monto').value = '';
       document.getElementById('arq-mov-concepto').value = '';
       renderMovimientosCaja();
@@ -1525,6 +1840,7 @@
       if (fondo === null) return;
       const nuevoArq = { id: 'ARQ-' + Date.now(), local_id: String(usuarioActual.localId), usuario: usuarioActual.user, fecha_apertura: new Date().toISOString(), fondo_inicial: parseFloat(fondo) || 0, estado: 'Abierto' };
       await supabaseClient.from('arqueos').insert([nuevoArq]);
+      dbArqueos.unshift({ id: nuevoArq.id, localId: nuevoArq.local_id, usuario: nuevoArq.usuario, fechaApertura: nuevoArq.fecha_apertura, fondoInicial: nuevoArq.fondo_inicial, estado: 'Abierto', efectivoFisico: null });
       await prepararVistaArqueo();
     }
 
@@ -1533,13 +1849,18 @@
       if (!arqueoAbierto) return;
       const nuevoFondo = parseFloat(document.getElementById('arq-fondo').value) || 0;
       await supabaseClient.from('arqueos').update({ fondo_inicial: nuevoFondo }).eq('id', arqueoAbierto.id);
+      arqueoAbierto.fondoInicial = nuevoFondo;
       await prepararVistaArqueo();
     }
 
     function calcularDiferenciaArqueo() {
       const arqueoAbierto = dbArqueos.find(a => String(a.localId) === String(usuarioActual.localId) && a.estado === 'Abierto');
       if (!arqueoAbierto) return;
-      const ventasTurno = dbVentas.filter(v => String(v.localId) === String(usuarioActual.localId) && new Date(v.fecha) >= new Date(arqueoAbierto.fechaApertura));
+      const ventasTurno = dbVentas.filter(v => {
+        if (String(v.localId) !== String(usuarioActual.localId)) return false;
+        if (new Date(v.fecha) < new Date(arqueoAbierto.fechaApertura)) return false;
+        return v.tipo_comprobante !== 'PEDIDO_WEB_DOMICILIO' && v.tipo_comprobante !== 'PEDIDO_RECHAZADO';
+      });
       let tEfectivo = 0;
       ventasTurno.forEach(v => { if (!v.metodoPago || v.metodoPago === 'Efectivo') tEfectivo += v.total; });
       let totalMovs = 0;
@@ -1560,11 +1881,14 @@
       if (!arqueoAbierto) return;
       const fisico = parseFloat(document.getElementById('arq-conteo-fisico').value) || 0;
       await supabaseClient.from('arqueos').update({ estado: 'Cerrado', fecha_cierre: new Date().toISOString(), efectivo_fisico: fisico }).eq('id', arqueoAbierto.id);
+      arqueoAbierto.estado = 'Cerrado';
+      arqueoAbierto.fechaCierre = new Date().toISOString();
+      arqueoAbierto.efectivoFisico = fisico;
       await prepararVistaArqueo();
     }
 
     function renderHistorialArqueos() {
-      const lista = dbArqueos.filter(a => String(a.localId) === String(usuarioActual.localId));
+      const lista = dbArqueos.filter(a => String(a.localId) === String(usuarioActual.localId)).sort((a, b) => new Date(b.fechaApertura) - new Date(a.fechaApertura));
       document.getElementById('arqueo-historial-tabla').innerHTML = lista.map(a => `
         <tr>
           <td><b>${a.usuario}</b></td><td>${new Date(a.fechaApertura).toLocaleString()}</td>
@@ -1585,7 +1909,11 @@
 
     function renderContabilidadFlujo() {
       const localId = usuarioActual ? String(usuarioActual.localId).trim() : '';
-      const ventasLocal = dbVentas.filter(v => String(v.localId || v.local_id).trim() === localId);
+      const ventasLocal = dbVentas.filter(v => {
+        if (v.localId !== localId) return false;
+        return v.tipo_comprobante !== 'PEDIDO_WEB_DOMICILIO' && v.tipo_comprobante !== 'PEDIDO_RECHAZADO';
+      }).sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+
       let totalIngresos = 0;
       ventasLocal.forEach(v => { totalIngresos += Number(v.total || 0); });
       document.getElementById('contab-val-ingresos').innerText = `$${totalIngresos.toFixed(2)}`;
@@ -1613,7 +1941,7 @@
 
     async function consultarSRI() {
       const cedula = document.getElementById('cli-cedula').value.trim();
-      if (!cedula) return alert('Ingresa Cédula o RUC.');
+      if (!cedula) return alert('Ingresa Cédula or RUC.');
       try {
         const res = await fetch(`https://pos-sistema-y075.onrender.com/api/sri/${cedula}`);
         const data = await res.json();
@@ -1631,7 +1959,7 @@
       if (!cedula || !nombre) return alert('Campos obligatorios');
       const nuevoCli = { id: Date.now().toString(), local_id: String(usuarioActual.localId), cedula, nombre, apellido, correo: 'S/C' };
       await supabaseClient.from('clientes').insert([nuevoCli]);
-      dbClientes.push({ id: nuevoCli.id, localId: nuevoCli.local_id, cedula, nombre, apellido, correo: 'S/C' });
+      dbClientes.unshift({ id: nuevoCli.id, localId: nuevoCli.local_id, cedula, nombre, apellido, correo: 'S/C' });
       poblarClientesDropdown(); renderClientes(); alert('Cliente guardado');
     }
 
@@ -1645,7 +1973,13 @@
 
     function renderKardex() {
       const q = (document.getElementById('kardex-buscar')?.value || '').toLowerCase();
-      document.getElementById('kardex-tabla').innerHTML = dbVentas.filter(v => String(v.localId) === String(usuarioActual.localId) && (v.id.toLowerCase().includes(q))).map(v => `
+      const kardexLista = dbVentas.filter(v => {
+        if (v.localId !== String(usuarioActual.localId)) return false;
+        if (!v.id.toLowerCase().includes(q)) return false;
+        return v.tipo_comprobante !== 'PEDIDO_WEB_DOMICILIO' && v.tipo_comprobante !== 'PEDIDO_RECHAZADO';
+      }).sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+
+      document.getElementById('kardex-tabla').innerHTML = kardexLista.map(v => `
         <tr><td><b>${v.id}</b></td><td>${new Date(v.fecha).toLocaleString()}</td><td>${v.localNombre}</td><td>${v.clienteNombre}</td><td>${v.metodoPago}</td><td>$${v.total.toFixed(2)}</td><td><button class="btn btn-primary btn-sm" onclick='mostrarFactura(${JSON.stringify(v)})'>Ver</button></td></tr>
       `).join('') || `<tr><td colspan="7" style="text-align:center;">Sin kardex</td></tr>`;
     }
@@ -1674,11 +2008,9 @@
       });
     }
 
-    // --- FUNCIÓN PARA ACTUALIZAR LA FOTO DIRECTAMENTE DESDE LA TABLA DE STOCK ---
     async function actualizarFotoDirectaStock(id, inputElement) {
       if (!inputElement.files || inputElement.files.length === 0) return;
       const file = inputElement.files[0];
-      
       const pObj = dbProductos.find(x => String(x.id) === String(id));
       if (!pObj) return;
 
@@ -1706,7 +2038,14 @@
       };
     }
 
-    // --- FUNCIÓN: CARGAR PRODUCTO ARRIBA PARA EDITARLO ---
+    async function cambiarVisibilidadWebDirecta(id, checkbox) {
+      const pObj = dbProductos.find(x => String(x.id) === String(id));
+      if (!pObj) return;
+      const nuevoEstado = checkbox.checked;
+      pObj.visibleWeb = nuevoEstado;
+      await supabaseClient.from('productos').update({ visible_web: nuevoEstado }).eq('id', id);
+    }
+
     function cargarProductoParaEditar(id) {
       const p = dbProductos.find(x => String(x.id) === String(id));
       if (!p) return;
@@ -1817,7 +2156,7 @@
         };
 
         await supabaseClient.from('productos').insert([nuevoProd]);
-        dbProductos.push({
+        dbProductos.unshift({
           id: nuevoProd.id, localId: nuevoProd.local_id, codigo: nuevoProd.codigo,
           nombre: nuevoProd.nombre, costo: nuevoProd.costo, precio: nuevoProd.precio,
           unidad_medida: nuevoProd.unidad, stock: nuevoProd.stock, visibleWeb: nuevoProd.visible_web, imagenUrl: nuevoProd.imagen_url
@@ -1852,7 +2191,9 @@
           <td>$${p.costo.toFixed(2)}</td>
           <td>$${p.precio.toFixed(2)}</td>
           <td>${p.stock}</td>
-          <td>${p.visibleWeb ? 'Sí' : 'No'}</td>
+          <td style="text-align: center;">
+            <input type="checkbox" ${p.visibleWeb ? 'checked' : ''} style="width: 20px; height: 20px; cursor: pointer;" title="Activar/Desactivar en Tienda Online" onchange="cambiarVisibilidadWebDirecta('${p.id}', this)">
+          </td>
           <td style="white-space: nowrap;">
             <button class="btn btn-primary btn-sm" onclick="cargarProductoParaEditar('${p.id}')">Editar</button>
             <button class="btn btn-danger btn-sm" onclick="eliminarProducto('${p.id}')">X</button>
@@ -1875,7 +2216,12 @@
 
     function renderHistorial() {
       const localId = usuarioActual ? String(usuarioActual.localId).trim() : '';
-      document.getElementById('historial-tabla').innerHTML = dbVentas.filter(v => String(v.localId) === String(localId)).map(v => `
+      const historialLista = dbVentas.filter(v => {
+        if (v.localId !== localId) return false;
+        return v.tipo_comprobante !== 'PEDIDO_WEB_DOMICILIO' && v.tipo_comprobante !== 'PEDIDO_RECHAZADO';
+      }).sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+
+      document.getElementById('historial-tabla').innerHTML = historialLista.map(v => `
         <tr><td>${v.id}</td><td>${v.localNombre}</td><td>${v.clienteNombre}</td><td>${v.metodoPago}</td><td>${new Date(v.fecha).toLocaleString()}</td><td>$${v.total.toFixed(2)}</td><td><button class="btn btn-primary btn-sm" onclick='mostrarFactura(${JSON.stringify(v)})'>Ver</button></td></tr>
       `).join('');
     }
@@ -1884,8 +2230,12 @@
       localTiendaIdActual = localIdUrl;
       await cargarDatosSupabase();
       const localObj = dbLocales.find(l => String(l.id) === String(localIdUrl));
-      if (!localObj) { document.body.innerHTML = `<h2>Tienda no encontrada.</h2>`; return; }
+      if (!localObj) { 
+        document.body.innerHTML = `<div style="text-align:center; padding:50px;"><h2>Tienda no encontrada.</h2><p>Verifica el enlace de tu tienda.</p></div>`; 
+        return; 
+      }
       document.getElementById('store-title').innerText = localObj.nombre;
+      document.getElementById('store-subtitle').innerText = `Catálogo oficial de ${localObj.nombre} - Realiza tus pedidos de forma rápida y segura.`;
       document.getElementById('vista-tienda-online').style.display = 'block';
       renderCatalogoTiendaWeb();
     }
@@ -1895,38 +2245,157 @@
       document.getElementById('store-grid-catalogo').innerHTML = prods.map(p => `
         <div class="store-item-card">
           <div>
-            <img src="${p.imagenUrl || 'https://via.placeholder.com/200'}" style="width:100%; height:130px; object-fit:cover; border-radius:8px;">
-            <h4 style="margin:8px 0;">${p.nombre}</h4>
-            <span style="color:var(--primary); font-weight:bold;">$${p.precio.toFixed(2)}</span>
+            <img src="${p.imagenUrl || 'https://via.placeholder.com/200'}" style="width:100%; height:150px; object-fit:cover; border-radius:12px; margin-bottom: 8px;">
+            <span style="font-size:0.75rem; color:#64748b; font-weight:bold; text-transform:uppercase;">${p.unidad_medida || 'unidad'}</span>
+            <h4 style="margin:4px 0 8px 0; font-size:1rem; color:#0f172a;">${p.nombre}</h4>
+            <div style="color:var(--primary); font-weight:800; font-size:1.2rem; margin-bottom:12px;">$${p.precio.toFixed(2)}</div>
           </div>
-          <button class="btn btn-primary btn-sm" onclick="agregarAlCarritoWeb('${p.id}')">Agregar</button>
+          <button class="btn btn-primary btn-sm" style="width:100%; padding: 10px; border-radius: 8px;" onclick="agregarAlCarritoWeb('${p.id}')">🛒 Añadir al Pedido</button>
         </div>
-      `).join('') || `<p>Sin productos online</p>`;
+      `).join('') || `<p style="text-align:center; grid-column: 1 / -1; color:#64748b; padding: 40px;">No hay productos disponibles en este momento.</p>`;
     }
 
     function agregarAlCarritoWeb(id) {
-      const prod = dbProductos.find(p => p.id === id);
+      const prod = dbProductos.find(p => String(p.id) === String(id));
       if (!prod) return;
-      let item = carritoTiendaWeb.find(i => i.id === id);
-      if (item) item.cantidad++; else carritoTiendaWeb.push({ id: prod.id, nombre: prod.nombre, precio: prod.precio, cantidad: 1 });
-      document.getElementById('store-cart-count').innerText = carritoTiendaWeb.reduce((s, x) => s + x.cantidad, 0);
-      alert('Añadido al pedido');
+      let item = carritoTiendaWeb.find(i => String(i.id) === String(id));
+      if (item) {
+        item.cantidad++;
+      } else {
+        carritoTiendaWeb.push({ id: prod.id, nombre: prod.nombre, precio: prod.precio, cantidad: 1, unidad: prod.unidad_medida || 'unidad', costo: prod.costo || 0, anulado: false });
+      }
+      const totalItems = carritoTiendaWeb.reduce((s, x) => s + x.cantidad, 0);
+      document.getElementById('store-cart-count').innerText = totalItems;
+      alert(`¡"${prod.nombre}" añadido a tu pedido!`);
     }
 
     function abrirCarritoWebModal() {
-      if (carritoTiendaWeb.length === 0) return alert('Pedido vacío');
-      document.getElementById('store-modal-total').innerText = carritoTiendaWeb.reduce((s, x) => s + (x.precio * x.cantidad), 0).toFixed(2);
-      document.getElementById('store-tabla-carrito-modal').innerHTML = carritoTiendaWeb.map(i => `<tr><td>${i.nombre}</td><td>${i.cantidad}</td><td>$${(i.precio * i.cantidad).toFixed(2)}</td></tr>`).join('');
+      if (carritoTiendaWeb.length === 0) return alert('Tu carrito está vacío. ¡Selecciona algunos productos primero!');
+      const total = carritoTiendaWeb.reduce((s, x) => s + (x.precio * x.cantidad), 0);
+      document.getElementById('store-modal-total').innerText = total.toFixed(2);
+      document.getElementById('store-tabla-carrito-modal').innerHTML = carritoTiendaWeb.map(i => `
+        <tr>
+          <td>${i.nombre}</td>
+          <td>${i.cantidad} ${i.unidad}</td>
+          <td>$${(i.precio * i.cantidad).toFixed(2)}</td>
+        </tr>
+      `).join('');
       document.getElementById('modal-carrito-web').style.display = 'flex';
     }
-    function cerrarCarritoWebModal() { document.getElementById('modal-carrito-web').style.display = 'none'; }
-    async function buscarClienteWebSri() {}
-    async function enviarPedidoWebCliente() {
-      alert('Pedido enviado con éxito.');
-      carritoTiendaWeb = []; cerrarCarritoWebModal();
+
+    function cerrarCarritoWebModal() {
+      document.getElementById('modal-carrito-web').style.display = 'none';
     }
 
-    function prepararVistaReportes() { generarReporte(); }
+    async function enviarPedidoWebCliente() {
+      const cedula = document.getElementById('web-cli-cedula').value.trim();
+      const correo = document.getElementById('web-cli-correo').value.trim();
+      const nombre = document.getElementById('web-cli-nombre').value.trim();
+      const apellido = document.getElementById('web-cli-apellido').value.trim();
+      const whatsapp = document.getElementById('web-cli-whatsapp').value.trim();
+      const calle = document.getElementById('web-cli-calle').value.trim();
+      const sector = document.getElementById('web-cli-sector').value.trim();
+      const referencia = document.getElementById('web-cli-referencia').value.trim();
+
+      if (!cedula || !nombre || !apellido || !whatsapp || !calle || !sector || !referencia) {
+        return alert('Por favor completa todos los campos obligatorios (*).');
+      }
+
+      if (carritoTiendaWeb.length === 0) return alert('El carrito está vacío.');
+
+      const totalPedido = carritoTiendaWeb.reduce((s, x) => s + (x.precio * x.cantidad), 0);
+      const idPedido = 'WEB-' + Date.now().toString().slice(-5);
+      const localObj = dbLocales.find(l => String(l.id) === String(localTiendaIdActual));
+
+      const infoEnvioStr = `WhatsApp: ${whatsapp} - Dir: ${calle}, Sector: ${sector} - Ref: ${referencia}`;
+
+      const nuevoPedidoSupabase = {
+        id: idPedido,
+        local_id: String(localTiendaIdActual),
+        local_nombre: localObj ? localObj.nombre : 'Tienda Online',
+        cliente_nombre: `${nombre} ${apellido} (${infoEnvioStr})`,
+        cliente_cedula: cedula,
+        metodo_pago: 'Pedido Online (Por Cobrar / Transferencia)',
+        fecha: new Date().toISOString(),
+        items: [...carritoTiendaWeb],
+        total: totalPedido,
+        usuario: 'Tienda Online',
+        tipo_comprobante: 'PEDIDO_WEB_DOMICILIO',
+        estado_sri: 'PENDIENTE',
+        punto_emision: '001-100',
+        clave_acceso: 'WEB-' + idPedido
+      };
+
+      try {
+        await supabaseClient.from('ventas').insert([nuevoPedidoSupabase]);
+        dbVentas.unshift(nuevoPedidoSupabase);
+
+        await supabaseClient.from('clientes').upsert([{
+          id: Date.now().toString(),
+          local_id: String(localTiendaIdActual),
+          cedula: cedula,
+          nombre: nombre,
+          apellido: apellido,
+          correo: correo || 'S/C'
+        }], { onConflict: 'cedula' });
+
+        alert(`¡Pedido #${idPedido} enviado con éxito! Nos pondremos en contacto contigo a través de WhatsApp.`);
+        
+        carritoTiendaWeb = [];
+        document.getElementById('store-cart-count').innerText = '0';
+        cerrarCarritoWebModal();
+        
+        document.getElementById('web-cli-cedula').value = '';
+        document.getElementById('web-cli-correo').value = '';
+        document.getElementById('web-cli-nombre').value = '';
+        document.getElementById('web-cli-apellido').value = '';
+        document.getElementById('web-cli-whatsapp').value = '';
+        document.getElementById('web-cli-calle').value = '';
+        document.getElementById('web-cli-sector').value = '';
+        document.getElementById('web-cli-referencia').value = '';
+
+      } catch (err) {
+        console.error(err);
+        alert('Hubo un error al registrar tu pedido. Por favor intenta de nuevo.');
+      }
+    }
+
+    function prepararVistaReportes() {
+      const anioSelect = document.getElementById('rep-anio');
+      if (anioSelect && anioSelect.options.length === 0) {
+        let optionsHtml = '';
+        const anioActualNum = new Date().getFullYear();
+        for (let y = anioActualNum; y >= 2024; y--) {
+          optionsHtml += `<option value="${y}">${y}</option>`;
+        }
+        anioSelect.innerHTML = optionsHtml;
+        anioSelect.value = anioActualNum;
+      }
+      
+      const mesSelect = document.getElementById('rep-mes');
+      if (mesSelect && mesSelect.value === '') {
+        mesSelect.value = new Date().getMonth();
+      }
+
+      const inputDia = document.getElementById('rep-input-dia');
+      if (inputDia && !inputDia.value) {
+        inputDia.value = new Date().toISOString().split('T')[0];
+      }
+
+      const inputInicio = document.getElementById('rep-input-inicio');
+      const inputFin = document.getElementById('rep-input-fin');
+      if (inputInicio && !inputInicio.value) {
+        const d = new Date();
+        d.setMonth(d.getMonth() - 1);
+        inputInicio.value = d.toISOString().split('T')[0];
+      }
+      if (inputFin && !inputFin.value) {
+        inputFin.value = new Date().toISOString().split('T')[0];
+      }
+
+      generarReporte();
+    }
+
     function cambiarModoFiltro(m, btn) {
       modoFiltroReporte = m;
       document.querySelectorAll('.filter-tab').forEach(b => { b.style.background = 'var(--border)'; b.style.color = 'var(--text)'; });
@@ -1936,20 +2405,84 @@
       document.getElementById('filtro-rango-container').style.display = m === 'rango' ? 'flex' : 'none';
       generarReporte();
     }
+
     function generarReporte() {
       const localId = usuarioActual ? String(usuarioActual.localId).trim() : '';
-      const ventas = dbVentas.filter(v => String(v.localId) === String(localId));
-      let total = 0; ventas.forEach(v => total += v.total);
-      document.getElementById('rep-val-ventas').innerText = `$${total.toFixed(2)}`;
-      document.getElementById('rep-val-compras').innerText = `$0.00`;
-      document.getElementById('rep-val-ganancia').innerText = `$${total.toFixed(2)}`;
+      
+      const ventasValidas = dbVentas.filter(v => {
+        if (v.localId !== localId) return false;
+        return v.tipo_comprobante !== 'PEDIDO_WEB_DOMICILIO' && v.tipo_comprobante !== 'PEDIDO_RECHAZADO';
+      });
+
+      let ventasFiltradas = [];
+
+      if (modoFiltroReporte === 'mes') {
+        const anioSel = parseInt(document.getElementById('rep-anio').value);
+        const mesSel = document.getElementById('rep-mes').value; // 'TODOS' o '0'..'11'
+
+        ventasFiltradas = ventasValidas.filter(v => {
+          const fechaVenta = new Date(v.fecha);
+          const anioVenta = fechaVenta.getFullYear();
+          const mesVenta = fechaVenta.getMonth();
+
+          if (anioVenta !== anioSel) return false;
+          if (mesSel !== 'TODOS' && mesVenta !== parseInt(mesSel)) return false;
+          return true;
+        });
+
+      } else if (modoFiltroReporte === 'dia') {
+        const diaSel = document.getElementById('rep-input-dia').value; // YYYY-MM-DD
+        if (!diaSel) return;
+
+        ventasFiltradas = ventasValidas.filter(v => {
+          const fechaVentaStr = new Date(v.fecha).toISOString().split('T')[0];
+          return fechaVentaStr === diaSel;
+        });
+
+      } else if (modoFiltroReporte === 'rango') {
+        const inicioSel = document.getElementById('rep-input-inicio').value;
+        const finSel = document.getElementById('rep-input-fin').value;
+        if (!inicioSel || !finSel) return;
+
+        const fechaInicio = new Date(inicioSel + 'T00:00:00');
+        const fechaFin = new Date(finSel + 'T23:59:59');
+
+        ventasFiltradas = ventasValidas.filter(v => {
+          const fechaVenta = new Date(v.fecha);
+          return fechaVenta >= fechaInicio && fechaVenta <= fechaFin;
+        });
+      }
+
+      let totalVentas = 0;
+      let totalCostoCompras = 0;
+
+      ventasFiltradas.forEach(v => {
+        totalVentas += Number(v.total || 0);
+        if (v.items && Array.isArray(v.items)) {
+          v.items.forEach(item => {
+            if (!item.anulado) {
+              const costoUnitario = Number(item.costo || 0);
+              const cantidad = Number(item.cantidad || 0);
+              totalCostoCompras += (costoUnitario * cantidad);
+            }
+          });
+        }
+      });
+
+      const gananciaNeta = totalVentas - totalCostoCompras;
+
+      document.getElementById('rep-val-ventas').innerText = `$${totalVentas.toFixed(2)}`;
+      document.getElementById('rep-val-compras').innerText = `$${totalCostoCompras.toFixed(2)}`;
+      document.getElementById('rep-val-ganancia').innerText = `$${gananciaNeta.toFixed(2)}`;
     }
 
     async function crearEmpleadoCajero() {
       const user = document.getElementById('emp-user').value.trim();
       const pass = document.getElementById('emp-pass').value.trim();
       if (!user || !pass) return;
-      await supabaseClient.from('usuarios').insert([{ id: Date.now().toString(), user, pass, rol: 'Cajero', local_id: String(usuarioActual.localId) }]);
+      const nuevoId = Date.now().toString();
+      await supabaseClient.from('usuarios').insert([{ id: nuevoId, user, pass, rol: 'Cajero', local_id: String(usuarioActual.localId) }]);
+      dbUsuarios.unshift({ id: nuevoId, user, pass, rol: 'Cajero', localId: String(usuarioActual.localId) });
       document.getElementById('emp-user').value = ''; document.getElementById('emp-pass').value = '';
       renderEmpleadosCajeros(); alert('Cajero creado');
     }
@@ -1961,18 +2494,106 @@
 
     async function crearLocal() {
       const nombre = document.getElementById('loc-nombre').value.trim();
-      if (!nombre) return;
-      const nuevo = { id: 'LOC-' + Date.now().toString().slice(-4), nombre, ruc: document.getElementById('loc-ruc').value, direccion: document.getElementById('loc-direccion').value, suscripcion_activa: true };
-      await supabaseClient.from('locales').insert([nuevo]);
-      dbLocales.push({ id: nuevo.id, nombre: nuevo.nombre, ruc: nuevo.ruc, direccion: nuevo.direccion, suscripcionActiva: true });
-      renderLocales(); poblardropdowns(); alert('Local creado');
+      if (!nombre) return alert('Ingresa el nombre de la sucursal.');
+      
+      const suscripcionActiva = document.getElementById('loc-suscripcion').value === 'SI';
+      const fechaVencimiento = document.getElementById('loc-vencimiento').value || null;
+
+      const nuevo = { 
+        id: 'LOC-' + Date.now().toString().slice(-4), 
+        nombre, 
+        propietario: document.getElementById('loc-propietario').value,
+        ruc: document.getElementById('loc-ruc').value, 
+        direccion: document.getElementById('loc-direccion').value, 
+        suscripcion_activa: suscripcionActiva,
+        fecha_vencimiento: fechaVencimiento,
+        obligado_contabilidad: document.getElementById('loc-contabilidad').value,
+        deuna_api_key: document.getElementById('loc-deuna-key').value,
+        deuna_secret: document.getElementById('loc-deuna-secret').value
+      };
+
+      const { error } = await supabaseClient.from('locales').insert([nuevo]);
+      if (error) {
+        alert('Error al guardar en Supabase: ' + error.message);
+        return;
+      }
+
+      dbLocales.unshift({ 
+        id: nuevo.id, 
+        nombre: nuevo.nombre, 
+        propietario: nuevo.propietario, 
+        ruc: nuevo.ruc, 
+        direccion: nuevo.direccion, 
+        suscripcionActiva: nuevo.suscripcion_activa, 
+        fechaVencimiento: nuevo.fecha_vencimiento 
+      });
+
+      document.getElementById('loc-nombre').value = '';
+      document.getElementById('loc-propietario').value = '';
+      document.getElementById('loc-ruc').value = '';
+      document.getElementById('loc-direccion').value = '';
+      document.getElementById('loc-vencimiento').value = '';
+
+      renderLocales(); 
+      poblardropdowns(); 
+      alert('¡Local creado exitosamente con su fecha de suscripción!');
     }
+
+    async function actualizarLocalDirecto(id) {
+      const selectSub = document.getElementById(`select-sub-${id}`);
+      const inputVenc = document.getElementById(`input-venc-${id}`);
+      if (!selectSub || !inputVenc) return;
+
+      const suscripcionActiva = selectSub.value === 'SI';
+      const fechaVencimiento = inputVenc.value || null;
+
+      const { error } = await supabaseClient.from('locales').update({
+        suscripcion_activa: suscripcionActiva,
+        fecha_vencimiento: fechaVencimiento
+      }).eq('id', id);
+
+      if (error) {
+        alert('Error al actualizar: ' + error.message);
+        return;
+      }
+
+      const lObj = dbLocales.find(l => String(l.id) === String(id));
+      if (lObj) {
+        lObj.suscripcionActiva = suscripcionActiva;
+        lObj.fechaVencimiento = fechaVencimiento;
+      }
+
+      alert('¡Suscripción y fecha actualizadas correctamente!');
+      renderLocales();
+    }
+
     function renderLocales() {
       document.getElementById('loc-tabla').innerHTML = dbLocales.map(l => `
-        <tr><td><b>${l.id}</b></td><td>${l.nombre}</td><td>${l.ruc || 'S/N'}</td><td>Vigente</td><td>${!esLocalMatriz(l.id, l.nombre) ? `<button class="btn btn-danger btn-sm" onclick="eliminarLocal('${l.id}')">X</button>` : ''}</td></tr>
+        <tr>
+          <td><b>${l.id}</b></td>
+          <td>${l.nombre}</td>
+          <td>${l.ruc || 'S/N'}<br><small>${l.direccion || ''}</small></td>
+          <td>
+            <div style="display:flex; gap:6px; align-items:center; margin-bottom:4px;">
+              <select id="select-sub-${l.id}" style="padding:4px; font-size:0.8rem; width:80px; margin:0;">
+                <option value="SI" ${l.suscripcionActiva !== false ? 'selected' : ''}>SÍ</option>
+                <option value="NO" ${l.suscripcionActiva === false ? 'selected' : ''}>NO</option>
+              </select>
+              <input type="date" id="input-venc-${l.id}" value="${l.fechaVencimiento || ''}" style="padding:4px; font-size:0.8rem; width:130px; margin:0;">
+            </div>
+            <button class="btn btn-primary btn-sm" style="padding:2px 8px; font-size:0.7rem;" onclick="actualizarLocalDirecto('${l.id}')">💾 Guardar Fecha</button>
+          </td>
+          <td>${!esLocalMatriz(l.id, l.nombre) ? `<button class="btn btn-danger btn-sm" onclick="eliminarLocal('${l.id}')">X</button>` : ''}</td>
+        </tr>
       `).join('');
     }
-    async function eliminarLocal(id) { await supabaseClient.from('locales').delete().eq('id', id); dbLocales = dbLocales.filter(l => l.id !== id); renderLocales(); }
+
+    async function eliminarLocal(id) { 
+      if (!confirm("¿Estás seguro de eliminar este local?")) return;
+      await supabaseClient.from('locales').delete().eq('id', id); 
+      dbLocales = dbLocales.filter(l => l.id !== id); 
+      renderLocales(); 
+    }
 
     async function crearUsuario() {
       const user = document.getElementById('usr-user').value.trim();
@@ -1980,7 +2601,9 @@
       const rol = document.getElementById('usr-rol').value;
       const localId = document.getElementById('usr-local-select').value;
       if (!user || !pass) return;
-      await supabaseClient.from('usuarios').insert([{ id: Date.now().toString(), user, pass, rol, local_id: String(localId) }]);
+      const nuevoId = Date.now().toString();
+      await supabaseClient.from('usuarios').insert([{ id: nuevoId, user, pass, rol, local_id: String(localId) }]);
+      dbUsuarios.unshift({ id: nuevoId, user, pass, rol, localId: String(localId) });
       renderUsuarios(); alert('Usuario creado');
     }
     function renderUsuarios() {
@@ -2001,9 +2624,15 @@
     function cargarFacturas() { filtrarFacturas(); }
     function filtrarFacturas() {
       const q = (document.getElementById('filtro-buscar-factura')?.value || '').toLowerCase();
-      document.getElementById('tabla-facturas-body').innerHTML = dbVentas.filter(v => String(v.localId) === String(usuarioActual.localId) && v.id.toLowerCase().includes(q)).map(v => `
+      const facturasLista = dbVentas.filter(v => {
+        if (v.localId !== String(usuarioActual.localId)) return false;
+        if (!v.id.toLowerCase().includes(q) && !v.clienteNombre.toLowerCase().includes(q)) return false;
+        return v.tipo_comprobante !== 'PEDIDO_WEB_DOMICILIO' && v.tipo_comprobante !== 'PEDIDO_RECHAZADO';
+      }).sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+
+      document.getElementById('tabla-facturas-body').innerHTML = facturasLista.map(v => `
         <tr><td><b>${v.id}</b></td><td>${v.clienteNombre}</td><td>${new Date(v.fecha).toLocaleString()}</td><td>${v.punto_emision}</td><td>${v.tipo_comprobante}</td><td>$${v.total.toFixed(2)}</td><td>${v.metodoPago}</td><td><button class="btn btn-primary btn-sm" onclick='mostrarFactura(${JSON.stringify(v)})'>Ver</button></td></tr>
-      `).join('') || `<tr><td colspan="8" style="text-align:center;">Sin facturas</td></tr>`;
+      `).join('') || `<tr><td colspan="8" style="text-align:center;">Sin facturas registradas</td></tr>`;
     }
     async function reenviarAlSri(id) {}
     async function enviarTodasPendientesSri() {}
@@ -2012,8 +2641,9 @@
       inicializarTema();
       const params = new URLSearchParams(window.location.search);
       const tiendaLocalId = params.get('tienda');
-      if (tiendaLocalId) { await inicializarTiendaWebPublica(tiendaLocalId); }
-      else {
+      if (tiendaLocalId) { 
+        await inicializarTiendaWebPublica(tiendaLocalId); 
+      } else {
         if (usuarioActual) { await cargarDatosSupabase(); aplicarSesionActiva(); }
         else { document.getElementById('login-screen').style.display = 'flex'; }
       }
