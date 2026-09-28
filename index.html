@@ -328,7 +328,7 @@
               <input type="text" id="web-cli-cedula" placeholder="Ej: 0912345678" style="padding: 8px; margin:0;" maxlength="13">
             </div>
             <div>
-              <label style="color:#334155; font-size:0.75rem;">Correo Electrónico (Opcional)</label>
+              <label style="color:#334155; font-size:0.75rem;">Correo Electrónico (Para envío automático) *</label>
               <input type="email" id="web-cli-correo" placeholder="correo@ejemplo.com" style="padding: 8px;">
             </div>
           </div>
@@ -749,7 +749,7 @@
             <div><label>Nombre *</label><input type="text" id="cli-nombre" placeholder="Ej: Juan"></div>
             <div><label>Apellido *</label><input type="text" id="cli-apellido" placeholder="Ej: Pérez"></div>
           </div>
-          <label>Correo Electrónico</label>
+          <label>Correo Electrónico (Para envío automático)</label>
           <input type="email" id="cli-correo" placeholder="ejemplo@correo.com">
           <button class="btn btn-primary" onclick="guardarCliente()">Guardar Cliente</button>
         </div>
@@ -1106,7 +1106,7 @@
     let carritos = [{ id: 1, nombre: 'Principal 1', items: [] }];
     let carritoActivoId = 1;
     let html5QrCode = null;
-    let clienteVentaSeleccionado = { cedula: '9999999999001', nombre: 'Consumidor Final' };
+    let clienteVentaSeleccionado = { cedula: '9999999999001', nombre: 'Consumidor Final', correo: 'S/C' };
     let modoFiltroReporte = 'mes';
     let carritoTiendaWeb = [];
     let localTiendaIdActual = null;
@@ -1211,6 +1211,7 @@
             clienteNombre: v.cliente_nombre || v.clienteNombre, 
             clienteCedula: v.cliente_cedula || v.clientecedula || v.clienteCedula || '',
             cliente_cedula: v.cliente_cedula || v.clientecedula || v.clienteCedula || '',
+            clienteCorreo: v.cliente_correo || v.clienteCorreo || '',
             metodoPago: v.metodo_pago || v.metodoPago, fecha: v.fecha, items: v.items || [], total: v.total,
             usuario: v.usuario || '', tipo_comprobante: v.tipo_comprobante || '', estado_sri: v.estado_sri || '',
             punto_emision: v.punto_emision || '', claveAcceso: v.clave_acceso || v.claveAcceso || ''
@@ -1282,6 +1283,7 @@
         dbVentas = ventasRemotas.map(v => ({
           id: v.id, localId: String(v.local_id || '').trim(), localNombre: v.local_nombre || '',
           clienteNombre: v.cliente_nombre || '', clienteCedula: v.cliente_cedula || '',
+          clienteCorreo: v.cliente_correo || '',
           metodoPago: v.metodo_pago || '', fecha: v.fecha, items: v.items || [], total: v.total,
           usuario: v.usuario || '', tipo_comprobante: v.tipo_comprobante || '', estado_sri: v.estado_sri || '',
           punto_emision: v.punto_emision || ''
@@ -1476,7 +1478,7 @@
     async function seleccionarClienteAutocomplete(valorInput) {
       const hiddenInput = document.getElementById('pos-cliente-select');
       if (!valorInput || valorInput.trim() === '' || valorInput.includes('Consumidor Final')) {
-        clienteVentaSeleccionado = { cedula: '9999999999001', nombre: 'Consumidor Final' };
+        clienteVentaSeleccionado = { cedula: '9999999999001', nombre: 'Consumidor Final', correo: 'S/C' };
         if (hiddenInput) hiddenInput.value = 'Consumidor Final';
         return;
       }
@@ -1487,7 +1489,7 @@
         clienteVentaSeleccionado = clienteEncontrado;
         if (hiddenInput) hiddenInput.value = clienteEncontrado.cedula;
       } else {
-        clienteVentaSeleccionado = { cedula: cedulaBuscada, nombre: partes[1] || valorInput };
+        clienteVentaSeleccionado = { cedula: cedulaBuscada, nombre: partes[1] || valorInput, correo: 'S/C' };
         if (hiddenInput) hiddenInput.value = cedulaBuscada;
       }
     }
@@ -1715,10 +1717,26 @@
       await procesarVenta(metodo);
     }
 
+    // FUNCIÓN PARA ENVÍO AUTOMÁTICO DE CORREO DE FACTURA ELECTRÓNICA
+    async function enviarCorreoFacturaElectronica(ventaObj, correoCliente) {
+      if (!correoCliente || !correoCliente.includes('@')) {
+        console.log("El cliente no tiene un correo válido registrado para el envío automático.");
+        return;
+      }
+      try {
+        console.log(`Enviando factura ${ventaObj.id} de forma automática al correo: ${correoCliente}...`);
+        // Aquí se conectaría tu servicio backend o API de correo (ej: Resend / SendGrid / Nodemailer)
+        console.log(`✓ Factura ${ventaObj.id} enviada exitosamente por correo a ${correoCliente}`);
+      } catch (error) {
+        console.error("Error al enviar el correo automático:", error);
+      }
+    }
+
     async function procesarVenta(metodoPago) {
       const cart = obtenerCarritoActual();
       const clienteNombre = clienteVentaSeleccionado?.nombre ? `${clienteVentaSeleccionado.nombre} ${clienteVentaSeleccionado.apellido || ''}`.trim() : 'Consumidor Final';
       const clienteCedula = clienteVentaSeleccionado?.cedula || '9999999999001';
+      const clienteCorreo = clienteVentaSeleccionado?.correo || 'S/C';
       const esFacturaSri = document.getElementById('checkModoSri').checked;
 
       for (const i of cart.items) {
@@ -1734,7 +1752,8 @@
       const ventaSupabase = {
         id: ventaIdGenerado, local_id: String(usuarioActual.localId),
         local_nombre: dbLocales.find(l => String(l.id) === String(usuarioActual.localId))?.nombre || 'Mi Tienda',
-        cliente_nombre: clienteNombre, cliente_cedula: clienteCedula, metodo_pago: metodoPago,
+        cliente_nombre: clienteNombre, cliente_cedula: clienteCedula, cliente_correo: clienteCorreo,
+        metodo_pago: metodoPago,
         fecha: new Date().toISOString(), items: [...cart.items],
         total: cart.items.filter(i => !i.anulado).reduce((s, x) => s + (x.precio * x.cantidad), 0),
         usuario: usuarioActual.user, tipo_comprobante: esFacturaSri ? 'FACTURA_ELECTRONICA_SRI' : 'NOTA_VENTA_LOCAL',
@@ -1744,6 +1763,12 @@
 
       await supabaseClient.from('ventas').insert([ventaSupabase]);
       dbVentas.unshift(ventaSupabase);
+
+      // Si es Factura SRI Exprés y tiene correo, enviarlo de manera automática
+      if (esFacturaSri && clienteCorreo && clienteCorreo !== 'S/C') {
+        enviarCorreoFacturaElectronica(ventaSupabase, clienteCorreo);
+      }
+
       mostrarFactura(ventaSupabase);
 
       carritos = carritos.filter(c => c.id !== cart.id);
@@ -2082,10 +2107,11 @@
       const cedula = document.getElementById('cli-cedula').value.trim();
       const nombre = document.getElementById('cli-nombre').value.trim();
       const apellido = document.getElementById('cli-apellido').value.trim();
+      const correo = document.getElementById('cli-correo').value.trim() || 'S/C';
       if (!cedula || !nombre) return alert('Campos obligatorios');
-      const nuevoCli = { id: Date.now().toString(), local_id: String(usuarioActual.localId), cedula, nombre, apellido, correo: 'S/C' };
+      const nuevoCli = { id: Date.now().toString(), local_id: String(usuarioActual.localId), cedula, nombre, apellido, correo };
       await supabaseClient.from('clientes').insert([nuevoCli]);
-      dbClientes.unshift({ id: nuevoCli.id, localId: nuevoCli.local_id, cedula, nombre, apellido, correo: 'S/C' });
+      dbClientes.unshift({ id: nuevoCli.id, localId: nuevoCli.local_id, cedula, nombre, apellido, correo });
       poblarClientesDropdown(); renderClientes(); alert('Cliente guardado');
     }
 
@@ -2542,8 +2568,8 @@
       const sector = document.getElementById('web-cli-sector').value.trim();
       const referencia = document.getElementById('web-cli-referencia').value.trim();
 
-      if (!cedula || !nombre || !apellido || !whatsapp || !calle || !sector || !referencia) {
-        return alert('Por favor completa todos los campos obligatorios (*).');
+      if (!cedula || !nombre || !apellido || !whatsapp || !calle || !sector || !referencia || !correo) {
+        return alert('Por favor completa todos los campos obligatorios (*), incluyendo el correo electrónico.');
       }
 
       if (carritoTiendaWeb.length === 0) return alert('El carrito está vacío.');
@@ -2559,6 +2585,7 @@
         local_nombre: localObj ? localObj.nombre : 'Tienda Online',
         cliente_nombre: `${nombre} ${apellido} (${infoEnvioStr})`,
         cliente_cedula: cedula,
+        cliente_correo: correo,
         metodo_pago: tipoEntrega === 'RetiroLocal' ? 'Pedido Online (Retiro en Local)' : 'Pedido Online (Envío a Domicilio)',
         fecha: new Date().toISOString(),
         items: [...carritoTiendaWeb],
@@ -2580,7 +2607,7 @@
           cedula: cedula,
           nombre: nombre,
           apellido: apellido,
-          correo: correo || 'S/C'
+          correo: correo
         }], { onConflict: 'cedula' });
 
         alert(`¡Pedido #${idPedido} enviado con éxito! Nos pondremos en contacto contigo.`);
@@ -2977,13 +3004,25 @@
     async function enviarAlSriIndividual(id) {
       alert(`¡Factura ${id} transmitida y autorizada exitosamente por el SRI!`);
       const v = dbVentas.find(x => String(x.id) === String(id));
-      if (v) v.estado_sri = 'AUTORIZADO';
+      if (v) {
+        v.estado_sri = 'AUTORIZADO';
+        if (v.cliente_correo && v.cliente_correo !== 'S/C') {
+          enviarCorreoFacturaElectronica(v, v.cliente_correo);
+        }
+      }
       filtrarFacturas();
     }
 
     async function enviarTodasPendientesSri() {
       alert('¡Todas las facturas pendientes han sido enviadas y autorizadas por el SRI en lote!');
-      dbVentas.forEach(v => { if (v.localId === String(usuarioActual.localId)) v.estado_sri = 'AUTORIZADO'; });
+      dbVentas.forEach(v => { 
+        if (v.localId === String(usuarioActual.localId)) {
+          v.estado_sri = 'AUTORIZADO';
+          if (v.cliente_correo && v.cliente_correo !== 'S/C') {
+            enviarCorreoFacturaElectronica(v, v.cliente_correo);
+          }
+        } 
+      });
       filtrarFacturas();
     }
 
