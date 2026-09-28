@@ -214,10 +214,32 @@
     #vista-tienda-online { position: fixed; inset: 0; background: #f8fafc; z-index: 20000; overflow-y: auto; display: none; padding: 0; color: #0f172a; }
     .store-hero-banner { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #ffffff; padding: 50px 20px; text-align: center; border-bottom: 4px solid var(--primary); box-shadow: 0 4px 25px rgba(0,0,0,0.15); }
     .store-main-container { max-width: 1100px; margin: -30px auto 50px auto; padding: 0 20px; }
-    .store-top-bar { display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 18px 24px; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08); margin-bottom: 25px; border: 1px solid #e2e8f0; }
+    .store-top-bar { display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 18px 24px; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08); margin-bottom: 25px; border: 1px solid #e2e8f0; flex-wrap: wrap; gap: 15px; }
     .store-products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
     .store-item-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); transition: all 0.3s; }
     .store-item-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); border-color: #cbd5e1; }
+    
+    /* BOTÓN WHATSAPP FLOTANTE TIENDA */
+    .whatsapp-flotante-tienda {
+      position: fixed;
+      bottom: 25px;
+      right: 25px;
+      background: #22c55e;
+      color: #ffffff;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+      z-index: 25000;
+      cursor: pointer;
+      font-size: 30px;
+      transition: transform 0.2s;
+      text-decoration: none;
+    }
+    .whatsapp-flotante-tienda:hover { transform: scale(1.1); }
 
     @media print {
       body * { visibility: hidden; }
@@ -251,12 +273,22 @@
           <span style="font-size: 0.85rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Estado del Local</span>
           <p style="font-size: 0.95rem; color: #0f172a; font-weight: 600;" id="store-status-text">🟢 Abierto para pedidos y consultas</p>
         </div>
+        <div style="flex: 1; max-width: 320px;">
+          <input type="text" id="store-input-buscar" placeholder="🔍 Buscar producto en tienda..." oninput="renderCatalogoTiendaWeb()" style="margin: 0; padding: 10px; font-size: 0.9rem;">
+        </div>
         <div>
           <button class="btn btn-primary btn-sm" style="padding: 10px 18px; border-radius: 30px; font-weight: 700;" onclick="abrirCarritoWebModal()">🛒 Ver Mi Carrito (<span id="store-cart-count">0</span>)</button>
         </div>
       </div>
+
+      <!-- BARRA DE CATEGORÍAS -->
+      <div id="store-categorias-bar" style="display: flex; gap: 8px; overflow-x: auto; margin-bottom: 20px; padding-bottom: 5px;"></div>
+
       <div class="store-products-grid" id="store-grid-catalogo"></div>
     </div>
+
+    <!-- BOTÓN FLOTANTE WHATSAPP -->
+    <a id="btn-whatsapp-flotante" href="#" target="_blank" class="whatsapp-flotante-tienda" title="Escríbenos por WhatsApp">💬</a>
 
     <!-- MODAL DETALLE DE PRODUCTO -->
     <div id="modal-detalle-producto-web" class="modal-overlay">
@@ -283,6 +315,12 @@
           <span style="font-size: 1.4rem; font-weight: 800; color: var(--primary);">$<span id="store-modal-total">0.00</span></span>
         </div>
         <div style="border-top: 1px solid #e2e8f0; padding-top: 10px; margin-top: 5px;">
+          <h4 style="font-size: 0.95rem; color: #0f172a; margin-bottom: 4px;">Tipo de Entrega</h4>
+          <select id="web-cli-tipo-entrega" style="padding: 8px; margin-bottom: 8px;">
+            <option value="Domicilio">Envío a Domicilio (Servientrega / Moto)</option>
+            <option value="RetiroLocal">Retirar en el Local (Sin costo)</option>
+          </select>
+
           <h4 style="font-size: 0.95rem; color: #0f172a; margin-bottom: 4px;">Datos para Facturación</h4>
           <div class="form-row">
             <div>
@@ -298,7 +336,7 @@
             <div><label style="color:#334155; font-size:0.75rem;">Nombres *</label><input type="text" id="web-cli-nombre" placeholder="Ej: María" style="padding: 8px;"></div>
             <div><label style="color:#334155; font-size:0.75rem;">Apellidos *</label><input type="text" id="web-cli-apellido" placeholder="Ej: López" style="padding: 8px;"></div>
           </div>
-          <h4 style="font-size: 0.95rem; color: #0f172a; margin-top: 10px; margin-bottom: 4px;">Datos de Envío a Domicilio</h4>
+          <h4 style="font-size: 0.95rem; color: #0f172a; margin-top: 10px; margin-bottom: 4px;">Datos de Contacto y Envío</h4>
           <label style="color:#334155; font-size:0.75rem;">WhatsApp de Contacto *</label><input type="text" id="web-cli-whatsapp" placeholder="Ej: 0991234567" style="padding: 8px;">
           <div class="form-row">
             <div><label style="color:#334155; font-size:0.75rem;">Calle Principal *</label><input type="text" id="web-cli-calle" placeholder="Ej: Av. Principal y 9 de Octubre" style="padding: 8px;"></div>
@@ -689,7 +727,7 @@
         </div>
       </section>
 
-      <!-- VISTA INVENTARIO CON DESCRIPCIÓN OPCIONAL -->
+      <!-- VISTA INVENTARIO -->
       <section id="vista-inventario" class="page-section">
         <div class="card">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
@@ -700,12 +738,24 @@
             </div>
           </div>
 
-          <div style="background:var(--bg); padding: 10px; border-radius: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
-            <div>
+          <div style="background:var(--bg); padding: 12px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div style="flex: 1;">
               <span style="font-size: 0.85rem; font-weight: bold; color: var(--primary);">Link de Tienda Online de este Local:</span><br>
               <a id="link-tienda-local" href="#" target="_blank" style="font-size: 0.8rem; color: var(--text); word-break: break-all;">Cargando...</a>
             </div>
-            <button class="btn btn-primary btn-sm" onclick="copiarLinkTienda()">📋 Copiar Link</button>
+            <div>
+              <button class="btn btn-primary btn-sm" onclick="copiarLinkTienda()">📋 Copiar Link</button>
+            </div>
+          </div>
+
+          <!-- CAJA PARA WHATSAPP DEL LOCAL DESDE STOCK -->
+          <div style="background: var(--bg); border: 1px solid var(--border); padding: 12px; border-radius: 8px; margin-bottom: 15px;">
+            <label style="font-weight: bold; color: var(--primary); margin-top:0;">📱 Número de WhatsApp para la Tienda Online</label>
+            <div style="display: flex; gap: 8px; margin-top: 4px;">
+              <input type="text" id="input-local-whatsapp-stock" placeholder="Ej: 593991234567" style="margin: 0; padding: 8px;">
+              <button class="btn btn-success btn-sm" style="margin: 0; white-space: nowrap;" onclick="guardarWhatsappLocalDesdeStock()">💾 Guardar Número</button>
+            </div>
+            <small style="color: var(--text-muted); font-size: 0.75rem;">Ingresa el número con código de país (sin el signo +) para que los clientes te escriban directo.</small>
           </div>
 
           <!-- INPUT OCULTO EDITAR -->
@@ -742,6 +792,9 @@
 
           <label>Nombre del Producto</label>
           <input type="text" id="inv-nombre" placeholder="Ej: Camisa casual / Monitor / Audífono / etc.">
+
+          <label>Categoría</label>
+          <input type="text" id="inv-categoria" placeholder="Ej: Monitores, Accesorios, Ropa..." value="General">
 
           <label>Descripción / Detalles (Opcional: Déjalo vacío si no deseas mostrar detalles en la web)</label>
           <textarea id="inv-descripcion" placeholder="Ej: Disponible en color negro y azul, tallas S a L, material resistente..." style="padding: 10px; height: 80px; resize: none;"></textarea>
@@ -791,6 +844,7 @@
                   <th>Foto</th>
                   <th>Código(s)</th>
                   <th>Producto</th>
+                  <th>Categoría</th>
                   <th>Unidad</th>
                   <th>Costo</th>
                   <th>P. Normal</th>
@@ -878,14 +932,16 @@
         </div>
       </section>
 
-      <!-- VISTA LOCALES CON SUSCRIPCIÓN Y VENCIMIENTO -->
+      <!-- VISTA LOCALES CON EDICIÓN COMPLETA -->
       <section id="vista-locales" class="page-section">
         <div class="card">
-          <h3>Crear Nueva Sucursal</h3>
+          <h3 id="titulo-seccion-local">Registrar Nueva Sucursal</h3>
+          <input type="hidden" id="editando-local-id" value="">
           <input type="text" id="loc-nombre" placeholder="Nombre de Sucursal">
           <input type="text" id="loc-propietario" placeholder="Propietario / Emisor">
           <input type="text" id="loc-ruc" placeholder="RUC (13 dígitos)">
           <input type="text" id="loc-direccion" placeholder="Dirección">
+          <input type="text" id="loc-whatsapp" placeholder="WhatsApp del Local (Ej: 593991234567)">
           <div class="form-row">
             <div>
               <label>¿Suscripción Activa?</label>
@@ -898,16 +954,16 @@
           </div>
           <label>¿Obligado a llevar contabilidad?</label>
           <select id="loc-contabilidad"><option value="NO">NO</option><option value="SI">SÍ</option></select>
-          <h4 style="margin-top:15px; font-size:0.95rem; color:var(--primary);">Credenciales Deuna Business (API)</h4>
-          <input type="text" id="loc-deuna-key" placeholder="API Key">
-          <input type="text" id="loc-deuna-secret" placeholder="Secret Key">
-          <button class="btn btn-primary" onclick="crearLocal()" style="margin-top:10px;">Registrar Local</button>
+          <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <button class="btn btn-primary" id="btn-guardar-local" onclick="guardarOActualizarLocal()" style="flex: 2; margin:0;">Registrar Local</button>
+            <button class="btn btn-danger" id="btn-cancelar-edicion-local" onclick="cancelarEdicionLocal()" style="flex: 1; margin:0; display:none; background:#64748b;">Cancelar</button>
+          </div>
         </div>
         <div class="card">
           <h3>Locales Activos y Suscripción</h3>
           <div class="table-responsive">
             <table>
-              <thead><tr><th>ID</th><th>Nombre</th><th>RUC / Dir</th><th>Suscripción / Vencimiento</th><th>Acciones</th></tr></thead>
+              <thead><tr><th>ID</th><th>Nombre</th><th>RUC / Dir / WhatsApp</th><th>Suscripción / Vencimiento</th><th>Acciones</th></tr></thead>
               <tbody id="loc-tabla"></tbody>
             </table>
           </div>
@@ -1016,6 +1072,7 @@
     let modoFiltroReporte = 'mes';
     let carritoTiendaWeb = [];
     let localTiendaIdActual = null;
+    let categoriaSeleccionadaWeb = 'TODOS';
     let intervaloMonitoreoPedidos = null;
     let ultimaCantidadPendientes = -1;
 
@@ -1082,7 +1139,7 @@
         if (resLoc.data) {
           dbLocales = resLoc.data.map(l => ({ 
             id: l.id, nombre: l.nombre, direccion: l.direccion, ruc: l.ruc || '',
-            propietario: l.propietario || '', obligadoContabilidad: l.obligado_contabilidad || 'NO',
+            propietario: l.propietario || '', whatsapp: l.whatsapp || '', obligadoContabilidad: l.obligado_contabilidad || 'NO',
             deuna_api_key: l.deuna_api_key || '', deuna_secret: l.deuna_secret || '',
             suscripcionActiva: l.suscripcion_active !== false && l.suscripcion_activa !== false, fechaVencimiento: l.fecha_vencimiento || null
           }));
@@ -1094,6 +1151,7 @@
           dbProductos = resProd.data.map(p => ({ 
             id: p.id, localId: String(p.local_id || p.localId || '').trim(), 
             codigo: p.codigo || '', nombre: p.nombre || '', 
+            categoria: p.categoria || 'General',
             descripcion: p.descripcion || '',
             costo: parseFloat(p.costo) || 0, precio: parseFloat(p.precio) || 0,
             precio_rovendedor: parseFloat(p.precio_rovendedor) || parseFloat(p.precio) || 0,
@@ -2087,6 +2145,7 @@
       if(document.getElementById('inv-codigo-5')) document.getElementById('inv-codigo-5').value = listaCodigos[4] || '';
 
       document.getElementById('inv-nombre').value = p.nombre || '';
+      document.getElementById('inv-categoria').value = p.categoria || 'General';
       document.getElementById('inv-descripcion').value = p.descripcion || '';
       document.getElementById('inv-unidad').value = p.unidad_medida || 'unidad';
       document.getElementById('inv-stock').value = p.stock || 0;
@@ -2110,6 +2169,7 @@
       document.getElementById('inv-codigo').value = '';
       ['inv-codigo-2', 'inv-codigo-3', 'inv-codigo-4', 'inv-codigo-5'].forEach(id => { if(document.getElementById(id)) document.getElementById(id).value = ''; });
       document.getElementById('inv-nombre').value = '';
+      document.getElementById('inv-categoria').value = 'General';
       document.getElementById('inv-descripcion').value = '';
       document.getElementById('inv-stock').value = '';
       document.getElementById('inv-costo').value = '';
@@ -2139,6 +2199,7 @@
       ].filter(Boolean).join(',');
 
       const nombre = document.getElementById('inv-nombre').value.trim();
+      const categoria = document.getElementById('inv-categoria').value.trim() || 'General';
       const descripcion = document.getElementById('inv-descripcion').value.trim();
       const costo = parseFloat(document.getElementById('inv-costo').value) || 0;
       const precio = parseFloat(document.getElementById('inv-precio').value);
@@ -2158,7 +2219,7 @@
 
       if (idEditando) {
         let datosUpdate = {
-          codigo: cods, nombre, descripcion, costo, precio,
+          codigo: cods, nombre, categoria, descripcion, costo, precio,
           precio_rovendedor: parseFloat(document.getElementById('inv-precio-revendedor').value) || precio,
           precio_proveedor: parseFloat(document.getElementById('inv-precio-proveedor').value) || precio,
           precio_familia: parseFloat(document.getElementById('inv-precio-familia').value) || precio,
@@ -2171,7 +2232,7 @@
         
         const pObj = dbProductos.find(x => String(x.id) === String(idEditando));
         if (pObj) {
-          Object.assign(pObj, { codigo: cods, nombre, descripcion, costo, precio, stock, unidad_medida: unidad, visibleWeb });
+          Object.assign(pObj, { codigo: cods, nombre, categoria, descripcion, costo, precio, stock, unidad_medida: unidad, visibleWeb });
           if (imagenUrl) pObj.imagenUrl = imagenUrl;
         }
 
@@ -2183,6 +2244,7 @@
           local_id: String(usuarioActual.localId).trim(),
           codigo: cods, 
           nombre, 
+          categoria,
           descripcion, 
           costo, 
           precio,
@@ -2204,7 +2266,7 @@
 
         dbProductos.unshift({
           id: nuevoProd.id, localId: nuevoProd.local_id, codigo: nuevoProd.codigo,
-          nombre: nuevoProd.nombre, descripcion: nuevoProd.descripcion, costo: nuevoProd.costo, precio: nuevoProd.precio,
+          nombre: nuevoProd.nombre, categoria: nuevoProd.categoria, descripcion: nuevoProd.descripcion, costo: nuevoProd.costo, precio: nuevoProd.precio,
           unidad_medida: nuevoProd.unidad, stock: nuevoProd.stock, visibleWeb: nuevoProd.visible_web, imagenUrl: nuevoProd.imagen_url
         });
 
@@ -2212,6 +2274,27 @@
         cancelarEdicionProducto();
       }
       renderInventario();
+    }
+
+    async function guardarWhatsappLocalDesdeStock() {
+      const nuevoWp = document.getElementById('input-local-whatsapp-stock').value.trim();
+      const localIdActual = usuarioActual ? String(usuarioActual.localId).trim() : '';
+      if (!localIdActual) return alert('No hay sesión de local activa.');
+
+      const { error } = await supabaseClient
+        .from('locales')
+        .update({ whatsapp: nuevoWp })
+        .eq('id', localIdActual);
+
+      if (error) {
+        alert('Error al guardar en base de datos: ' + error.message);
+        return;
+      }
+
+      const localObj = dbLocales.find(l => String(l.id) === localIdActual);
+      if (localObj) localObj.whatsapp = nuevoWp;
+
+      alert('¡Número de WhatsApp actualizado correctamente para tu tienda online!');
     }
 
     function renderInventario() {
@@ -2223,6 +2306,12 @@
       document.getElementById('link-tienda-local').innerText = link;
       document.getElementById('link-tienda-local').href = link;
 
+      const localObj = dbLocales.find(l => String(l.id) === localActual);
+      const inputWpStock = document.getElementById('input-local-whatsapp-stock');
+      if (inputWpStock && localObj) {
+        inputWpStock.value = localObj.whatsapp || '';
+      }
+
       document.getElementById('inv-tabla-catalogo').innerHTML = lista.map(p => `
         <tr>
           <td>
@@ -2233,6 +2322,7 @@
           </td>
           <td><b>${p.codigo}</b></td>
           <td>${p.nombre}</td>
+          <td><span style="font-size:0.75rem; background:var(--bg); padding:3px 6px; border-radius:4px; border:1px solid var(--border);">${p.categoria || 'General'}</span></td>
           <td>${p.unidad_medida}</td>
           <td>$${p.costo.toFixed(2)}</td>
           <td>$${p.precio.toFixed(2)}</td>
@@ -2245,7 +2335,7 @@
             <button class="btn btn-danger btn-sm" onclick="eliminarProducto('${p.id}')">X</button>
           </td>
         </tr>
-      `).join('') || `<tr><td colspan="9" style="text-align:center;">Sin productos</td></tr>`;
+      `).join('') || `<tr><td colspan="10" style="text-align:center;">Sin productos</td></tr>`;
     }
 
     function copiarLinkTienda() {
@@ -2282,30 +2372,70 @@
       }
       document.getElementById('store-title').innerText = localObj.nombre;
       document.getElementById('store-subtitle').innerText = `Catálogo oficial de ${localObj.nombre} - Realiza tu pedido en línea de forma segura.`;
+      
+      const numeroWp = localObj.whatsapp || "593991234567"; 
+      document.getElementById('btn-whatsapp-flotante').href = `https://wa.me/${numeroWp}?text=Hola,%20estoy%20visitando%20la%20tienda%20online%20de%20${encodeURIComponent(localObj.nombre)}%20y%20tengo%20una%20consulta.`;
+
       document.getElementById('vista-tienda-online').style.display = 'block';
+      renderizarCategoriasTiendaWeb();
+      renderCatalogoTiendaWeb();
+    }
+
+    function renderizarCategoriasTiendaWeb() {
+      const prodsWeb = dbProductos.filter(p => String(p.localId) === String(localTiendaIdActual) && p.visibleWeb === true);
+      const categoriasSet = new Set(['TODOS']);
+      prodsWeb.forEach(p => categoriasSet.add(p.categoria || 'General'));
+      
+      const categoriasArray = Array.from(categoriasSet);
+      document.getElementById('store-categorias-bar').innerHTML = categoriasArray.map(cat => `
+        <button class="cart-tab-btn ${categoriaSeleccionadaWeb === cat ? 'active' : ''}" style="padding: 8px 16px; border-radius: 20px; font-weight: 700;" onclick="seleccionarCategoriaWeb('${cat}')">${cat}</button>
+      `).join('');
+    }
+
+    function seleccionarCategoriaWeb(cat) {
+      categoriaSeleccionadaWeb = cat;
+      renderizarCategoriasTiendaWeb();
       renderCatalogoTiendaWeb();
     }
 
     function renderCatalogoTiendaWeb() {
-      const prods = dbProductos.filter(p => String(p.localId) === String(localTiendaIdActual) && p.visibleWeb === true);
+      const textoBusqueda = (document.getElementById('store-input-buscar')?.value || '').toLowerCase();
+      const prods = dbProductos.filter(p => {
+        if (String(p.localId) !== String(localTiendaIdActual) || p.visibleWeb !== true) return false;
+        if (categoriaSeleccionadaWeb !== 'TODOS' && (p.categoria || 'General') !== categoriaSeleccionadaWeb) return false;
+        if (textoBusqueda && !p.nombre.toLowerCase().includes(textoBusqueda) && !p.codigo.toLowerCase().includes(textoBusqueda)) return false;
+        return true;
+      });
+
       document.getElementById('store-grid-catalogo').innerHTML = prods.map(p => {
         const tieneDescripcion = p.descripcion && p.descripcion.trim() !== '';
+        let avisoStock = '';
+        if (p.stock > 0 && p.stock <= 3) {
+          avisoStock = `<div style="background:#fffbeb; color:#b45309; padding:3px 8px; border-radius:6px; font-size:0.7rem; font-weight:bold; margin-bottom:6px; border:1px solid #fde68a;">🔥 ¡Solo quedan ${p.stock} disponibles!</div>`;
+        } else if (p.stock <= 0) {
+          avisoStock = `<div style="background:#fef2f2; color:#b91c1c; padding:3px 8px; border-radius:6px; font-size:0.7rem; font-weight:bold; margin-bottom:6px; border:1px solid #fecaca;">❌ Producto Agotado</div>`;
+        }
+
         return `
           <div class="store-item-card">
             <div>
-              <img src="${p.imagenUrl || 'https://via.placeholder.com/200'}" style="width:100%; height:160px; object-fit:cover; border-radius:12px; margin-bottom: 10px;">
-              <span style="font-size:0.75rem; color:#64748b; font-weight:bold; text-transform:uppercase;">Stock: ${p.stock} ${p.unidad_medida || 'ud'}</span>
-              <h4 style="margin:4px 0 6px 0; font-size:1.05rem; color:#0f172a; font-weight:700;">${p.nombre}</h4>
-              ${tieneDescripcion ? `<p style="font-size:0.85rem; color:#64748b; margin-bottom:12px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${p.descripcion}</p>` : ''}
-              <div style="color:var(--primary); font-weight:800; font-size:1.25rem; margin-bottom:14px;">$${p.precio.toFixed(2)}</div>
+              <img src="${p.imagenUrl || 'https://via.placeholder.com/200'}" style="width:100%; height:160px; object-fit:cover; border-radius:12px; margin-bottom: 8px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                <span style="font-size:0.7rem; color:#64748b; font-weight:bold; text-transform:uppercase;">${p.categoria || 'General'}</span>
+                <span style="font-size:0.7rem; color:#64748b; font-weight:bold;">Stock: ${p.stock}</span>
+              </div>
+              <h4 style="margin:2px 0 4px 0; font-size:1.05rem; color:#0f172a; font-weight:700;">${p.nombre}</h4>
+              ${avisoStock}
+              ${tieneDescripcion ? `<p style="font-size:0.85rem; color:#64748b; margin-bottom:10px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${p.descripcion}</p>` : ''}
+              <div style="color:var(--primary); font-weight:800; font-size:1.25rem; margin-bottom:12px;">$${p.precio.toFixed(2)}</div>
             </div>
             <div style="display:flex; gap:6px;">
               ${tieneDescripcion ? `<button class="btn btn-sm" style="flex:1; background:#f1f5f9; color:#334155; font-weight:700;" onclick="verDetalleProductoWeb('${p.id}')">🔍 Detalles</button>` : ''}
-              <button class="btn btn-primary btn-sm" style="flex:1;" onclick="agregarAlCarritoWeb('${p.id}')">🛒 Pedir</button>
+              <button class="btn btn-primary btn-sm" style="flex:1;" onclick="agregarAlCarritoWeb('${p.id}')" ${p.stock <= 0 ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : ''}>🛒 Pedir</button>
             </div>
           </div>
         `;
-      }).join('') || `<p style="text-align:center; grid-column: 1 / -1; color:#64748b; padding: 40px;">No hay productos disponibles en este momento.</p>`;
+      }).join('') || `<p style="text-align:center; grid-column: 1 / -1; color:#64748b; padding: 40px;">No se encontraron productos con esos filtros.</p>`;
     }
 
     function verDetalleProductoWeb(id) {
@@ -2313,7 +2443,7 @@
       if (!p || !p.descripcion) return;
       document.getElementById('modal-prod-web-contenido').innerHTML = `
         <img src="${p.imagenUrl || 'https://via.placeholder.com/300'}" style="width:100%; height:220px; object-fit:cover; border-radius:12px; margin-bottom:15px;">
-        <span style="font-size:0.75rem; font-weight:bold; color:var(--primary); text-transform:uppercase;">${p.unidad_medida || 'unidad'} | Stock: ${p.stock}</span>
+        <span style="font-size:0.75rem; font-weight:bold; color:var(--primary); text-transform:uppercase;">${p.categoria || 'General'} | Stock: ${p.stock}</span>
         <h2 style="font-size:1.3rem; margin:6px 0; color:#0f172a;">${p.nombre}</h2>
         <div style="font-size:1.5rem; font-weight:800; color:var(--primary); margin-bottom:12px;">$${p.precio.toFixed(2)}</div>
         <h4 style="font-size:0.9rem; color:#64748b; margin-bottom:4px;">Descripción / Detalles:</h4>
@@ -2329,9 +2459,10 @@
 
     function agregarAlCarritoWeb(id) {
       const prod = dbProductos.find(p => String(p.id) === String(id));
-      if (!prod) return;
+      if (!prod || prod.stock <= 0) return alert('Producto agotado.');
       let item = carritoTiendaWeb.find(i => String(i.id) === String(id));
       if (item) {
+        if (item.cantidad >= prod.stock) return alert('No hay más stock disponible.');
         item.cantidad++;
       } else {
         carritoTiendaWeb.push({ id: prod.id, nombre: prod.nombre, precio: prod.precio, cantidad: 1, unidad: prod.unidad_medida || 'unidad', costo: prod.costo || 0, anulado: false });
@@ -2360,6 +2491,7 @@
     }
 
     async function enviarPedidoWebCliente() {
+      const tipoEntrega = document.getElementById('web-cli-tipo-entrega').value;
       const cedula = document.getElementById('web-cli-cedula').value.trim();
       const correo = document.getElementById('web-cli-correo').value.trim();
       const nombre = document.getElementById('web-cli-nombre').value.trim();
@@ -2378,7 +2510,7 @@
       const totalPedido = carritoTiendaWeb.reduce((s, x) => s + (x.precio * x.cantidad), 0);
       const idPedido = 'WEB-' + Date.now().toString().slice(-5);
       const localObj = dbLocales.find(l => String(l.id) === String(localTiendaIdActual));
-      const infoEnvioStr = `WhatsApp: ${whatsapp} - Dir: ${calle}, Sector: ${sector} - Ref: ${referencia}`;
+      const infoEnvioStr = `[Entrega: ${tipoEntrega}] WhatsApp: ${whatsapp} - Dir: ${calle}, Sector: ${sector} - Ref: ${referencia}`;
 
       const nuevoPedidoSupabase = {
         id: idPedido,
@@ -2386,7 +2518,7 @@
         local_nombre: localObj ? localObj.nombre : 'Tienda Online',
         cliente_nombre: `${nombre} ${apellido} (${infoEnvioStr})`,
         cliente_cedula: cedula,
-        metodo_pago: 'Pedido Online (Por Cobrar / Transferencia)',
+        metodo_pago: tipoEntrega === 'RetiroLocal' ? 'Pedido Online (Retiro en Local)' : 'Pedido Online (Envío a Domicilio)',
         fecha: new Date().toISOString(),
         items: [...carritoTiendaWeb],
         total: totalPedido,
@@ -2528,20 +2660,90 @@
       `).join('');
     }
 
-    async function crearLocal() {
+    async function guardarOActualizarLocal() {
+      const idEditando = document.getElementById('editando-local-id').value;
       const nombre = document.getElementById('loc-nombre').value.trim();
+      const propietario = document.getElementById('loc-propietario').value.trim();
+      const ruc = document.getElementById('loc-ruc').value.trim();
+      const direccion = document.getElementById('loc-direccion').value.trim();
+      const whatsapp = document.getElementById('loc-whatsapp').value.trim();
+      const suscripcionActive = document.getElementById('loc-suscripcion').value === 'SI';
+      const fechaVencimiento = document.getElementById('loc-vencimiento').value || null;
+      const obligadoContabilidad = document.getElementById('loc-contabilidad').value;
+
       if (!nombre) return alert('Ingresa el nombre de la sucursal.');
-      const nuevo = { 
-        id: 'LOC-' + Date.now().toString().slice(-4), nombre, 
-        propietario: document.getElementById('loc-propietario').value,
-        ruc: document.getElementById('loc-ruc').value, direccion: document.getElementById('loc-direccion').value, 
-        suscripcion_active: document.getElementById('loc-suscripcion').value === 'SI',
-        fecha_vencimiento: document.getElementById('loc-vencimiento').value || null,
-        obligado_contabilidad: document.getElementById('loc-contabilidad').value
-      };
-      await supabaseClient.from('locales').insert([nuevo]);
-      dbLocales.unshift({ id: nuevo.id, nombre: nuevo.nombre, propietario: nuevo.propietario, ruc: nuevo.ruc, direccion: nuevo.direccion, suscripcionActiva: nuevo.suscripcion_active, fechaVencimiento: nuevo.fecha_vencimiento });
-      renderLocales(); poblardropdowns(); alert('¡Local creado!');
+
+      if (idEditando) {
+        await supabaseClient.from('locales').update({
+          nombre, propietario, ruc, direccion, whatsapp,
+          suscripcion_active: suscripcionActive,
+          fecha_vencimiento: fechaVencimiento,
+          obligado_contabilidad: obligadoContabilidad
+        }).eq('id', idEditando);
+
+        const lObj = dbLocales.find(l => String(l.id) === String(idEditando));
+        if (lObj) {
+          Object.assign(lObj, { nombre, propietario, ruc, direccion, whatsapp, suscripcionActiva: suscripcionActive, fechaVencimiento, obligadoContabilidad });
+        }
+        alert('¡Local actualizado con éxito!');
+        cancelarEdicionLocal();
+      } else {
+        const nuevo = { 
+          id: 'LOC-' + Date.now().toString().slice(-4), 
+          nombre, propietario, ruc, direccion, whatsapp,
+          suscripcion_active: suscripcionActive,
+          fecha_vencimiento: fechaVencimiento,
+          obligado_contabilidad: obligadoContabilidad
+        };
+        await supabaseClient.from('locales').insert([nuevo]);
+        dbLocales.unshift({ 
+          id: nuevo.id, nombre: nuevo.nombre, propietario: nuevo.propietario, 
+          ruc: nuevo.ruc, direccion: nuevo.direccion, whatsapp: nuevo.whatsapp, 
+          suscripcionActiva: nuevo.suscripcion_active, fechaVencimiento: nuevo.fecha_vencimiento, 
+          obligadoContabilidad: nuevo.obligado_contabilidad 
+        });
+        alert('¡Local registrado con éxito!');
+        cancelarEdicionLocal();
+      }
+      renderLocales();
+      poblardropdowns();
+    }
+
+    function cargarLocalParaEditar(id) {
+      const l = dbLocales.find(x => String(x.id) === String(id));
+      if (!l) return;
+
+      document.getElementById('editando-local-id').value = l.id;
+      document.getElementById('loc-nombre').value = l.nombre || '';
+      document.getElementById('loc-propietario').value = l.propietario || '';
+      document.getElementById('loc-ruc').value = l.ruc || '';
+      document.getElementById('loc-direccion').value = l.direccion || '';
+      document.getElementById('loc-whatsapp').value = l.whatsapp || '';
+      document.getElementById('loc-suscripcion').value = l.suscripcionActiva !== false ? 'SI' : 'NO';
+      document.getElementById('loc-vencimiento').value = l.fechaVencimiento || '';
+      document.getElementById('loc-contabilidad').value = l.obligadoContabilidad || 'NO';
+
+      document.getElementById('titulo-seccion-local').innerText = `Editando Sucursal: ${l.nombre}`;
+      document.getElementById('btn-guardar-local').innerText = 'Actualizar Local';
+      document.getElementById('btn-cancelar-edicion-local').style.display = 'block';
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function cancelarEdicionLocal() {
+      document.getElementById('editando-local-id').value = '';
+      document.getElementById('loc-nombre').value = '';
+      document.getElementById('loc-propietario').value = '';
+      document.getElementById('loc-ruc').value = '';
+      document.getElementById('loc-direccion').value = '';
+      document.getElementById('loc-whatsapp').value = '';
+      document.getElementById('loc-suscripcion').value = 'SI';
+      document.getElementById('loc-vencimiento').value = '';
+      document.getElementById('loc-contabilidad').value = 'NO';
+
+      document.getElementById('titulo-seccion-local').innerText = 'Registrar Nueva Sucursal';
+      document.getElementById('btn-guardar-local').innerText = 'Registrar Local';
+      document.getElementById('btn-cancelar-edicion-local').style.display = 'none';
     }
 
     async function actualizarLocalDirecto(id) {
@@ -2553,7 +2755,7 @@
       await supabaseClient.from('locales').update({ suscripcion_active: act, fecha_vencimiento: venc }).eq('id', id);
       const l = dbLocales.find(x => String(x.id) === String(id));
       if (l) { l.suscripcionActiva = act; l.fechaVencimiento = venc; }
-      alert('¡Actualizado!');
+      alert('¡Suscripción actualizada!');
       renderLocales();
     }
 
@@ -2562,7 +2764,11 @@
         <tr>
           <td><b>${l.id}</b></td>
           <td>${l.nombre}</td>
-          <td>${l.ruc || 'S/N'}<br><small>${l.direccion || ''}</small></td>
+          <td>
+            ${l.ruc || 'S/N'}<br>
+            <small>${l.direccion || ''}</small><br>
+            <small style="color:var(--primary);">Wp: ${l.whatsapp || 'No configurado'}</small>
+          </td>
           <td>
             <div style="display:flex; gap:6px; align-items:center; margin-bottom:4px;">
               <select id="select-sub-${l.id}" style="padding:4px; font-size:0.8rem; width:80px; margin:0;">
@@ -2571,9 +2777,12 @@
               </select>
               <input type="date" id="input-venc-${l.id}" value="${l.fechaVencimiento || ''}" style="padding:4px; font-size:0.8rem; width:130px; margin:0;">
             </div>
-            <button class="btn btn-primary btn-sm" style="padding:2px 8px; font-size:0.7rem;" onclick="actualizarLocalDirecto('${l.id}')">💾 Guardar</button>
+            <button class="btn btn-primary btn-sm" style="padding:2px 8px; font-size:0.7rem;" onclick="actualizarLocalDirecto('${l.id}')">💾 Guardar Sub</button>
           </td>
-          <td>${!esLocalMatriz(l.id, l.nombre) ? `<button class="btn btn-danger btn-sm" onclick="eliminarLocal('${l.id}')">X</button>` : ''}</td>
+          <td style="white-space: nowrap;">
+            <button class="btn btn-primary btn-sm" onclick="cargarLocalParaEditar('${l.id}')" style="margin-right:4px;">Editar</button>
+            ${!esLocalMatriz(l.id, l.nombre) ? `<button class="btn btn-danger btn-sm" onclick="eliminarLocal('${l.id}')">X</button>` : ''}
+          </td>
         </tr>
       `).join('');
     }
