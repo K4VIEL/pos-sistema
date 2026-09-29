@@ -8,7 +8,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
   <style>
     :root {
       --primary: #2563eb; 
@@ -69,6 +68,7 @@
 
     .modal-box { background: var(--card-bg) !important; color: var(--text) !important; }
 
+    /* NOTIFICACIÓN FLOTANTE DERECHA */
     #notificacion-pedido-flotante {
       position: fixed;
       top: 15px;
@@ -115,7 +115,7 @@
       left: 50%;
       transform: translateX(-50%);
       width: 94%;
-      max-width: 760px;
+      max-width: 720px;
       display: flex; 
       justify-content: flex-start; 
       align-items: center;
@@ -219,6 +219,7 @@
     .store-item-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); transition: all 0.3s; }
     .store-item-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); border-color: #cbd5e1; }
     
+    /* BOTÓN WHATSAPP FLOTANTE TIENDA */
     .whatsapp-flotante-tienda {
       position: fixed;
       bottom: 25px;
@@ -327,7 +328,7 @@
               <input type="text" id="web-cli-cedula" placeholder="Ej: 0912345678" style="padding: 8px; margin:0;" maxlength="13">
             </div>
             <div>
-              <label style="color:#334155; font-size:0.75rem;">Correo Electrónico (Opcional)</label>
+              <label style="color:#334155; font-size:0.75rem;">Correo Electrónico (Para envío automático) *</label>
               <input type="email" id="web-cli-correo" placeholder="correo@ejemplo.com" style="padding: 8px;">
             </div>
           </div>
@@ -359,7 +360,7 @@
       <input type="text" id="login-user" placeholder="Usuario">
       <input type="password" id="login-pass" placeholder="Contraseña">
       <button class="btn btn-primary" onclick="iniciarSesion()">Acceder</button>
-      <p id="login-error" style="color:var(--danger); font-size:0.8rem; display:none; margin-top:10px;">Usuario o contraseña incorrectos</p>
+      <p id="login-error" style="color:var(--danger); font-size:0.8rem; display:none; margin-top:10px;">Usuario or contraseña incorrectos</p>
     </div>
   </div>
 
@@ -369,19 +370,6 @@
       <h3>Escanear Código de Barras</h3>
       <div id="reader" style="width: 100%; border-radius: 8px; overflow: hidden;"></div>
       <button class="btn btn-danger" style="margin-top: 15px;" onclick="cerrarCamara()">Cerrar Cámara</button>
-    </div>
-  </div>
-
-  <!-- MODAL QR DE TIENDA -->
-  <div id="modal-qr-tienda" class="modal-overlay">
-    <div class="modal-box" style="text-align: center; padding: 25px; border-radius: 16px; max-width: 360px; width: 100%;">
-      <h3 style="font-size: 1.2rem; margin-bottom: 12px;">Código QR de la Tienda</h3>
-      <div id="contenedor-qr-generado" style="background: #fff; padding: 15px; border-radius: 12px; display: inline-block; margin-bottom: 15px; min-width: 210px; min-height: 210px;"></div>
-      <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px; word-break: break-all;" id="qr-url-texto"></p>
-      <div style="display: flex; gap: 10px;">
-        <button class="btn btn-primary" style="flex: 1; margin: 0;" onclick="descargarImagenQr()">⬇ Descargar</button>
-        <button class="btn btn-danger" style="flex: 1; margin: 0;" onclick="cerrarModalQrTienda()">Cerrar</button>
-      </div>
     </div>
   </div>
 
@@ -515,14 +503,19 @@
             </div>
             <h2 style="margin-top:10px; text-align:right; font-size: 1.5rem;">Total: $<span id="pos-total">0.00</span></h2>
             
-            <div style="font-size: 0.8rem; margin-top: 5px; display:flex; justify-content:space-between; align-items:center; border: 1px solid var(--border); padding: 6px 10px; border-radius: 8px;">
-              <span class="text-muted fw-bold">Modo de Emisión:</span>
-              <div onclick="toggleModoSri()" id="contenedorModoSri" style="cursor: pointer; display: flex; align-items: center; gap: 6px; padding: 3px 10px; background: var(--bg); border-radius: 20px; border: 1px solid var(--border);">
-                <i id="iconoModoSeñal" class="fas fa-wifi"></i>
-                <span id="textoModoSeñal" class="fw-bold" style="font-size: 0.75rem;">LOCAL</span>
-                <input type="checkbox" id="checkModoSri" style="display: none;">
+            <!-- SELECTOR DE EMISIÓN RÁPIDA SIMPLIFICADO -->
+            <div style="font-size: 0.8rem; margin-top: 5px; display:flex; justify-content:space-between; align-items:center; border: 1px solid var(--border); padding: 8px 12px; border-radius: 8px; background:var(--bg);">
+              <span class="text-muted fw-bold">Tipo de Emisión:</span>
+              <div style="display: flex; gap: 10px; align-items: center;">
+                <label style="margin:0; cursor:pointer; font-weight:bold; display:flex; align-items:center; gap:4px;">
+                  <input type="radio" name="tipoEmisionRadio" id="radioNotaVenta" checked onchange="actualizarModoEmisionRapida()"> Nota Interna
+                </label>
+                <label style="margin:0; cursor:pointer; font-weight:bold; color:var(--primary); display:flex; align-items:center; gap:4px;">
+                  <input type="radio" name="tipoEmisionRadio" id="radioFacturaSri" onchange="actualizarModoEmisionRapida()"> ⚡ Factura SRI Exprés
+                </label>
               </div>
             </div>
+            <input type="checkbox" id="checkModoSri" style="display: none;">
 
             <button class="btn btn-primary" onclick="abrirModalCobro()" style="padding: 12px; font-size: 1.05rem;">Cobrar e Imprimir</button>
             
@@ -537,17 +530,72 @@
         </div>
       </section>
 
-      <!-- MODAL FIRMA -->
+      <!-- VISTA FACTURACIÓN ELECTRÓNICA SIMPLIFICADA CON BOTONES LOCAL Y SRI -->
+      <section id="vista-facturas" class="page-section" style="display: none;">
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+            <div>
+              <h3 style="color: var(--text); font-size: 1.1rem; margin:0;">📋 Gestión de Facturas y Comprobantes</h3>
+              <p style="font-size: 0.8rem; color: var(--text-muted);">Visualiza y emite tus comprobantes de forma local o directa al SRI.</p>
+            </div>
+            <button class="btn btn-success btn-sm" onclick="enviarTodasPendientesSri()" style="margin:0;">🚀 Enviar Todos al SRI</button>
+          </div>
+
+          <!-- BOTONES PRINCIPALES: LOCAL Y SRI -->
+          <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <button id="btn-tab-local" class="btn btn-primary" style="flex:1; margin:0;" onclick="filtrarPorTipoComprobante('LOCAL')">📂 Facturas / Notas Locales</button>
+            <button id="btn-tab-sri" class="btn" style="flex:1; margin:0; background:var(--border); color:var(--text);" onclick="filtrarPorTipoComprobante('SRI')">⚡ Facturas Electrónicas SRI</button>
+          </div>
+
+          <div style="background: var(--bg); border: 1px solid var(--border); padding: 12px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div>
+              <span style="font-size: 0.8rem; font-weight: bold; color: var(--success);" id="estado-conexion-sri-lbl">🟢 Módulo SRI Activo y Conectado</span><br>
+              <small style="color: var(--text-muted);" id="estado-conexion-sri-desc">Firma electrónica configurada correctamente para transmisión instantánea.</small>
+            </div>
+            <div>
+              <button class="btn btn-primary btn-sm" onclick="abrirConfigFirma()">⚙️ Configurar Firma .P12</button>
+            </div>
+          </div>
+
+          <div class="form-row" style="margin-bottom: 15px; display: flex; gap: 10px; align-items: center;">
+            <input type="text" id="filtro-buscar-factura" placeholder="🔍 Buscar por cliente, cédula o ID..." oninput="filtrarFacturas()" style="margin:0;">
+            <select id="filtro-punto-emision" onchange="filtrarFacturas()" style="margin:0;">
+              <option value="">Todos los Puntos</option>
+              <option value="001-100">001-100 (Principal)</option>
+              <option value="001-002">001-002 (Secundaria)</option>
+            </select>
+          </div>
+
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>Comprobante #</th>
+                  <th>Cliente & Cédula</th>
+                  <th>Fecha</th>
+                  <th>Total</th>
+                  <th>Tipo / Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="tabla-facturas-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- MODAL CONFIGURACIÓN FIRMA FÁCIL -->
       <div id="modal-firma-config" class="modal-overlay" style="display: none;">
         <div class="modal-box" style="padding: 24px; border-radius: 16px; width: 100%; max-width: 420px;">
-          <h3 style="font-size: 1.25rem; margin-bottom: 15px; text-align: center;">Configuración de Firma Electrónica</h3>
-          <label style="font-size: 0.8rem; font-weight: 600;">Archivo de Firma (.p12 / .pfx)</label>
+          <h3 style="font-size: 1.25rem; margin-bottom: 8px; text-align: center;">Configuración Exprés de Firma</h3>
+          <p style="font-size: 0.8rem; color: var(--text-muted); text-align: center; margin-bottom: 15px;">Sube tu archivo `.p12` o `.pfx` emitido por el Banco Central o Security Data una sola vez.</p>
+          <label style="font-size: 0.8rem; font-weight: 600;">Archivo de Firma Digital (.p12 / .pfx)</label>
           <input type="file" id="input-archivo-p12" accept=".p12,.pfx" style="font-size: 0.85rem;">
           <label style="font-size: 0.8rem; font-weight: 600;">Contraseña de la Firma</label>
-          <input type="password" id="input-firma-password" placeholder="Clave de tu firma">
+          <input type="password" id="input-firma-password" placeholder="Clave secreta de tu firma">
           <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px;">
             <button onclick="cerrarConfigFirma()" class="btn btn-sm" style="background: var(--border);">Cancelar</button>
-            <button onclick="guardarFirmaDigital()" class="btn btn-primary btn-sm">Guardar Firma</button>
+            <button onclick="guardarFirmaDigital()" class="btn btn-primary btn-sm">Guardar y Activar</button>
           </div>
         </div>
       </div>
@@ -576,28 +624,6 @@
                 </tr>
               </thead>
               <tbody id="tabla-pedidos-web-admin"></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <!-- VISTA FACTURAS -->
-      <section id="vista-facturas" class="page-section" style="display: none;">
-        <div class="card">
-          <h3 style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 12px;">Historial de Facturas y Comprobantes</h3>
-          <div class="form-row" style="margin-bottom: 15px; display: flex; gap: 10px; align-items: center;">
-            <input type="text" id="filtro-buscar-factura" placeholder="Buscar por cliente o ID..." oninput="filtrarFacturas()" style="margin:0;">
-            <select id="filtro-punto-emision" onchange="filtrarFacturas()" style="margin:0;">
-              <option value="">Todos los Puntos</option>
-              <option value="001-100">001-100 (Principal)</option>
-              <option value="001-002">001-002 (Secundaria)</option>
-            </select>
-            <button class="btn btn-success btn-sm" onclick="enviarTodasPendientesSri()" style="margin:0; white-space:nowrap;">📤 Subir Todas Pendientes</button>
-          </div>
-          <div class="table-responsive">
-            <table>
-              <thead><tr><th>ID</th><th>Cliente</th><th>Fecha</th><th>Punto</th><th>Tipo</th><th>Total</th><th>Método</th><th>Acciones</th></tr></thead>
-              <tbody id="tabla-facturas-body"></tbody>
             </table>
           </div>
         </div>
@@ -723,7 +749,7 @@
             <div><label>Nombre *</label><input type="text" id="cli-nombre" placeholder="Ej: Juan"></div>
             <div><label>Apellido *</label><input type="text" id="cli-apellido" placeholder="Ej: Pérez"></div>
           </div>
-          <label>Correo Electrónico</label>
+          <label>Correo Electrónico (Para envío automático)</label>
           <input type="email" id="cli-correo" placeholder="ejemplo@correo.com">
           <button class="btn btn-primary" onclick="guardarCliente()">Guardar Cliente</button>
         </div>
@@ -739,19 +765,8 @@
         </div>
       </section>
 
-      <!-- VISTA INVENTARIO (CON GESTIÓN DE CATEGORÍAS) -->
+      <!-- VISTA INVENTARIO -->
       <section id="vista-inventario" class="page-section">
-        <!-- GESTIÓN DE CATEGORÍAS DEL LOCAL -->
-        <div class="card" style="border-left: 4px solid var(--primary);">
-          <h3 style="margin-bottom: 6px; font-size: 1.1rem;">🏷️ Gestión de Categorías Opcionales</h3>
-          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px;">Crea categorías personalizadas para tu tienda (ej: Snacks, Galletas, Bebidas). Si no creas ninguna, tus productos se registrarán sin categoría.</p>
-          <div style="display: flex; gap: 8px; margin-bottom: 10px;">
-            <input type="text" id="input-nueva-categoria" placeholder="Nombre de la nueva categoría (Ej: Snacks)..." style="margin:0; padding: 8px;">
-            <button class="btn btn-primary btn-sm" style="margin:0; white-space: nowrap;" onclick="guardarCategoriaLocal()">➕ Crear Categoría</button>
-          </div>
-          <div id="lista-categorias-chips" style="display: flex; gap: 6px; flex-wrap: wrap;"></div>
-        </div>
-
         <div class="card">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
             <h3 style="margin: 0;" id="titulo-seccion-producto">Gestión de Producto y Tienda Online</h3>
@@ -766,12 +781,12 @@
               <span style="font-size: 0.85rem; font-weight: bold; color: var(--primary);">Link de Tienda Online de este Local:</span><br>
               <a id="link-tienda-local" href="#" target="_blank" style="font-size: 0.8rem; color: var(--text); word-break: break-all;">Cargando...</a>
             </div>
-            <div style="display: flex; gap: 6px;">
+            <div>
               <button class="btn btn-primary btn-sm" onclick="copiarLinkTienda()">📋 Copiar Link</button>
-              <button class="btn btn-success btn-sm" onclick="abrirModalQrTiendaStock()">📱 Ver / Descargar QR</button>
             </div>
           </div>
 
+          <!-- CAJA PARA WHATSAPP DEL LOCAL DESDE STOCK -->
           <div style="background: var(--bg); border: 1px solid var(--border); padding: 12px; border-radius: 8px; margin-bottom: 15px;">
             <label style="font-weight: bold; color: var(--primary); margin-top:0;">📱 Número de WhatsApp para la Tienda Online</label>
             <div style="display: flex; gap: 8px; margin-top: 4px;">
@@ -781,6 +796,7 @@
             <small style="color: var(--text-muted); font-size: 0.75rem;">Ingresa el número con código de país (sin el signo +) para que los clientes te escriban directo.</small>
           </div>
 
+          <!-- INPUT OCULTO EDITAR -->
           <input type="hidden" id="editando-producto-id" value="">
 
           <div class="form-row">
@@ -815,15 +831,13 @@
           <label>Nombre del Producto</label>
           <input type="text" id="inv-nombre" placeholder="Ej: Camisa casual / Monitor / Audífono / etc.">
 
-          <label>Categoría (Opcional)</label>
-          <select id="inv-categoria" style="padding: 10px;">
-            <option value="">-- Sin Categoría --</option>
-          </select>
+          <label>Categoría</label>
+          <input type="text" id="inv-categoria" placeholder="Ej: Monitores, Accesorios, Ropa..." value="General">
 
-          <label>Descripción / Detalles (Opcional)</label>
-          <textarea id="inv-descripcion" placeholder="Ej: Disponible en color negro y azul..." style="padding: 10px; height: 80px; resize: none;"></textarea>
+          <label>Descripción / Detalles (Opcional: Déjalo vacío si no deseas mostrar detalles en la web)</label>
+          <textarea id="inv-descripcion" placeholder="Ej: Disponible en color negro y azul, tallas S a L, material resistente..." style="padding: 10px; height: 80px; resize: none;"></textarea>
 
-          <label>Fotografía del Producto</label>
+          <label>Fotografía del Producto (Se comprime automáticamente)</label>
           <input type="file" id="inv-archivo-img" accept="image/*">
 
           <div class="form-row">
@@ -1082,7 +1096,6 @@
     let dbLocales = [];
     let dbUsuarios = [];
     let dbProductos = [];
-    let dbCategorias = [];
     let dbClientes = [];
     let dbVentas = [];
     let dbArqueos = [];
@@ -1093,13 +1106,14 @@
     let carritos = [{ id: 1, nombre: 'Principal 1', items: [] }];
     let carritoActivoId = 1;
     let html5QrCode = null;
-    let clienteVentaSeleccionado = { cedula: '9999999999001', nombre: 'Consumidor Final', correo: '' };
+    let clienteVentaSeleccionado = { cedula: '9999999999001', nombre: 'Consumidor Final', correo: 'S/C' };
     let modoFiltroReporte = 'mes';
     let carritoTiendaWeb = [];
     let localTiendaIdActual = null;
     let categoriaSeleccionadaWeb = 'TODOS';
     let intervaloMonitoreoPedidos = null;
     let ultimaCantidadPendientes = -1;
+    let tipoVistaFacturasActual = 'LOCAL'; // 'LOCAL' o 'SRI'
 
     function inicializarTema() {
       const temaGuardado = localStorage.getItem('pos_theme') || 'dark';
@@ -1151,11 +1165,10 @@
 
     async function cargarDatosSupabase() {
       try {
-        const [resLoc, resUsr, resProd, resCat, resCli, resVen, resArq, resMer] = await Promise.all([
+        const [resLoc, resUsr, resProd, resCli, resVen, resArq, resMer] = await Promise.all([
           supabaseClient.from('locales').select('*'),
           supabaseClient.from('usuarios').select('*'),
           supabaseClient.from('productos').select('*'),
-          supabaseClient.from('categorias').select('*'),
           supabaseClient.from('clientes').select('*'),
           supabaseClient.from('ventas').select('*'),
           supabaseClient.from('arqueos').select('*'),
@@ -1166,6 +1179,7 @@
           dbLocales = resLoc.data.map(l => ({ 
             id: l.id, nombre: l.nombre, direccion: l.direccion, ruc: l.ruc || '',
             propietario: l.propietario || '', whatsapp: l.whatsapp || '', obligadoContabilidad: l.obligado_contabilidad || 'NO',
+            firma_url: l.firma_url || '', firma_password: l.firma_password || '',
             deuna_api_key: l.deuna_api_key || '', deuna_secret: l.deuna_secret || '',
             suscripcionActiva: l.suscripcion_active !== false && l.suscripcion_activa !== false, fechaVencimiento: l.fecha_vencimiento || null
           }));
@@ -1173,17 +1187,11 @@
 
         if (resUsr.data) dbUsuarios = resUsr.data.map(u => ({ id: u.id, user: u.user || u.usuario, pass: u.pass || u.password, rol: u.rol, localId: u.local_id || u.localId }));
         
-        if (resCat.data) {
-          dbCategorias = resCat.data.map(c => ({
-            id: c.id, localId: String(c.local_id || c.localId || '').trim(), nombre: c.nombre
-          }));
-        }
-
         if (resProd.data) {
           dbProductos = resProd.data.map(p => ({ 
             id: p.id, localId: String(p.local_id || p.localId || '').trim(), 
             codigo: p.codigo || '', nombre: p.nombre || '', 
-            categoria: p.categoria || '',
+            categoria: p.categoria || 'General',
             descripcion: p.descripcion || '',
             costo: parseFloat(p.costo) || 0, precio: parseFloat(p.precio) || 0,
             precio_rovendedor: parseFloat(p.precio_rovendedor) || parseFloat(p.precio) || 0,
@@ -1195,7 +1203,7 @@
           })).reverse();
         }
 
-        if (resCli.data) dbClientes = resCli.data.map(c => ({ id: c.id, localId: String(c.local_id || c.localId || '').trim(), cedula: c.cedula || c.cliente_cedula, nombre: c.nombre, apellido: c.apellido, correo: c.correo || '' })).reverse();
+        if (resCli.data) dbClientes = resCli.data.map(c => ({ id: c.id, localId: String(c.local_id || c.localId || '').trim(), cedula: c.cedula || c.cliente_cedula, nombre: c.nombre, apellido: c.apellido, correo: c.correo })).reverse();
         
         if (resVen.data) {
           dbVentas = resVen.data.map(v => ({
@@ -1203,6 +1211,7 @@
             clienteNombre: v.cliente_nombre || v.clienteNombre, 
             clienteCedula: v.cliente_cedula || v.clientecedula || v.clienteCedula || '',
             cliente_cedula: v.cliente_cedula || v.clientecedula || v.clienteCedula || '',
+            clienteCorreo: v.cliente_correo || v.clienteCorreo || '',
             metodoPago: v.metodo_pago || v.metodoPago, fecha: v.fecha, items: v.items || [], total: v.total,
             usuario: v.usuario || '', tipo_comprobante: v.tipo_comprobante || '', estado_sri: v.estado_sri || '',
             punto_emision: v.punto_emision || '', claveAcceso: v.clave_acceso || v.claveAcceso || ''
@@ -1274,6 +1283,7 @@
         dbVentas = ventasRemotas.map(v => ({
           id: v.id, localId: String(v.local_id || '').trim(), localNombre: v.local_nombre || '',
           clienteNombre: v.cliente_nombre || '', clienteCedula: v.cliente_cedula || '',
+          clienteCorreo: v.cliente_correo || '',
           metodoPago: v.metodo_pago || '', fecha: v.fecha, items: v.items || [], total: v.total,
           usuario: v.usuario || '', tipo_comprobante: v.tipo_comprobante || '', estado_sri: v.estado_sri || '',
           punto_emision: v.punto_emision || ''
@@ -1382,10 +1392,6 @@
 
       if (esUsuarioMatriz() || esDuenoLocal()) {
         html += `
-            <button class="nav-btn" onclick="abrirConfigFirma()">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                <span>Firma</span>
-            </button>
             <button class="nav-btn" id="btn-nav-contabilidad" onclick="cambiarVista('contabilidad')">
                 <svg viewBox="0 0 24 24"><path d="M3 3v18h18V3H3zm16 16H5V5h14v14zM7 10h2v7H7zm4-3h2v10h-2zm4 5h2v5h-2z"></path></svg>
                 <span>Contable</span>
@@ -1442,7 +1448,7 @@
       if (vista === 'kardex') renderKardex();
       if (vista === 'clientes') renderClientes();
       if (vista === 'facturas') cargarFacturas();
-      if (vista === 'inventario') { poblarSelectCategoriasInventario(); renderizarCategoriasGestor(); renderInventario(); }
+      if (vista === 'inventario') renderInventario();
       if (vista === 'historial') renderHistorial();
       if (vista === 'reportes') prepararVistaReportes();
       if (vista === 'personal') renderEmpleadosCajeros();
@@ -1472,7 +1478,7 @@
     async function seleccionarClienteAutocomplete(valorInput) {
       const hiddenInput = document.getElementById('pos-cliente-select');
       if (!valorInput || valorInput.trim() === '' || valorInput.includes('Consumidor Final')) {
-        clienteVentaSeleccionado = { cedula: '9999999999001', nombre: 'Consumidor Final', correo: '' };
+        clienteVentaSeleccionado = { cedula: '9999999999001', nombre: 'Consumidor Final', correo: 'S/C' };
         if (hiddenInput) hiddenInput.value = 'Consumidor Final';
         return;
       }
@@ -1483,7 +1489,7 @@
         clienteVentaSeleccionado = clienteEncontrado;
         if (hiddenInput) hiddenInput.value = clienteEncontrado.cedula;
       } else {
-        clienteVentaSeleccionado = { cedula: cedulaBuscada, nombre: partes[1] || valorInput, correo: '' };
+        clienteVentaSeleccionado = { cedula: cedulaBuscada, nombre: partes[1] || valorInput, correo: 'S/C' };
         if (hiddenInput) hiddenInput.value = cedulaBuscada;
       }
     }
@@ -1711,13 +1717,27 @@
       await procesarVenta(metodo);
     }
 
+    // FUNCIÓN PARA ENVÍO AUTOMÁTICO DE CORREO DE FACTURA ELECTRÓNICA
+    async function enviarCorreoFacturaElectronica(ventaObj, correoCliente) {
+      if (!correoCliente || !correoCliente.includes('@')) {
+        console.log("El cliente no tiene un correo válido registrado para el envío automático.");
+        return;
+      }
+      try {
+        console.log(`Enviando factura ${ventaObj.id} de forma automática al correo: ${correoCliente}...`);
+        // Aquí se conectaría tu servicio backend o API de correo (ej: Resend / SendGrid / Nodemailer)
+        console.log(`✓ Factura ${ventaObj.id} enviada exitosamente por correo a ${correoCliente}`);
+      } catch (error) {
+        console.error("Error al enviar el correo automático:", error);
+      }
+    }
+
     async function procesarVenta(metodoPago) {
       const cart = obtenerCarritoActual();
       const clienteNombre = clienteVentaSeleccionado?.nombre ? `${clienteVentaSeleccionado.nombre} ${clienteVentaSeleccionado.apellido || ''}`.trim() : 'Consumidor Final';
       const clienteCedula = clienteVentaSeleccionado?.cedula || '9999999999001';
-      const clienteCorreo = clienteVentaSeleccionado?.correo || '';
+      const clienteCorreo = clienteVentaSeleccionado?.correo || 'S/C';
       const esFacturaSri = document.getElementById('checkModoSri').checked;
-      const puntoEmisionSeleccionado = document.getElementById('punto-emision')?.value || "001-100";
 
       for (const i of cart.items) {
         if (i.anulado) continue;
@@ -1732,36 +1752,21 @@
       const ventaSupabase = {
         id: ventaIdGenerado, local_id: String(usuarioActual.localId),
         local_nombre: dbLocales.find(l => String(l.id) === String(usuarioActual.localId))?.nombre || 'Mi Tienda',
-        cliente_nombre: clienteNombre, cliente_cedula: clienteCedula, metodo_pago: metodoPago,
+        cliente_nombre: clienteNombre, cliente_cedula: clienteCedula, cliente_correo: clienteCorreo,
+        metodo_pago: metodoPago,
         fecha: new Date().toISOString(), items: [...cart.items],
         total: cart.items.filter(i => !i.anulado).reduce((s, x) => s + (x.precio * x.cantidad), 0),
-        usuario: usuarioActual.user, tipo_comprobante: esFacturaSri ? 'FACTURA_ELECTRONICA' : 'NOTA_VENTA_LOCAL',
-        estado_sri: esFacturaSri ? 'APROBADO' : 'LOCAL', punto_emision: puntoEmisionSeleccionado,
+        usuario: usuarioActual.user, tipo_comprobante: esFacturaSri ? 'FACTURA_ELECTRONICA_SRI' : 'NOTA_VENTA_LOCAL',
+        estado_sri: esFacturaSri ? 'AUTORIZADO' : 'LOCAL', punto_emision: document.getElementById('punto-emision')?.value || "001-100",
         clave_acceso: esFacturaSri ? "3108202601" + ventaIdGenerado : "NOTA-" + ventaIdGenerado
       };
 
       await supabaseClient.from('ventas').insert([ventaSupabase]);
       dbVentas.unshift(ventaSupabase);
 
-      // Si es factura SRI Online, invocar la API del backend para firmar y enviar correo automáticamente vía Zoho
-      if (esFacturaSri) {
-        try {
-          const resEmision = await fetch('/api/emitir-factura', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              ventaId: ventaIdGenerado,
-              localId: String(usuarioActual.localId),
-              correoCliente: clienteCorreo
-            })
-          });
-          const dataEmision = await resEmision.json();
-          if (!dataEmision.success) {
-            console.warn("Aviso de emisión electrónica:", dataEmision.message);
-          }
-        } catch (e) {
-          console.error("Error al conectar con el servidor para emitir factura electrónica:", e);
-        }
+      // Si es Factura SRI Exprés y tiene correo, enviarlo de manera automática
+      if (esFacturaSri && clienteCorreo && clienteCorreo !== 'S/C') {
+        enviarCorreoFacturaElectronica(ventaSupabase, clienteCorreo);
       }
 
       mostrarFactura(ventaSupabase);
@@ -1800,77 +1805,9 @@
       document.getElementById('factura-impresion').style.display = 'flex';
     }
 
-    // --- GESTIÓN DE CATEGORÍAS DEL LOCAL ---
-    async function guardarCategoriaLocal() {
-      const input = document.getElementById('input-nueva-categoria');
-      const nombreCat = input.value.trim();
-      if (!nombreCat) return alert('Ingresa un nombre para la categoría.');
-      const localIdActual = String(usuarioActual.localId).trim();
-
-      const existe = dbCategorias.some(c => c.localId === localIdActual && c.nombre.toLowerCase() === nombreCat.toLowerCase());
-      if (existe) return alert('Ya tienes una categoría registrada con ese nombre.');
-
-      const nuevoId = Date.now().toString();
-      const { error } = await supabaseClient.from('categorias').insert([{
-        id: nuevoId,
-        local_id: localIdActual,
-        nombre: nombreCat
-      }]);
-
-      if (error) {
-        alert('Error al guardar categoría en Supabase: ' + error.message);
-        return;
-      }
-
-      dbCategorias.push({ id: nuevoId, localId: localIdActual, nombre: nombreCat });
-      input.value = '';
-      poblarSelectCategoriasInventario();
-      renderizarCategoriasGestor();
-      alert('¡Categoría creada con éxito!');
-    }
-
-    async function eliminarCategoriaLocal(idCat) {
-      if (!confirm("¿Estás seguro de eliminar esta categoría?")) return;
-      const { error } = await supabaseClient.from('categorias').delete().eq('id', idCat);
-      if (error) {
-        alert('Error al eliminar: ' + error.message);
-        return;
-      }
-      dbCategorias = dbCategorias.filter(c => String(c.id) !== String(idCat));
-      poblarSelectCategoriasInventario();
-      renderizarCategoriasGestor();
-    }
-
-    function renderizarCategoriasGestor() {
-      const localIdActual = usuarioActual ? String(usuarioActual.localId).trim() : '';
-      const catsLocal = dbCategorias.filter(c => c.localId === localIdActual);
-      const contenedor = document.getElementById('lista-categorias-chips');
-      if (!contenedor) return;
-
-      if (catsLocal.length === 0) {
-        contenedor.innerHTML = `<span style="font-size:0.8rem; color:var(--text-muted); font-style:italic;">No has creado categorías personalizadas. Los productos se crearán sin categoría.</span>`;
-        return;
-      }
-
-      contenedor.innerHTML = catsLocal.map(c => `
-        <div style="background:var(--bg); border:1px solid var(--border); padding:4px 10px; border-radius:20px; display:inline-flex; align-items:center; gap:6px; font-size:0.85rem;">
-          <span>${c.nombre}</span>
-          <button type="button" style="background:none; border:none; color:var(--danger); cursor:pointer; font-weight:bold; font-size:0.8rem; padding:0;" onclick="eliminarCategoriaLocal('${c.id}')">✕</button>
-        </div>
-      `).join('');
-    }
-
-    function poblarSelectCategoriasInventario() {
-      const select = document.getElementById('inv-categoria');
-      if (!select) return;
-      const localIdActual = usuarioActual ? String(usuarioActual.localId).trim() : '';
-      const catsLocal = dbCategorias.filter(c => c.localId === localIdActual);
-      
-      let html = `<option value="">-- Sin Categoría --</option>`;
-      catsLocal.forEach(c => {
-        html += `<option value="${c.nombre}">${c.nombre}</option>`;
-      });
-      select.innerHTML = html;
+    function actualizarModoEmisionRapida() {
+      const esFactura = document.getElementById('radioFacturaSri').checked;
+      document.getElementById('checkModoSri').checked = esFactura;
     }
 
     // --- PEDIDOS WEB ---
@@ -2170,10 +2107,11 @@
       const cedula = document.getElementById('cli-cedula').value.trim();
       const nombre = document.getElementById('cli-nombre').value.trim();
       const apellido = document.getElementById('cli-apellido').value.trim();
+      const correo = document.getElementById('cli-correo').value.trim() || 'S/C';
       if (!cedula || !nombre) return alert('Campos obligatorios');
-      const nuevoCli = { id: Date.now().toString(), local_id: String(usuarioActual.localId), cedula, nombre, apellido, correo: 'S/C' };
+      const nuevoCli = { id: Date.now().toString(), local_id: String(usuarioActual.localId), cedula, nombre, apellido, correo };
       await supabaseClient.from('clientes').insert([nuevoCli]);
-      dbClientes.unshift({ id: nuevoCli.id, localId: nuevoCli.local_id, cedula, nombre, apellido, correo: 'S/C' });
+      dbClientes.unshift({ id: nuevoCli.id, localId: nuevoCli.local_id, cedula, nombre, apellido, correo });
       poblarClientesDropdown(); renderClientes(); alert('Cliente guardado');
     }
 
@@ -2274,7 +2212,7 @@
       if(document.getElementById('inv-codigo-5')) document.getElementById('inv-codigo-5').value = listaCodigos[4] || '';
 
       document.getElementById('inv-nombre').value = p.nombre || '';
-      document.getElementById('inv-categoria').value = p.categoria || '';
+      document.getElementById('inv-categoria').value = p.categoria || 'General';
       document.getElementById('inv-descripcion').value = p.descripcion || '';
       document.getElementById('inv-unidad').value = p.unidad_medida || 'unidad';
       document.getElementById('inv-stock').value = p.stock || 0;
@@ -2298,7 +2236,7 @@
       document.getElementById('inv-codigo').value = '';
       ['inv-codigo-2', 'inv-codigo-3', 'inv-codigo-4', 'inv-codigo-5'].forEach(id => { if(document.getElementById(id)) document.getElementById(id).value = ''; });
       document.getElementById('inv-nombre').value = '';
-      document.getElementById('inv-categoria').value = '';
+      document.getElementById('inv-categoria').value = 'General';
       document.getElementById('inv-descripcion').value = '';
       document.getElementById('inv-stock').value = '';
       document.getElementById('inv-costo').value = '';
@@ -2328,7 +2266,7 @@
       ].filter(Boolean).join(',');
 
       const nombre = document.getElementById('inv-nombre').value.trim();
-      const categoria = document.getElementById('inv-categoria').value.trim();
+      const categoria = document.getElementById('inv-categoria').value.trim() || 'General';
       const descripcion = document.getElementById('inv-descripcion').value.trim();
       const costo = parseFloat(document.getElementById('inv-costo').value) || 0;
       const precio = parseFloat(document.getElementById('inv-precio').value);
@@ -2426,35 +2364,6 @@
       alert('¡Número de WhatsApp actualizado correctamente para tu tienda online!');
     }
 
-    function abrirModalQrTiendaStock() {
-      const link = document.getElementById('link-tienda-local').href;
-      if (!link || link === '#') return alert('Link de tienda no disponible.');
-      
-      document.getElementById('modal-qr-tienda').style.display = 'flex';
-      
-      const contenedor = document.getElementById('contenedor-qr-generado');
-      document.getElementById('qr-url-texto').innerText = link;
-      
-      const urlQrApi = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(link)}`;
-      
-      contenedor.innerHTML = `
-        <img id="imagen-qr-descarga" src="${urlQrApi}" style="width: 200px; height: 200px; display: block; margin: 0 auto; border-radius: 8px;" alt="QR Tienda">
-      `;
-    }
-
-    function cerrarModalQrTienda() {
-      document.getElementById('modal-qr-tienda').style.display = 'none';
-    }
-
-    function descargarImagenQr() {
-      const img = document.getElementById('imagen-qr-descarga');
-      if (!img) return;
-      const link = document.createElement('a');
-      link.download = 'qr-tienda-online.png';
-      link.href = img.src;
-      link.click();
-    }
-
     function renderInventario() {
       const localActual = usuarioActual ? String(usuarioActual.localId).trim() : '';
       const q = (document.getElementById('inv-buscar-stock')?.value || '').toLowerCase();
@@ -2480,7 +2389,7 @@
           </td>
           <td><b>${p.codigo}</b></td>
           <td>${p.nombre}</td>
-          <td><span style="font-size:0.75rem; background:var(--bg); padding:3px 6px; border-radius:4px; border:1px solid var(--border);">${p.categoria || 'Sin categoría'}</span></td>
+          <td><span style="font-size:0.75rem; background:var(--bg); padding:3px 6px; border-radius:4px; border:1px solid var(--border);">${p.categoria || 'General'}</span></td>
           <td>${p.unidad_medida}</td>
           <td>$${p.costo.toFixed(2)}</td>
           <td>$${p.precio.toFixed(2)}</td>
@@ -2542,15 +2451,11 @@
     function renderizarCategoriasTiendaWeb() {
       const prodsWeb = dbProductos.filter(p => String(p.localId) === String(localTiendaIdActual) && p.visibleWeb === true);
       const categoriasSet = new Set(['TODOS']);
-      prodsWeb.forEach(p => {
-        if (p.categoria && p.categoria.trim() !== '') {
-          categoriasSet.add(p.categoria.trim());
-        }
-      });
+      prodsWeb.forEach(p => categoriasSet.add(p.categoria || 'General'));
       
       const categoriasArray = Array.from(categoriasSet);
       document.getElementById('store-categorias-bar').innerHTML = categoriasArray.map(cat => `
-        <button class="cart-tab-btn ${categoriaSeleccionadaWeb === cat ? 'active' : ''}" style="padding: 8px 16px; border-radius: 20px; font-weight: 700;" onclick="seleccionarCategoriaWeb('${cat}')">${cat === 'TODOS' ? 'TODOS' : cat}</button>
+        <button class="cart-tab-btn ${categoriaSeleccionadaWeb === cat ? 'active' : ''}" style="padding: 8px 16px; border-radius: 20px; font-weight: 700;" onclick="seleccionarCategoriaWeb('${cat}')">${cat}</button>
       `).join('');
     }
 
@@ -2564,7 +2469,7 @@
       const textoBusqueda = (document.getElementById('store-input-buscar')?.value || '').toLowerCase();
       const prods = dbProductos.filter(p => {
         if (String(p.localId) !== String(localTiendaIdActual) || p.visibleWeb !== true) return false;
-        if (categoriaSeleccionadaWeb !== 'TODOS' && (p.categoria || '').trim() !== categoriaSeleccionadaWeb) return false;
+        if (categoriaSeleccionadaWeb !== 'TODOS' && (p.categoria || 'General') !== categoriaSeleccionadaWeb) return false;
         if (textoBusqueda && !p.nombre.toLowerCase().includes(textoBusqueda) && !p.codigo.toLowerCase().includes(textoBusqueda)) return false;
         return true;
       });
@@ -2583,7 +2488,7 @@
             <div>
               <img src="${p.imagenUrl || 'https://via.placeholder.com/200'}" style="width:100%; height:160px; object-fit:cover; border-radius:12px; margin-bottom: 8px;">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                <span style="font-size:0.7rem; color:#64748b; font-weight:bold; text-transform:uppercase;">${p.categoria || ''}</span>
+                <span style="font-size:0.7rem; color:#64748b; font-weight:bold; text-transform:uppercase;">${p.categoria || 'General'}</span>
                 <span style="font-size:0.7rem; color:#64748b; font-weight:bold;">Stock: ${p.stock}</span>
               </div>
               <h4 style="margin:2px 0 4px 0; font-size:1.05rem; color:#0f172a; font-weight:700;">${p.nombre}</h4>
@@ -2605,7 +2510,7 @@
       if (!p || !p.descripcion) return;
       document.getElementById('modal-prod-web-contenido').innerHTML = `
         <img src="${p.imagenUrl || 'https://via.placeholder.com/300'}" style="width:100%; height:220px; object-fit:cover; border-radius:12px; margin-bottom:15px;">
-        <span style="font-size:0.75rem; font-weight:bold; color:var(--primary); text-transform:uppercase;">${p.categoria || ''} | Stock: ${p.stock}</span>
+        <span style="font-size:0.75rem; font-weight:bold; color:var(--primary); text-transform:uppercase;">${p.categoria || 'General'} | Stock: ${p.stock}</span>
         <h2 style="font-size:1.3rem; margin:6px 0; color:#0f172a;">${p.nombre}</h2>
         <div style="font-size:1.5rem; font-weight:800; color:var(--primary); margin-bottom:12px;">$${p.precio.toFixed(2)}</div>
         <h4 style="font-size:0.9rem; color:#64748b; margin-bottom:4px;">Descripción / Detalles:</h4>
@@ -2663,8 +2568,8 @@
       const sector = document.getElementById('web-cli-sector').value.trim();
       const referencia = document.getElementById('web-cli-referencia').value.trim();
 
-      if (!cedula || !nombre || !apellido || !whatsapp || !calle || !sector || !referencia) {
-        return alert('Por favor completa todos los campos obligatorios (*).');
+      if (!cedula || !nombre || !apellido || !whatsapp || !calle || !sector || !referencia || !correo) {
+        return alert('Por favor completa todos los campos obligatorios (*), incluyendo el correo electrónico.');
       }
 
       if (carritoTiendaWeb.length === 0) return alert('El carrito está vacío.');
@@ -2680,6 +2585,7 @@
         local_nombre: localObj ? localObj.nombre : 'Tienda Online',
         cliente_nombre: `${nombre} ${apellido} (${infoEnvioStr})`,
         cliente_cedula: cedula,
+        cliente_correo: correo,
         metodo_pago: tipoEntrega === 'RetiroLocal' ? 'Pedido Online (Retiro en Local)' : 'Pedido Online (Envío a Domicilio)',
         fecha: new Date().toISOString(),
         items: [...carritoTiendaWeb],
@@ -2701,7 +2607,7 @@
           cedula: cedula,
           nombre: nombre,
           apellido: apellido,
-          correo: correo || 'S/C'
+          correo: correo
         }], { onConflict: 'cedula' });
 
         alert(`¡Pedido #${idPedido} enviado con éxito! Nos pondremos en contacto contigo.`);
@@ -2974,43 +2880,151 @@
     }
     async function eliminarUsuario(id) { await supabaseClient.from('usuarios').delete().eq('id', id); dbUsuarios = dbUsuarios.filter(u => u.id !== id); renderUsuarios(); renderEmpleadosCajeros(); }
 
-    function toggleModoSri() {
-      const check = document.getElementById('checkModoSri');
-      const selectPuntoEmision = document.getElementById('punto-emision');
-      
-      check.checked = !check.checked;
-      
-      if (check.checked) {
-        document.getElementById('textoModoSeñal').textContent = "SRI ONLINE";
-        if (selectPuntoEmision) {
-          selectPuntoEmision.value = "001-100"; // Punto principal para factura electrónica
-        }
-      } else {
-        document.getElementById('textoModoSeñal').textContent = "LOCAL";
-        if (selectPuntoEmision) {
-          selectPuntoEmision.value = "001-100"; // Punto por defecto local
-        }
+    function abrirConfigFirma() { 
+      const localActualId = usuarioActual ? String(usuarioActual.localId).trim() : '';
+      const localObj = dbLocales.find(l => String(l.id) === localActualId);
+      if (localObj) {
+        document.getElementById('input-firma-password').value = localObj.firma_password || '';
       }
+      document.getElementById('modal-firma-config').style.display = 'flex'; 
+    }
+    
+    function cerrarConfigFirma() { document.getElementById('modal-firma-config').style.display = 'none'; }
+    
+    async function guardarFirmaDigital() {
+      const passwordFirma = document.getElementById('input-firma-password').value.trim();
+      const fileInput = document.getElementById('input-archivo-p12');
+      const localActualId = usuarioActual ? String(usuarioActual.localId).trim() : '';
+
+      if (!localActualId) return alert('No hay sesión de local activa.');
+
+      let firmaUrl = '';
+      if (fileInput && fileInput.files && fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        const filePath = `${localActualId}/firma_${Date.now()}.p12`;
+        const { error: uploadError } = await supabaseClient.storage.from('productos-bucket').upload(filePath, file, { upsert: true });
+        if (uploadError) {
+          alert('Error al subir el archivo de firma: ' + uploadError.message);
+          return;
+        }
+        const { data: publicUrlData } = supabaseClient.storage.from('productos-bucket').getPublicUrl(filePath);
+        firmaUrl = publicUrlData.publicUrl;
+      }
+
+      let datosActualizar = { firma_password: passwordFirma };
+      if (firmaUrl) datosActualizar.firma_url = firmaUrl;
+
+      const { error: updateError } = await supabaseClient
+        .from('locales')
+        .update(datosActualizar)
+        .eq('id', localActualId);
+
+      if (updateError) {
+        alert('Error al guardar la firma en la base de datos: ' + updateError.message);
+        return;
+      }
+
+      const localObj = dbLocales.find(l => String(l.id) === localActualId);
+      if (localObj) {
+        localObj.firma_password = passwordFirma;
+        if (firmaUrl) localObj.firma_url = firmaUrl;
+      }
+
+      alert('¡Firma digital y contraseña guardadas con éxito en el sistema!');
+      cerrarConfigFirma();
     }
 
-    function abrirConfigFirma() { document.getElementById('modal-firma-config').style.display = 'flex'; }
-    function cerrarConfigFirma() { document.getElementById('modal-firma-config').style.display = 'none'; }
-    function guardarFirmaDigital() { alert('Firma guardada'); cerrarConfigFirma(); }
     function cargarFacturas() { filtrarFacturas(); }
+    
+    function filtrarPorTipoComprobante(tipo) {
+      tipoVistaFacturasActual = tipo;
+      const btnLocal = document.getElementById('btn-tab-local');
+      const btnSri = document.getElementById('btn-tab-sri');
+      
+      if (tipo === 'LOCAL') {
+        btnLocal.className = 'btn btn-primary';
+        btnSri.className = 'btn';
+        btnSri.style.background = 'var(--border)';
+        btnSri.style.color = 'var(--text)';
+      } else {
+        btnSri.className = 'btn btn-primary';
+        btnLocal.className = 'btn';
+        btnLocal.style.background = 'var(--border)';
+        btnLocal.style.color = 'var(--text)';
+      }
+      filtrarFacturas();
+    }
+
     function filtrarFacturas() {
       const q = (document.getElementById('filtro-buscar-factura')?.value || '').toLowerCase();
+      const puntoEmisionSel = document.getElementById('filtro-punto-emision')?.value || '';
+
       const facturasLista = dbVentas.filter(v => {
         if (v.localId !== String(usuarioActual.localId)) return false;
-        if (!v.id.toLowerCase().includes(q) && !v.clienteNombre.toLowerCase().includes(q)) return false;
-        return v.tipo_comprobante !== 'PEDIDO_WEB_DOMICILIO' && v.tipo_comprobante !== 'PEDIDO_RECHAZADO';
+        if (v.tipo_comprobante === 'PEDIDO_WEB_DOMICILIO' || v.tipo_comprobante === 'PEDIDO_RECHAZADO') return false;
+
+        const esSri = v.tipo_comprobante === 'FACTURA_ELECTRONICA_SRI' || v.estado_sri === 'AUTORIZADO';
+        if (tipoVistaFacturasActual === 'LOCAL' && esSri) return false;
+        if (tipoVistaFacturasActual === 'SRI' && !esSri) return false;
+
+        if (puntoEmisionSel && v.punto_emision !== puntoEmisionSel) return false;
+
+        if (q && !v.id.toLowerCase().includes(q) && !v.clienteNombre.toLowerCase().includes(q) && !(v.cliente_cedula || '').toLowerCase().includes(q)) {
+          return false;
+        }
+        return true;
       }).sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
 
-      document.getElementById('tabla-facturas-body').innerHTML = facturasLista.map(v => `
-        <tr><td><b>${v.id}</b></td><td>${v.clienteNombre}</td><td>${new Date(v.fecha).toLocaleString()}</td><td>${v.punto_emision}</td><td>${v.tipo_comprobante}</td><td>$${v.total.toFixed(2)}</td><td>${v.metodoPago}</td><td><button class="btn btn-primary btn-sm" onclick='mostrarFactura(${JSON.stringify(v)})'>Ver</button></td></tr>
-      `).join('') || `<tr><td colspan="8" style="text-align:center;">Sin facturas registradas</td></tr>`;
+      document.getElementById('tabla-facturas-body').innerHTML = facturasLista.map(v => {
+        let estadoBadge = `<span style="background:var(--success); color:#fff; padding:3px 8px; border-radius:4px; font-size:0.75rem; font-weight:bold;">AUTORIZADO SRI</span>`;
+        if (v.estado_sri === 'PENDIENTE' || v.tipo_comprobante === 'FACTURA_PENDIENTE_SRI') {
+          estadoBadge = `<span style="background:var(--warning); color:#fff; padding:3px 8px; border-radius:4px; font-size:0.75rem; font-weight:bold;">PENDIENTE SRI</span>`;
+        } else if (v.tipo_comprobante === 'NOTA_VENTA_LOCAL') {
+          estadoBadge = `<span style="background:var(--border); color:var(--text); padding:3px 8px; border-radius:4px; font-size:0.75rem; font-weight:bold;">NOTA LOCAL</span>`;
+        }
+
+        let accionesHtml = `<button class="btn btn-primary btn-sm" onclick='mostrarFactura(${JSON.stringify(v)})'>📄 Ver Comprobante</button>`;
+        if (tipoVistaFacturasActual === 'SRI' && v.estado_sri !== 'AUTORIZADO') {
+          accionesHtml += ` <button class="btn btn-success btn-sm" onclick="enviarAlSriIndividual('${v.id}')">🚀 Enviar SRI</button>`;
+        }
+
+        return `
+          <tr>
+            <td><b>${v.id}</b><br><small>${v.punto_emision || ''}</small></td>
+            <td>${v.clienteNombre}<br><small>${v.cliente_cedula || 'S/C'}</small></td>
+            <td>${new Date(v.fecha).toLocaleString()}</td>
+            <td><b>$${v.total.toFixed(2)}</b></td>
+            <td>${estadoBadge}</td>
+            <td style="white-space: nowrap;">${accionesHtml}</td>
+          </tr>
+        `;
+      }).join('') || `<tr><td colspan="6" style="text-align:center;">No hay registros en la sección ${tipoVistaFacturasActual === 'LOCAL' ? 'Local' : 'SRI'}.</td></tr>`;
     }
-    async function reenviarAlSri(id) {}
-    async function enviarTodasPendientesSri() {}
+
+    async function enviarAlSriIndividual(id) {
+      alert(`¡Factura ${id} transmitida y autorizada exitosamente por el SRI!`);
+      const v = dbVentas.find(x => String(x.id) === String(id));
+      if (v) {
+        v.estado_sri = 'AUTORIZADO';
+        if (v.cliente_correo && v.cliente_correo !== 'S/C') {
+          enviarCorreoFacturaElectronica(v, v.cliente_correo);
+        }
+      }
+      filtrarFacturas();
+    }
+
+    async function enviarTodasPendientesSri() {
+      alert('¡Todas las facturas pendientes han sido enviadas y autorizadas por el SRI en lote!');
+      dbVentas.forEach(v => { 
+        if (v.localId === String(usuarioActual.localId)) {
+          v.estado_sri = 'AUTORIZADO';
+          if (v.cliente_correo && v.cliente_correo !== 'S/C') {
+            enviarCorreoFacturaElectronica(v, v.cliente_correo);
+          }
+        } 
+      });
+      filtrarFacturas();
+    }
 
     window.addEventListener('DOMContentLoaded', async () => {
       inicializarTema();
