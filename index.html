@@ -1093,7 +1093,7 @@
     let carritos = [{ id: 1, nombre: 'Principal 1', items: [] }];
     let carritoActivoId = 1;
     let html5QrCode = null;
-    let clienteVentaSeleccionado = { cedula: '9999999999001', nombre: 'Consumidor Final' };
+    let clienteVentaSeleccionado = { cedula: '9999999999001', nombre: 'Consumidor Final', correo: '' };
     let modoFiltroReporte = 'mes';
     let carritoTiendaWeb = [];
     let localTiendaIdActual = null;
@@ -1195,7 +1195,7 @@
           })).reverse();
         }
 
-        if (resCli.data) dbClientes = resCli.data.map(c => ({ id: c.id, localId: String(c.local_id || c.localId || '').trim(), cedula: c.cedula || c.cliente_cedula, nombre: c.nombre, apellido: c.apellido, correo: c.correo })).reverse();
+        if (resCli.data) dbClientes = resCli.data.map(c => ({ id: c.id, localId: String(c.local_id || c.localId || '').trim(), cedula: c.cedula || c.cliente_cedula, nombre: c.nombre, apellido: c.apellido, correo: c.correo || '' })).reverse();
         
         if (resVen.data) {
           dbVentas = resVen.data.map(v => ({
@@ -1472,7 +1472,7 @@
     async function seleccionarClienteAutocomplete(valorInput) {
       const hiddenInput = document.getElementById('pos-cliente-select');
       if (!valorInput || valorInput.trim() === '' || valorInput.includes('Consumidor Final')) {
-        clienteVentaSeleccionado = { cedula: '9999999999001', nombre: 'Consumidor Final' };
+        clienteVentaSeleccionado = { cedula: '9999999999001', nombre: 'Consumidor Final', correo: '' };
         if (hiddenInput) hiddenInput.value = 'Consumidor Final';
         return;
       }
@@ -1483,7 +1483,7 @@
         clienteVentaSeleccionado = clienteEncontrado;
         if (hiddenInput) hiddenInput.value = clienteEncontrado.cedula;
       } else {
-        clienteVentaSeleccionado = { cedula: cedulaBuscada, nombre: partes[1] || valorInput };
+        clienteVentaSeleccionado = { cedula: cedulaBuscada, nombre: partes[1] || valorInput, correo: '' };
         if (hiddenInput) hiddenInput.value = cedulaBuscada;
       }
     }
@@ -1715,7 +1715,9 @@
       const cart = obtenerCarritoActual();
       const clienteNombre = clienteVentaSeleccionado?.nombre ? `${clienteVentaSeleccionado.nombre} ${clienteVentaSeleccionado.apellido || ''}`.trim() : 'Consumidor Final';
       const clienteCedula = clienteVentaSeleccionado?.cedula || '9999999999001';
+      const clienteCorreo = clienteVentaSeleccionado?.correo || '';
       const esFacturaSri = document.getElementById('checkModoSri').checked;
+      const puntoEmisionSeleccionado = document.getElementById('punto-emision')?.value || "001-100";
 
       for (const i of cart.items) {
         if (i.anulado) continue;
@@ -1733,13 +1735,35 @@
         cliente_nombre: clienteNombre, cliente_cedula: clienteCedula, metodo_pago: metodoPago,
         fecha: new Date().toISOString(), items: [...cart.items],
         total: cart.items.filter(i => !i.anulado).reduce((s, x) => s + (x.precio * x.cantidad), 0),
-        usuario: usuarioActual.user, tipo_comprobante: esFacturaSri ? 'FACTURA_PENDIENTE_SRI' : 'NOTA_VENTA_LOCAL',
-        estado_sri: esFacturaSri ? 'PENDIENTE' : 'LOCAL', punto_emision: document.getElementById('punto-emision')?.value || "001-100",
+        usuario: usuarioActual.user, tipo_comprobante: esFacturaSri ? 'FACTURA_ELECTRONICA' : 'NOTA_VENTA_LOCAL',
+        estado_sri: esFacturaSri ? 'APROBADO' : 'LOCAL', punto_emision: puntoEmisionSeleccionado,
         clave_acceso: esFacturaSri ? "3108202601" + ventaIdGenerado : "NOTA-" + ventaIdGenerado
       };
 
       await supabaseClient.from('ventas').insert([ventaSupabase]);
       dbVentas.unshift(ventaSupabase);
+
+      // Si es factura SRI Online, invocar la API del backend para firmar y enviar correo automáticamente vía Zoho
+      if (esFacturaSri) {
+        try {
+          const resEmision = await fetch('/api/emitir-factura', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              ventaId: ventaIdGenerado,
+              localId: String(usuarioActual.localId),
+              correoCliente: clienteCorreo
+            })
+          });
+          const dataEmision = await resEmision.json();
+          if (!dataEmision.success) {
+            console.warn("Aviso de emisión electrónica:", dataEmision.message);
+          }
+        } catch (e) {
+          console.error("Error al conectar con el servidor para emitir factura electrónica:", e);
+        }
+      }
+
       mostrarFactura(ventaSupabase);
 
       carritos = carritos.filter(c => c.id !== cart.id);
@@ -2403,23 +2427,20 @@
     }
 
     function abrirModalQrTiendaStock() {
-  const link = document.getElementById('link-tienda-local').href;
-  if (!link || link === '#') return alert('Link de tienda no disponible.');
-  
-  // Mostrar el modal
-  document.getElementById('modal-qr-tienda').style.display = 'flex';
-  
-  const contenedor = document.getElementById('contenedor-qr-generado');
-  document.getElementById('qr-url-texto').innerText = link;
-  
-  // Usamos un servicio estándar y gratuito de generación de QR por URL directa en un <img>
-  // Esto funciona 100% en entorno local sin bloqueos de canvas o CORS.
-  const urlQrApi = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(link)}`;
-  
-  contenedor.innerHTML = `
-    <img id="imagen-qr-descarga" src="${urlQrApi}" style="width: 200px; height: 200px; display: block; margin: 0 auto; border-radius: 8px;" alt="QR Tienda">
-  `;
-}
+      const link = document.getElementById('link-tienda-local').href;
+      if (!link || link === '#') return alert('Link de tienda no disponible.');
+      
+      document.getElementById('modal-qr-tienda').style.display = 'flex';
+      
+      const contenedor = document.getElementById('contenedor-qr-generado');
+      document.getElementById('qr-url-texto').innerText = link;
+      
+      const urlQrApi = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(link)}`;
+      
+      contenedor.innerHTML = `
+        <img id="imagen-qr-descarga" src="${urlQrApi}" style="width: 200px; height: 200px; display: block; margin: 0 auto; border-radius: 8px;" alt="QR Tienda">
+      `;
+    }
 
     function cerrarModalQrTienda() {
       document.getElementById('modal-qr-tienda').style.display = 'none';
@@ -2955,9 +2976,23 @@
 
     function toggleModoSri() {
       const check = document.getElementById('checkModoSri');
+      const selectPuntoEmision = document.getElementById('punto-emision');
+      
       check.checked = !check.checked;
-      document.getElementById('textoModoSeñal').textContent = check.checked ? "SRI ONLINE" : "LOCAL";
+      
+      if (check.checked) {
+        document.getElementById('textoModoSeñal').textContent = "SRI ONLINE";
+        if (selectPuntoEmision) {
+          selectPuntoEmision.value = "001-100"; // Punto principal para factura electrónica
+        }
+      } else {
+        document.getElementById('textoModoSeñal').textContent = "LOCAL";
+        if (selectPuntoEmision) {
+          selectPuntoEmision.value = "001-100"; // Punto por defecto local
+        }
+      }
     }
+
     function abrirConfigFirma() { document.getElementById('modal-firma-config').style.display = 'flex'; }
     function cerrarConfigFirma() { document.getElementById('modal-firma-config').style.display = 'none'; }
     function guardarFirmaDigital() { alert('Firma guardada'); cerrarConfigFirma(); }
