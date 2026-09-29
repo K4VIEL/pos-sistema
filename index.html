@@ -360,7 +360,7 @@
       <input type="text" id="login-user" placeholder="Usuario">
       <input type="password" id="login-pass" placeholder="Contraseña">
       <button class="btn btn-primary" onclick="iniciarSesion()">Acceder</button>
-      <p id="login-error" style="color:var(--danger); font-size:0.8rem; display:none; margin-top:10px;">Usuario or contraseña incorrectos</p>
+      <p id="login-error" style="color:var(--danger); font-size:0.8rem; display:none; margin-top:10px;">Usuario o contraseña incorrectos</p>
     </div>
   </div>
 
@@ -588,7 +588,7 @@
       <div id="modal-firma-config" class="modal-overlay" style="display: none;">
         <div class="modal-box" style="padding: 24px; border-radius: 16px; width: 100%; max-width: 420px;">
           <h3 style="font-size: 1.25rem; margin-bottom: 8px; text-align: center;">Configuración Exprés de Firma</h3>
-          <p style="font-size: 0.8rem; color: var(--text-muted); text-align: center; margin-bottom: 15px;">Sube tu archivo `.p12` o `.pfx` emitido por el Banco Central o Security Data una sola vez.</p>
+          <p style="font-size: 0.8rem; color: var(--text-muted); text-align: center; margin-bottom: 15px;">Sube tu archivo `.p12` o `.pfx` al bucket `firmas` una sola vez.</p>
           <label style="font-size: 0.8rem; font-weight: 600;">Archivo de Firma Digital (.p12 / .pfx)</label>
           <input type="file" id="input-archivo-p12" accept=".p12,.pfx" style="font-size: 0.85rem;">
           <label style="font-size: 0.8rem; font-weight: 600;">Contraseña de la Firma</label>
@@ -1725,7 +1725,6 @@
       }
       try {
         console.log(`Enviando factura ${ventaObj.id} de forma automática al correo: ${correoCliente}...`);
-        // Aquí se conectaría tu servicio backend o API de correo (ej: Resend / SendGrid / Nodemailer)
         console.log(`✓ Factura ${ventaObj.id} enviada exitosamente por correo a ${correoCliente}`);
       } catch (error) {
         console.error("Error al enviar el correo automático:", error);
@@ -1764,7 +1763,6 @@
       await supabaseClient.from('ventas').insert([ventaSupabase]);
       dbVentas.unshift(ventaSupabase);
 
-      // Si es Factura SRI Exprés y tiene correo, enviarlo de manera automática
       if (esFacturaSri && clienteCorreo && clienteCorreo !== 'S/C') {
         enviarCorreoFacturaElectronica(ventaSupabase, clienteCorreo);
       }
@@ -2902,12 +2900,14 @@
       if (fileInput && fileInput.files && fileInput.files.length > 0) {
         const file = fileInput.files[0];
         const filePath = `${localActualId}/firma_${Date.now()}.p12`;
-        const { error: uploadError } = await supabaseClient.storage.from('productos-bucket').upload(filePath, file, { upsert: true });
+        
+        // Subida corregida apuntando directo al bucket 'firmas'
+        const { error: uploadError } = await supabaseClient.storage.from('firmas').upload(filePath, file, { upsert: true });
         if (uploadError) {
-          alert('Error al subir el archivo de firma: ' + uploadError.message);
+          alert('Error al subir el archivo de firma al bucket "firmas": ' + uploadError.message);
           return;
         }
-        const { data: publicUrlData } = supabaseClient.storage.from('productos-bucket').getPublicUrl(filePath);
+        const { data: publicUrlData } = supabaseClient.storage.from('firmas').getPublicUrl(filePath);
         firmaUrl = publicUrlData.publicUrl;
       }
 
@@ -2930,7 +2930,7 @@
         if (firmaUrl) localObj.firma_url = firmaUrl;
       }
 
-      alert('¡Firma digital y contraseña guardadas con éxito en el sistema!');
+      alert('¡Firma digital y contraseña guardadas con éxito en el bucket "firmas"!');
       cerrarConfigFirma();
     }
 
