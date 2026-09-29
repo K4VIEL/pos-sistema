@@ -5,6 +5,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
 const forge = require('node-forge');
+const nodemailer = require('nodemailer');
 
 const app = express();
 
@@ -43,9 +44,20 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+// Configuración de Nodemailer usando Zoho con las variables de entorno de Render
+const transporter = nodemailer.createTransport({
+    host: 'smtp.zoho.com',
+    port: 465,
+    secure: true, // true para puerto 465
+    auth: {
+        user: process.env.ZOHO_USER,
+        pass: process.env.ZOHO_PASS
+    }
+});
+
 app.post('/api/emitir-factura', async (req, res) => {
     try {
-        const { ventaId, localId } = req.body;
+        const { ventaId, localId, correoCliente } = req.body;
 
         if (!ventaId || !localId) {
             return res.status(400).json({ success: false, message: "Faltan datos: ventaId o localId son requeridos." });
@@ -128,9 +140,24 @@ app.post('/api/emitir-factura', async (req, res) => {
             return res.json({ success: false, message: "No se pudo extraer la llave privada del certificado .p12." });
         }
 
+        // Envío de correo electrónico automático vía Zoho si se proporciona un correo
+        if (correoCliente) {
+            try {
+                await transporter.sendMail({
+                    from: `"Multi-Servicios" <${process.env.ZOHO_USER}>`,
+                    to: correoCliente,
+                    subject: `Comprobante Electrónico - Clave de Acceso: ${claveAccesoFinal}`,
+                    text: `Estimado cliente, adjuntamos el detalle de su comprobante electrónico.\n\nClave de Acceso: ${claveAccesoFinal}\n\nGracias por preferirnos.`
+                });
+                console.log(`Correo de factura enviado exitosamente a: ${correoCliente}`);
+            } catch (mailError) {
+                console.error("Advertencia: No se pudo enviar el correo, pero la factura fue firmada:", mailError);
+            }
+        }
+
         return res.json({
             success: true,
-            mensaje: "Factura firmada con éxito",
+            mensaje: "Factura firmada y correo enviado con éxito",
             claveAcceso: claveAccesoFinal
         });
 
@@ -148,3 +175,4 @@ const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
     console.log(`Servidor seguro corriendo en el puerto ${PORT}`);
 });
+ñ
