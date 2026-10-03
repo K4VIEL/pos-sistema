@@ -210,6 +210,26 @@
     
     .item-anulado { text-decoration: line-through; color: var(--danger); background-color: var(--bg); }
 
+    /* ESTILOS ESTADO SRI */
+    .sri-status-card {
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border: 1px solid var(--border);
+      background: rgba(239, 68, 68, 0.05);
+    }
+    .sri-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+    .sri-dot.ok { background-color: #22c55e; box-shadow: 0 0 6px #22c55e; }
+    .sri-dot.fail { background-color: #ef4444; box-shadow: 0 0 6px #ef4444; }
+
     /* ESTILOS DE LA BARRA DE TOTALES EN POS CARRITO */
     .pos-cart-totals-panel {
       margin-top: 10px;
@@ -325,40 +345,66 @@
     .whatsapp-flotante-tienda:hover { transform: scale(1.1); }
 
     /* =========================================================
-       REGLA DE AISLAMIENTO: TODOS LOS MODALES Y REPORTES EN MODO CLARO
+       CORRECCIÓN TÉCNICA DEFINITIVA DE IMPRESIÓN PARA TICKET 72MM
        ========================================================= */
     #factura-impresion,
-    #factura-impresion *,
-    #modal-detalle-arqueo .modal-box,
-    #modal-detalle-arqueo .modal-box *,
-    #modal-detalle-pedido-web .modal-box,
-    #modal-detalle-pedido-web .modal-box * {
+    #factura-impresion * {
       color: #000000 !important;
     }
 
     #factura-impresion .modal-ticket-box,
-    #modal-detalle-arqueo .modal-box,
-    #modal-detalle-pedido-web .modal-box,
     #factura-impresion table,
     #factura-impresion th,
-    #factura-impresion td,
-    #modal-detalle-arqueo table,
-    #modal-detalle-arqueo th,
-    #modal-detalle-arqueo td,
-    #modal-detalle-pedido-web table,
-    #modal-detalle-pedido-web th,
-    #modal-detalle-pedido-web td,
-    #modal-ped-info-cliente {
+    #factura-impresion td {
       background-color: #ffffff !important;
       color: #000000 !important;
-      border-color: #cbd5e1 !important;
+      border-color: #000000 !important;
     }
 
     @media print {
-      body * { visibility: hidden; }
-      #factura-impresion, #factura-impresion * { visibility: visible; }
-      #factura-impresion { position: absolute; left: 0; top: 0; width: 100%; max-width: 300px; padding: 10px; color: #000 !important; background: #fff !important; }
-      .no-print { display: none !important; }
+      @page {
+        size: 72mm auto;
+        margin: 0mm !important;
+      }
+
+      html, body {
+        width: 72mm !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #ffffff !important;
+        overflow: visible !important;
+      }
+
+      /* Ocultar absolutamente todo el resto del documento */
+      body > *:not(#factura-impresion) {
+        display: none !important;
+      }
+
+      #factura-impresion {
+        display: block !important;
+        position: static !important;
+        width: 72mm !important;
+        max-width: 72mm !important;
+        margin: 0 auto !important;
+        padding: 0 !important;
+        background: #ffffff !important;
+        box-shadow: none !important;
+        inset: auto !important;
+      }
+
+      #factura-impresion .modal-ticket-box {
+        width: 72mm !important;
+        max-width: 72mm !important;
+        padding: 2mm 3mm !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+        border-radius: 0 !important;
+      }
+
+      .no-print {
+        display: none !important;
+      }
     }
   </style>
 </head>
@@ -621,7 +667,7 @@
               </div>
             </div>
 
-            <!-- TABLA DEL CARRITO CON COLUMNA DE ELECCIÓN DE PRECIOS POR PRODUCTO -->
+            <!-- TABLA DEL CARRITO -->
             <div class="table-responsive" id="contenedor-tabla-carrito" style="max-height: 220px; overflow-y: auto; margin-top:5px; border: 1px solid var(--border); border-radius: 8px;">
               <table>
                 <thead>
@@ -637,7 +683,7 @@
               </table>
             </div>
 
-            <!-- SECCIÓN: DESCUENTO, PROPINA, TOTAL Y NOTA -->
+            <!-- TOTALES Y OPCIONES -->
             <div class="pos-cart-totals-panel">
               <div class="pos-cart-row-fields">
                 <div class="pos-input-group">
@@ -731,6 +777,38 @@
 
       <!-- VISTA FACTURAS -->
       <section id="vista-facturas" class="page-section" style="display: none;">
+        <div class="card" id="panel-estado-sri" style="margin-bottom: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <div>
+              <h3 style="margin: 0; font-size: 1.05rem;">Estado SRI</h3>
+              <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;">Disponibilidad de los servicios de recepción y autorización de comprobantes electrónicos</p>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="verificarEstadoSRI()" style="margin:0; padding: 4px 10px; font-size: 0.75rem;">🔄 Verificar</button>
+          </div>
+
+          <div class="form-row" style="margin-bottom: 10px;">
+            <div class="sri-status-card" id="card-recepcion-sri">
+              <span class="sri-dot fail" id="dot-recepcion-sri"></span>
+              <div>
+                <span style="font-size: 0.7rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">RECEPCIÓN</span>
+                <div style="font-size: 0.85rem; font-weight: bold; color: var(--danger);" id="txt-recepcion-sri">✕ NO DISPONIBLE <small style="font-weight: normal; color: var(--text-muted);">(Producción)</small></div>
+              </div>
+            </div>
+
+            <div class="sri-status-card" id="card-autorizacion-sri">
+              <span class="sri-dot fail" id="dot-autorizacion-sri"></span>
+              <div>
+                <span style="font-size: 0.7rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">AUTORIZACIÓN</span>
+                <div style="font-size: 0.85rem; font-weight: bold; color: var(--danger);" id="txt-autorizacion-sri">✕ NO DISPONIBLE <small style="font-weight: normal; color: var(--text-muted);">(Producción)</small></div>
+              </div>
+            </div>
+          </div>
+
+          <div id="alerta-intermitencia-sri" style="text-align: center; color: var(--danger); font-weight: 700; font-size: 0.85rem; padding: 6px 10px; background: rgba(239, 68, 68, 0.1); border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.2);">
+            🔴 ¡El SRI se encuentra intermitente, es posible que sus facturas no se autoricen!
+          </div>
+        </div>
+
         <div class="card">
           <h3 style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 12px;">Historial de Facturas y Comprobantes</h3>
           <div class="form-row" style="margin-bottom: 15px; display: flex; gap: 10px; align-items: center;">
@@ -744,7 +822,7 @@
           </div>
           <div class="table-responsive">
             <table>
-              <thead><tr><th>ID</th><th>Cliente</th><th>Fecha</th><th>Punto</th><th>Tipo</th><th>Total</th><th>Método</th><th>Acciones</th></tr></thead>
+              <thead><tr><th>Comprobante #</th><th>Cliente</th><th>Fecha</th><th>Punto</th><th>Clave Acceso / N° Autorización</th><th>Estado SRI</th><th>Total</th><th>Método</th><th style="text-align:center;">Acciones</th></tr></thead>
               <tbody id="tabla-facturas-body"></tbody>
             </table>
           </div>
@@ -887,11 +965,10 @@
         </div>
       </section>
 
-      <!-- VISTA INVENTARIO (CON GESTIÓN DE CATEGORÍAS) -->
+      <!-- VISTA INVENTARIO -->
       <section id="vista-inventario" class="page-section">
-        <!-- GESTIÓN DE CATEGORÍAS DEL LOCAL -->
         <div class="card" style="border-left: 4px solid var(--primary);">
-          <h3 style="margin-bottom: 6px; font-size: 1.1rem;">🏷️ Gestión de Categorías Opcionales</h3>
+          <h3 style="margin-bottom: 6px; font-size: 1.1rem;">🏷 Gestión de Categorías Opcionales</h3>
           <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px;">Crea categorías personalizadas para tu tienda (ej: Snacks, Galletas, Bebidas). Si no creas ninguna, tus productos se registrarán sin categoría.</p>
           <div style="display: flex; gap: 8px; margin-bottom: 10px;">
             <input type="text" id="input-nueva-categoria" placeholder="Nombre de la nueva categoría (Ej: Snacks)..." style="margin:0; padding: 8px;">
@@ -955,6 +1032,14 @@
                 <option value="unidad">Unidad (ud)</option>
                 <option value="Kilo">Kilo (kg)</option>
                 <option value="Libra">Libra (lb)</option>
+              </select>
+            </div>
+            <div>
+              <label>IVA</label>
+              <select id="inv-iva">
+                <option value="">Según el local</option>
+                <option value="0">0%</option>
+                <option value="15">15%</option>
               </select>
             </div>
             <div><label>Stock Inicial</label><input type="number" step="0.01" id="inv-stock" placeholder="Ej: 20"></div>
@@ -1170,58 +1255,78 @@
     </main>
   </div>
 
-  <!-- COMPROBANTE DE IMPRESIÓN FORZADO EN BLANCO Y NEGRO -->
+  <!-- COMPROBANTE DE IMPRESIÓN FORZADO A MEDIDA DE TICKET EXACTA (72MM CONTINUO) -->
   <div id="factura-impresion" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:30000; align-items:center; justify-content:center; overflow-y:auto; padding:20px;">
-    <div class="modal-ticket-box" style="max-width: 320px; width: 100%; margin: auto; font-family: monospace; font-size: 12px; color: #000000 !important; background: #ffffff !important; padding: 15px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
-      <div style="text-align: center; line-height: 1.3; color: #000000 !important;">
-        <h3 id="fac-local-nombre" style="margin: 0; font-size: 14px; font-weight: bold; color: #000000 !important;"></h3>
-        <p style="margin: 2px 0; color: #000000 !important;" id="fac-propietario"></p>
-        <p style="margin: 2px 0; color: #000000 !important;">RUC: <span id="fac-ruc"></span></p>
-        <p style="margin: 2px 0; font-size: 11px; color: #000000 !important;" id="fac-dir"></p>
-        <p style="margin: 2px 0; font-size: 11px; color: #000000 !important;">Obligado contabilidad: <span id="fac-contabilidad">NO</span></p>
-        <p style="margin: 2px 0; color: #000000 !important;">Usuario Venta: <span id="fac-usuario"></span></p>
+    <div class="modal-ticket-box" style="max-width: 280px; width: 100%; margin: auto; font-family: monospace; font-size: 11px; color: #000000 !important; background: #ffffff !important; padding: 10px; border-radius: 6px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+      
+      <!-- ENCABEZADO TOTALMENTE DINÁMICO DESDE LA SUCURSAL REGISTRADA -->
+      <div style="text-align: center; line-height: 1.25; color: #000000 !important;">
+        <h3 id="fac-local-nombre" style="margin: 0; font-size: 14px; font-weight: bold; color: #000000 !important; text-transform: uppercase;">-</h3>
+        <p style="margin: 2px 0; font-weight: bold; color: #000000 !important;">RUC: <span id="fac-ruc">-</span></p>
+        <p style="margin: 2px 0; font-size: 9.5px; color: #000000 !important;" id="fac-dir">-</p>
+        <p style="margin: 2px 0; font-size: 9.5px; color: #000000 !important;">Obligado contabilidad: <span id="fac-contabilidad">NO</span></p>
+        <p style="margin: 2px 0; font-size: 9.5px; color: #000000 !important;">Usuario Venta: <span id="fac-usuario">-</span></p>
+        <p style="margin: 3px 0; font-size: 9px; font-weight: bold; color: #000000 !important;" id="fac-regimen">CONTRIBUYENTE NEGOCIO POPULAR - RÉGIMEN RIMPE</p>
       </div>
-      <div style="margin-top: 8px; border-top: 1px dashed #000000; border-bottom: 1px dashed #000000; padding: 5px 0; line-height: 1.3; color: #000000 !important;">
-        <p style="margin: 2px 0; font-weight: bold; color: #000000 !important;">Comprobante #: <span id="fac-id"></span></p>
-        <p style="margin: 2px 0; font-size: 11px; color: #000000 !important;">Fecha Emisión: <span id="fac-fecha"></span></p>
+      
+      <div style="margin-top: 6px; border-top: 1px dashed #000000; border-bottom: 1px dashed #000000; padding: 4px 0; line-height: 1.25; color: #000000 !important; text-align: center;">
+        <p style="margin: 2px 0; font-weight: bold; font-size: 12px; color: #000000 !important;">Factura #: <span id="fac-id">001-100-000000000</span></p>
+        <p style="margin: 2px 0; font-size: 10px; color: #000000 !important;">Fecha Emisión: <span id="fac-fecha">-</span></p>
+        <p style="margin: 2px 0; font-size: 9px; color: #000000 !important;">Número de autorización:</p>
+        <p style="margin: 1px 0; font-size: 8.5px; word-break: break-all; font-weight: bold; color: #000000 !important;" id="fac-clave-acceso">-</p>
+        <p style="margin: 2px 0; font-size: 9px; color: #000000 !important;">Ambiente: <span id="fac-ambiente">Producción</span></p>
       </div>
-      <div style="margin-top: 5px; line-height: 1.3; font-size: 11px; color: #000000 !important;">
+
+      <!-- DATOS DINÁMICOS DEL CLIENTE -->
+      <div style="margin-top: 4px; line-height: 1.25; font-size: 10px; color: #000000 !important; text-align: center;">
         <p style="margin: 2px 0; color: #000000 !important;"><b>Cliente:</b> <span id="fac-cliente">CONSUMIDOR FINAL</span></p>
         <p style="margin: 2px 0; color: #000000 !important;"><b>RUC/CI:</b> <span id="fac-cedula">9999999999999</span></p>
       </div>
-      <hr style="border: none; border-top: 1px dashed #000000; margin: 6px 0;">
-      <table style="width: 100%; font-size: 11px; border-collapse: collapse; color: #000000 !important; background-color: #ffffff !important;">
+
+      <hr style="border: none; border-top: 1px dashed #000000; margin: 4px 0;">
+      
+      <table style="width: 100%; font-size: 10px; border-collapse: collapse; color: #000000 !important; background-color: #ffffff !important;">
         <thead>
           <tr style="border-bottom: 1px solid #000000;">
-            <th style="text-align: left; padding-bottom: 3px; color: #000000 !important; background-color: #ffffff !important;">Cant.</th>
-            <th style="text-align: left; padding-bottom: 3px; color: #000000 !important; background-color: #ffffff !important;">Descripción</th>
-            <th style="text-align: right; padding-bottom: 3px; color: #000000 !important; background-color: #ffffff !important;">P.Unit</th>
-            <th style="text-align: right; padding-bottom: 3px; color: #000000 !important; background-color: #ffffff !important;">Total</th>
+            <th style="text-align: left; padding-bottom: 2px; color: #000000 !important; background-color: #ffffff !important; width: 15%;">Cant.</th>
+            <th style="text-align: left; padding-bottom: 2px; color: #000000 !important; background-color: #ffffff !important;">Precio U.</th>
+            <th style="text-align: right; padding-bottom: 2px; color: #000000 !important; background-color: #ffffff !important;">Desc.</th>
+            <th style="text-align: right; padding-bottom: 2px; color: #000000 !important; background-color: #ffffff !important;">SubTotal</th>
           </tr>
         </thead>
         <tbody id="fac-items" style="background-color: #ffffff !important;"></tbody>
       </table>
-      <hr style="border: none; border-top: 1px dashed #000000; margin: 6px 0;">
-      <div style="text-align: right; font-size: 12px; line-height: 1.4; color: #000000 !important;">
+
+      <hr style="border: none; border-top: 1px dashed #000000; margin: 4px 0;">
+
+      <div style="text-align: right; font-size: 10.5px; line-height: 1.3; color: #000000 !important;">
+        <p style="margin: 2px 0; color: #000000 !important;">Subtotal 0%: $<span id="fac-subtotal-0">0.00</span></p>
+        <div id="fac-iva-extra"></div>
         <p style="margin: 2px 0; color: #000000 !important;">Subtotal: $<span id="fac-subtotal">0.00</span></p>
         <p style="margin: 2px 0; color: #000000 !important; display: none;" id="fac-row-descuento">Descuento: -$<span id="fac-descuento">0.00</span></p>
         <p style="margin: 2px 0; color: #000000 !important; display: none;" id="fac-row-propina">Propina: +$<span id="fac-propina">0.00</span></p>
-        <p style="margin: 2px 0; font-weight: bold; font-size: 13px; color: #000000 !important;">TOTAL: $<span id="fac-total">0.00</span></p>
+        <p style="margin: 2px 0; font-weight: bold; font-size: 12px; color: #000000 !important;">TOTAL: $<span id="fac-total">0.00</span></p>
       </div>
-      <div id="fac-container-nota" style="display: none; border-top: 1px dashed #000000; margin-top: 6px; padding-top: 4px; font-size: 10px; color: #000000 !important;">
+
+      <div id="fac-container-nota" style="display: none; border-top: 1px dashed #000000; margin-top: 4px; padding-top: 3px; font-size: 9.5px; color: #000000 !important;">
         <p style="margin: 2px 0; color: #000000 !important;"><b>Nota:</b> <span id="fac-nota"></span></p>
       </div>
-      <hr style="border: none; border-top: 1px dashed #000000; margin: 6px 0;">
-      <div style="font-size: 11px; line-height: 1.3; color: #000000 !important;">
+
+      <hr style="border: none; border-top: 1px dashed #000000; margin: 4px 0;">
+
+      <div style="font-size: 10px; line-height: 1.25; color: #000000 !important;">
         <p style="margin: 2px 0; font-weight: bold; color: #000000 !important;">FORMA DE PAGO:</p>
-        <p style="margin: 2px 0; color: #000000 !important;">Pago <span id="fac-metodo">Efectivo</span></p>
+        <p style="margin: 2px 0; color: #000000 !important;">Pago <span id="fac-metodo">efectivo</span> $<span id="fac-pago-monto">0.00</span></p>
       </div>
-      <div style="text-align: center; margin-top: 10px; font-size: 10px; color: #000000 !important;">
-        <p style="margin: 2px 0; color: #000000 !important;">Gracias por su compra</p>
-        <p style="margin: 2px 0; color: #000000 !important;" id="fac-leyenda-doc">Documento electrónico autorizado</p>
+
+      <hr style="border: none; border-top: 1px dashed #000000; margin: 4px 0;">
+
+      <div style="text-align: center; margin-top: 4px; font-size: 9px; color: #000000 !important; line-height: 1.2;">
+        <p style="margin: 2px 0; font-weight: bold; color: #000000 !important;">Gracias por su compra</p>
       </div>
-      <div class="no-print" style="margin-top: 15px; display: flex; gap: 8px;">
-        <button class="btn btn-primary" style="flex:1; margin:0;" onclick="window.print()">Imprimir</button>
+
+      <div class="no-print" style="margin-top: 12px; display: flex; gap: 8px;">
+        <button class="btn btn-primary" style="flex:1; margin:0;" onclick="imprimirSoloTicket()">Imprimir Ticket</button>
         <button class="btn btn-danger" style="flex:1; margin:0;" onclick="document.getElementById('factura-impresion').style.display='none'">Cerrar</button>
       </div>
     </div>
@@ -1231,6 +1336,8 @@
     const SUPABASE_URL = 'https://ycwuzqjwmzhynhjawnqd.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inljd3V6cWp3bXpoeW5oamF3bnFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcxNzUyNjQsImV4cCI6MjEwMjc1MTI2NH0.AuU9Us6BdYDTy2np4iJY9ltCFicVbIUtQ4D7FNDgIfM';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    // URL pública de tu backend de facturación (Render). Ej: https://backend-sri.onrender.com
+    const SRI_API_URL = 'https://pos-sistema-y075.onrender.com/';
 
     let dbLocales = [];
     let dbUsuarios = [];
@@ -1254,11 +1361,18 @@
     let intervaloMonitoreoPedidos = null;
     let ultimaCantidadPendientes = -1;
 
+    let estadoSriServicios = { recepcion: false, autorizacion: false };
+
+    /* IMPRESIÓN DIRECTA SIN CORTAR ENCABEZADO NI GENERAR PÁGINAS BLANCAS */
+    function imprimirSoloTicket() {
+      window.print();
+    }
+
     function inicializarTema() {
       const temaGuardado = localStorage.getItem('pos_theme') || 'dark';
       document.body.setAttribute('data-theme', temaGuardado);
       const btnTema = document.getElementById('btn-tema');
-      if (btnTema) btnTema.innerText = temaGuardado === 'dark' ? '☀' : '🌙';
+      if (btnTema) btnTema.innerText = temaGuardado === 'dark' ? '☀️' : '🌙';
     }
 
     function toggleTema() {
@@ -1320,6 +1434,7 @@
             id: l.id, nombre: l.nombre, direccion: l.direccion, ruc: l.ruc || '',
             propietario: l.propietario || '', whatsapp: l.whatsapp || '', obligadoContabilidad: l.obligado_contabilidad || 'NO',
             deuna_api_key: l.deuna_api_key || '', deuna_secret: l.deuna_secret || '',
+            sriAmbiente: l.sri_ambiente || '1', ivaDefecto: Number(l.iva_defecto || 0), preciosIncluyenIva: l.precios_incluyen_iva !== false,
             suscripcionActiva: l.suscripcion_active !== false && l.suscripcion_activa !== false, fechaVencimiento: l.fecha_vencimiento || null
           }));
         }
@@ -1344,7 +1459,8 @@
             precio_familia: parseFloat(p.precio_familia) || parseFloat(p.precio) || 0,
             precio_mayorista: parseFloat(p.precio_mayorista) || parseFloat(p.precio) || 0,
             unidad_medida: p.unidad || p.unidad_medida || 'unidad',
-            stock: parseFloat(p.stock) || 0, visibleWeb: p.visible_web === true, imagenUrl: p.imagen_url || ''
+            stock: parseFloat(p.stock) || 0, visibleWeb: p.visible_web === true, imagenUrl: p.imagen_url || '',
+            iva: (p.iva === null || p.iva === undefined) ? null : parseFloat(p.iva)
           })).reverse();
         }
 
@@ -1359,7 +1475,8 @@
             metodoPago: v.metodo_pago || v.metodoPago, fecha: v.fecha, items: v.items || [], total: v.total,
             subtotal: v.subtotal || v.total, descuento: v.descuento || 0, propina: v.propina || 0, nota: v.nota || '',
             usuario: v.usuario || '', tipo_comprobante: v.tipo_comprobante || '', estado_sri: v.estado_sri || '',
-            punto_emision: v.punto_emision || '', claveAcceso: v.clave_acceso || v.claveAcceso || ''
+            punto_emision: v.punto_emision || '', claveAcceso: v.clave_acceso || v.claveAcceso || '',
+            numeroComprobante: v.numero_comprobante || '', numeroAutorizacion: v.numero_autorizacion || '', fechaAutorizacion: v.fecha_autorizacion || ''
           })).sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
         }
 
@@ -1431,7 +1548,8 @@
           metodoPago: v.metodo_pago || '', fecha: v.fecha, items: v.items || [], total: v.total,
           subtotal: v.subtotal || v.total, descuento: v.descuento || 0, propina: v.propina || 0, nota: v.nota || '',
           usuario: v.usuario || '', tipo_comprobante: v.tipo_comprobante || '', estado_sri: v.estado_sri || '',
-          punto_emision: v.punto_emision || ''
+          punto_emision: v.punto_emision || '', claveAcceso: v.clave_acceso || '',
+          numeroComprobante: v.numero_comprobante || '', numeroAutorizacion: v.numero_autorizacion || '', fechaAutorizacion: v.fecha_autorizacion || ''
         })).sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
       }
 
@@ -1537,7 +1655,7 @@
 
       if (esUsuarioMatriz() || esDuenoLocal()) {
         html += `
-            <button class="nav-btn" onclick="abrirConfigFirma()">
+            <button class="nav-btn" id="btn-nav-firma" onclick="abrirConfigFirma()">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
                 <span>Firma</span>
             </button>
@@ -1585,8 +1703,10 @@
     async function cambiarVista(vista) {
       document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+      
       const sec = document.getElementById(`vista-${vista}`);
       if(sec) sec.classList.add('active');
+      
       const btnNav = document.getElementById(`btn-nav-${vista}`);
       if(btnNav) btnNav.classList.add('active');
 
@@ -1596,7 +1716,7 @@
       if (vista === 'contabilidad') renderContabilidadFlujo();
       if (vista === 'kardex') renderKardex();
       if (vista === 'clientes') renderClientes();
-      if (vista === 'facturas') cargarFacturas();
+      if (vista === 'facturas') { cargarFacturas(); verificarEstadoSRI(); }
       if (vista === 'inventario') { poblarSelectCategoriasInventario(); renderizarCategoriasGestor(); renderInventario(); }
       if (vista === 'historial') renderHistorial();
       if (vista === 'reportes') prepararVistaReportes();
@@ -1805,6 +1925,8 @@
         cantidad: cantidad, 
         unidad: unidad, 
         tipoPrecio: tipoActual,
+        iva: prod.iva ?? null,
+        codigo: prod.codigo || '',
         anulado: false 
       });
       renderizarCarritosTabs();
@@ -1986,13 +2108,12 @@
         const localObj = dbLocales.find(l => String(l.id) === localActualId);
         const localNombre = localObj ? localObj.nombre : 'Mi Tienda';
 
-        const ventaIdGenerado = 'FAC-' + Date.now().toString().slice(-5);
+        const ventaIdGenerado = '001-100-' + Date.now().toString().slice(-9).padStart(9, '0');
         const tipoComprobanteVal = esFacturaSri ? 'FACTURA_PENDIENTE_SRI' : 'NOTA_VENTA_LOCAL';
         const estadoSriVal = esFacturaSri ? 'PENDIENTE' : 'LOCAL';
         const puntoEmisionVal = document.getElementById('punto-emision')?.value || "001-100";
-        const claveAccesoVal = esFacturaSri ? "3108202601" + ventaIdGenerado : "NOTA-" + ventaIdGenerado;
+        const claveAccesoVal = ''; // la clave de acceso real (módulo 11) la genera el backend al emitir
 
-        // Intento 1: Campos completos
         const ventaSupabaseCompleta = {
           id: ventaIdGenerado,
           local_id: localActualId,
@@ -2016,7 +2137,6 @@
 
         let { error } = await supabaseClient.from('ventas').insert([ventaSupabaseCompleta]);
 
-        // Intento 2: Fallback si la BD no tiene las columnas adicionales en el esquema
         if (error && error.message.includes('column')) {
           const ventaSupabaseBasica = {
             id: ventaIdGenerado,
@@ -2060,13 +2180,14 @@
           usuario: usuarioActual ? usuarioActual.user : 'Cajero',
           tipo_comprobante: tipoComprobanteVal,
           estado_sri: estadoSriVal,
-          punto_emision: puntoEmisionVal
+          punto_emision: puntoEmisionVal,
+          claveAcceso: claveAccesoVal
         };
 
         dbVentas.unshift(ventaLocal);
+        if (esFacturaSri && !error) await emitirFacturaSri(ventaLocal.id, localActualId);
         mostrarFactura(ventaLocal);
 
-        // Limpiar carrito activo
         carritos = carritos.filter(c => c.id !== cart.id);
         if (carritos.length === 0) carritos.push({ id: Date.now(), nombre: 'Principal 1', items: [], descuento: 0, propina: 0, nota: '' });
         carritoActivoId = carritos[0].id;
@@ -2077,35 +2198,75 @@
       }
     }
 
+    /* MAPEO DINÁMICO DESDE LA BASE DE DATOS DEL LOCAL */
     function mostrarFactura(v) {
       const localInfo = dbLocales.find(l => String(l.id) === String(v.localId || v.local_id)) || {};
-      document.getElementById('fac-local-nombre').innerText = localInfo.nombre || v.localNombre || 'SUCURSAL';
-      document.getElementById('fac-propietario').innerText = localInfo.propietario || '';
+      
+      document.getElementById('fac-local-nombre').innerText = localInfo.nombre || v.localNombre || 'MI LOCAL';
       document.getElementById('fac-ruc').innerText = localInfo.ruc || 'S/N';
       document.getElementById('fac-dir').innerText = 'Dir: ' + (localInfo.direccion || 'S/N');
       document.getElementById('fac-contabilidad').innerText = localInfo.obligadoContabilidad || 'NO';
-      document.getElementById('fac-usuario').innerText = v.usuario || usuarioActual?.user || '';
-      document.getElementById('fac-id').innerText = v.id;
-      document.getElementById('fac-fecha').innerText = new Date(v.fecha).toLocaleString();
-      document.getElementById('fac-cliente').innerText = v.cliente_nombre || v.clienteNombre || 'Consumidor Final';
-      document.getElementById('fac-cedula').innerText = v.cliente_cedula || v.clienteCedula || '9999999999001';
-      document.getElementById('fac-metodo').innerText = v.metodo_pago || v.metodoPago || 'Efectivo';
+      document.getElementById('fac-usuario').innerText = v.usuario || usuarioActual?.user || 'GERENTE';
       
-      document.getElementById('fac-items').innerHTML = (v.items || []).map(i => `
-        <tr class="${i.anulado ? 'item-anulado' : ''}">
-          <td style="color:#000000 !important; background-color: #ffffff !important;">${i.cantidad} ${i.unidad ? i.unidad.substring(0,2) : ''}</td>
-          <td style="color:#000000 !important; background-color: #ffffff !important;">${i.nombre} ${i.anulado ? '<small><b>[ANULADO]</b></small>' : ''}</td>
-          <td style="text-align: right; color:#000000 !important; background-color: #ffffff !important;">$${Number(i.precio).toFixed(2)}</td>
-          <td style="text-align: right; color:#000000 !important; background-color: #ffffff !important;">$${(i.cantidad * i.precio).toFixed(2)}</td>
-        </tr>
-      `).join('');
+      let numFac = v.numeroComprobante || v.id || '001-100-000000000';
+      if (!numFac.includes('-')) {
+        let pEmision = v.punto_emision || '001-100';
+        let numSec = (v.id || '').replace(/\D/g, '').padStart(9, '0');
+        numFac = `${pEmision}-${numSec}`;
+      }
+      document.getElementById('fac-id').innerText = numFac;
+      
+      const fechaObj = v.fecha ? new Date(v.fecha) : new Date();
+      const fechaFormateada = fechaObj.getFullYear() + '-' +
+        String(fechaObj.getMonth() + 1).padStart(2, '0') + '-' +
+        String(fechaObj.getDate()).padStart(2, '0') + ' ' +
+        String(fechaObj.getHours()).padStart(2, '0') + ':' +
+        String(fechaObj.getMinutes()).padStart(2, '0') + ':' +
+        String(fechaObj.getSeconds()).padStart(2, '0');
+      document.getElementById('fac-fecha').innerText = fechaFormateada;
+
+      const claveReal = v.claveAcceso || v.clave_acceso || '';
+      let textoAut;
+      if (v.numeroAutorizacion) textoAut = v.numeroAutorizacion;
+      else if (v.tipo_comprobante === 'NOTA_VENTA_LOCAL') textoAut = 'NOTA DE VENTA - SIN VALIDEZ TRIBUTARIA';
+      else textoAut = (claveReal.length === 49 ? claveReal + ' ' : '') + '(PENDIENTE DE AUTORIZACIÓN)';
+      document.getElementById('fac-clave-acceso').innerText = textoAut;
+      document.getElementById('fac-ambiente').innerText = localInfo.sriAmbiente === '2' ? 'Producción' : 'Pruebas';
+
+      document.getElementById('fac-cliente').innerText = v.cliente_nombre || v.clienteNombre || 'CONSUMIDOR FINAL';
+      document.getElementById('fac-cedula').innerText = v.cliente_cedula || v.clienteCedula || '9999999999999';
+      document.getElementById('fac-metodo').innerText = (v.metodo_pago || v.metodoPago || 'Efectivo').toLowerCase();
+      
+      document.getElementById('fac-items').innerHTML = (v.items || []).map(i => {
+        const cant = Number(i.cantidad || 1);
+        const precioU = Number(i.precio || 0);
+        const desc = 0.00;
+        const sub = cant * precioU;
+        return `
+          <tr class="${i.anulado ? 'item-anulado' : ''}">
+            <td colspan="4" style="padding-top:4px; font-weight:bold; color:#000000 !important;">${i.nombre} ${i.anulado ? '<small>[ANULADO]</small>' : ''}</td>
+          </tr>
+          <tr class="${i.anulado ? 'item-anulado' : ''}" style="border-bottom: 1px dashed #cbd5e1;">
+            <td style="color:#000000 !important;">${cant}</td>
+            <td style="color:#000000 !important;">${precioU.toFixed(2)}</td>
+            <td style="text-align: right; color:#000000 !important;">${desc.toFixed(2)}</td>
+            <td style="text-align: right; font-weight:bold; color:#000000 !important;">${sub.toFixed(2)}</td>
+          </tr>
+        `;
+      }).join('');
 
       let subtotalVal = Number(v.subtotal !== undefined ? v.subtotal : v.total);
       let descVal = Number(v.descuento || 0);
       let propVal = Number(v.propina || 0);
       let totalVal = Number(v.total);
 
-      document.getElementById('fac-subtotal').innerText = subtotalVal.toFixed(2);
+      const dz = desgloseIvaTicket(v, localInfo);
+      const baseSin = Object.values(dz).reduce((s, t) => s + t.base, 0);
+      document.getElementById('fac-subtotal-0').innerText = (dz[0] ? dz[0].base : 0).toFixed(2);
+      document.getElementById('fac-iva-extra').innerHTML = Object.keys(dz).filter(k => Number(k) > 0).map(k =>
+        `<p style="margin:2px 0; color:#000000 !important;">Subtotal ${k}%: $${dz[k].base.toFixed(2)}</p><p style="margin:2px 0; color:#000000 !important;">IVA ${k}%: $${dz[k].iva.toFixed(2)}</p>`).join('');
+      document.getElementById('fac-subtotal').innerText = baseSin.toFixed(2);
+      document.getElementById('fac-pago-monto').innerText = totalVal.toFixed(2);
 
       const rowDesc = document.getElementById('fac-row-descuento');
       if (descVal > 0) {
@@ -2136,7 +2297,66 @@
       document.getElementById('factura-impresion').style.display = 'flex';
     }
 
-    // --- GESTIÓN DE CATEGORÍAS DEL LOCAL ---
+    async function verificarEstadoSRI() {
+      try {
+        const res = await fetch('https://pos-sistema-y075.onrender.com/api/sri/estado').catch(() => null);
+        if (res && res.ok) {
+          const data = await res.json();
+          estadoSriServicios.recepcion = data.recepcion === true;
+          estadoSriServicios.autorizacion = data.autorizacion === true;
+        } else {
+          estadoSriServicios.recepcion = false;
+          estadoSriServicios.autorizacion = false;
+        }
+      } catch (e) {
+        estadoSriServicios.recepcion = false;
+        estadoSriServicios.autorizacion = false;
+      }
+      actualizarInterfazEstadoSRI();
+    }
+
+    function actualizarInterfazEstadoSRI() {
+      const dotRec = document.getElementById('dot-recepcion-sri');
+      const txtRec = document.getElementById('txt-recepcion-sri');
+      const cardRec = document.getElementById('card-recepcion-sri');
+
+      const dotAut = document.getElementById('dot-autorizacion-sri');
+      const txtAut = document.getElementById('txt-autorizacion-sri');
+      const cardAut = document.getElementById('card-autorizacion-sri');
+
+      const alerta = document.getElementById('alerta-intermitencia-sri');
+
+      if (estadoSriServicios.recepcion) {
+        dotRec.className = 'sri-dot ok';
+        txtRec.innerHTML = `✓ DISPONIBLE <small style="font-weight: normal; color: var(--text-muted);">(Producción)</small>`;
+        txtRec.style.color = 'var(--success)';
+        cardRec.style.background = 'rgba(34, 197, 94, 0.05)';
+      } else {
+        dotRec.className = 'sri-dot fail';
+        txtRec.innerHTML = `✕ NO DISPONIBLE <small style="font-weight: normal; color: var(--text-muted);">(Producción)</small>`;
+        txtRec.style.color = 'var(--danger)';
+        cardRec.style.background = 'rgba(239, 68, 68, 0.05)';
+      }
+
+      if (estadoSriServicios.autorizacion) {
+        dotAut.className = 'sri-dot ok';
+        txtAut.innerHTML = `✓ DISPONIBLE <small style="font-weight: normal; color: var(--text-muted);">(Producción)</small>`;
+        txtAut.style.color = 'var(--success)';
+        cardAut.style.background = 'rgba(34, 197, 94, 0.05)';
+      } else {
+        dotAut.className = 'sri-dot fail';
+        txtAut.innerHTML = `✕ NO DISPONIBLE <small style="font-weight: normal; color: var(--text-muted);">(Producción)</small>`;
+        txtAut.style.color = 'var(--danger)';
+        cardAut.style.background = 'rgba(239, 68, 68, 0.05)';
+      }
+
+      if (!estadoSriServicios.recepcion || !estadoSriServicios.autorizacion) {
+        alerta.style.display = 'block';
+      } else {
+        alerta.style.display = 'none';
+      }
+    }
+
     async function guardarCategoriaLocal() {
       const input = document.getElementById('input-nueva-categoria');
       const nombreCat = input.value.trim();
@@ -2209,7 +2429,6 @@
       select.innerHTML = html;
     }
 
-    // --- PEDIDOS WEB ---
     async function renderPedidosWebAdmin() {
       await cargarDatosSupabase();
       const localIdActual = usuarioActual ? String(usuarioActual.localId).trim() : '';
@@ -2661,6 +2880,7 @@
       document.getElementById('inv-precio-proveedor').value = p.precio_proveedor || p.precio || 0;
       document.getElementById('inv-precio-familia').value = p.precio_familia || p.precio || 0;
       document.getElementById('inv-precio-mayorista').value = p.precio_mayorista || p.precio || 0;
+      document.getElementById('inv-iva').value = (p.iva === null || p.iva === undefined) ? '' : String(p.iva);
       document.getElementById('inv-visible-web').checked = p.visibleWeb || false;
 
       document.getElementById('titulo-seccion-producto').innerText = `Editando: ${p.nombre}`;
@@ -2684,6 +2904,7 @@
       document.getElementById('inv-precio-proveedor').value = '';
       document.getElementById('inv-precio-familia').value = '';
       document.getElementById('inv-precio-mayorista').value = '';
+      document.getElementById('inv-iva').value = '';
       document.getElementById('inv-visible-web').checked = false;
       document.getElementById('inv-archivo-img').value = '';
 
@@ -2712,6 +2933,7 @@
       const stock = parseFloat(document.getElementById('inv-stock').value) || 0;
       const unidad = document.getElementById('inv-unidad').value || 'unidad';
       const visibleWeb = document.getElementById('inv-visible-web').checked;
+      const ivaProd = document.getElementById('inv-iva').value === '' ? null : parseFloat(document.getElementById('inv-iva').value);
       const fileInput = document.getElementById('inv-archivo-img');
 
       if (!codigoPpal || !nombre || isNaN(precio)) {
@@ -2730,7 +2952,7 @@
           precio_proveedor: parseFloat(document.getElementById('inv-precio-proveedor').value) || precio,
           precio_familia: parseFloat(document.getElementById('inv-precio-familia').value) || precio,
           precio_mayorista: parseFloat(document.getElementById('inv-precio-mayorista').value) || precio,
-          unidad, stock, visible_web: visibleWeb
+          unidad, stock, visible_web: visibleWeb, iva: ivaProd
         };
         if (imagenUrl) datosUpdate.imagen_url = imagenUrl;
 
@@ -2738,7 +2960,7 @@
         
         const pObj = dbProductos.find(x => String(x.id) === String(idEditando));
         if (pObj) {
-          Object.assign(pObj, { codigo: cods, nombre, categoria, descripcion, costo, precio, stock, unidad_medida: unidad, visibleWeb });
+          Object.assign(pObj, { codigo: cods, nombre, categoria, descripcion, costo, precio, stock, unidad_medida: unidad, visibleWeb, iva: ivaProd });
           if (imagenUrl) pObj.imagenUrl = imagenUrl;
         }
 
@@ -2761,7 +2983,8 @@
           unidad, 
           stock, 
           visible_web: visibleWeb, 
-          imagen_url: imagenUrl
+          imagen_url: imagenUrl,
+          iva: ivaProd
         };
 
         const { error } = await supabaseClient.from('productos').insert([nuevoProd]);
@@ -2773,7 +2996,7 @@
         dbProductos.unshift({
           id: nuevoProd.id, localId: nuevoProd.local_id, codigo: nuevoProd.codigo,
           nombre: nuevoProd.nombre, categoria: nuevoProd.categoria, descripcion: nuevoProd.descripcion, costo: nuevoProd.costo, precio: nuevoProd.precio,
-          unidad_medida: nuevoProd.unidad, stock: nuevoProd.stock, visibleWeb: nuevoProd.visible_web, imagenUrl: nuevoProd.imagen_url
+          unidad_medida: nuevoProd.unidad, stock: nuevoProd.stock, visibleWeb: nuevoProd.visible_web, imagenUrl: nuevoProd.imagen_url, iva: nuevoProd.iva
         });
 
         alert('¡Producto guardado con éxito!');
@@ -3363,20 +3586,125 @@
     function cerrarConfigFirma() { document.getElementById('modal-firma-config').style.display = 'none'; }
     function guardarFirmaDigital() { alert('Firma guardada'); cerrarConfigFirma(); }
     function cargarFacturas() { filtrarFacturas(); }
+    /* ============== FACTURACIÓN ELECTRÓNICA SRI ============== */
+    function toastSri(msg, tipo) {
+      let t = document.getElementById('toast-sri');
+      if (!t) {
+        t = document.createElement('div'); t.id = 'toast-sri';
+        t.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:100px;z-index:40000;padding:10px 16px;border-radius:10px;color:#fff;font-size:0.85rem;max-width:90%;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.35)';
+        document.body.appendChild(t);
+      }
+      t.style.background = tipo === 'ok' ? '#16a34a' : tipo === 'err' ? '#dc2626' : '#2563eb';
+      t.textContent = msg; t.style.display = 'block';
+      clearTimeout(t._h);
+      if (tipo !== 'info') t._h = setTimeout(() => { t.style.display = 'none'; }, 7000);
+    }
+
+    // Envía la venta al backend: genera clave de acceso, XML, firma, recepción y autorización.
+    async function emitirFacturaSri(ventaId, localId) {
+      const v = dbVentas.find(x => x.id === ventaId);
+      toastSri('⏳ Enviando factura al SRI...', 'info');
+      let r;
+      try {
+        const res = await fetch(`${SRI_API_URL}/api/emitir-factura`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ventaId, localId: String(localId) })
+        });
+        r = await res.json();
+      } catch (e) {
+        r = { success: false, estado: 'PENDIENTE', message: 'Sin conexión con el servidor de facturación (' + e.message + ').' };
+      }
+      if (v) {
+        if (r.claveAcceso) v.claveAcceso = r.claveAcceso;
+        if (r.numeroComprobante) v.numeroComprobante = r.numeroComprobante;
+        if (r.estado && ['AUTORIZADO', 'PENDIENTE', 'EN_PROCESO', 'DEVUELTA', 'RECHAZADO'].includes(r.estado)) v.estado_sri = r.estado;
+        if (r.estado === 'AUTORIZADO') { v.numeroAutorizacion = r.numeroAutorizacion; v.fechaAutorizacion = r.fechaAutorizacion; v.tipo_comprobante = 'FACTURA'; }
+      }
+      if (r.success) toastSri('✅ Factura autorizada por el SRI', 'ok');
+      else toastSri('⚠️ ' + (r.message || 'No se pudo emitir la factura') + ' — queda pendiente, puedes reintentar en Facturas.', 'err');
+      return r;
+    }
+
+    async function reenviarAlSri(id) {
+      const v = dbVentas.find(x => x.id === id);
+      if (!v) return;
+      await emitirFacturaSri(id, v.localId);
+      filtrarFacturas();
+    }
+
+    async function enviarTodasPendientesSri() {
+      const lista = dbVentas.filter(v => v.localId === String(usuarioActual.localId) &&
+        v.tipo_comprobante === 'FACTURA_PENDIENTE_SRI' && v.estado_sri !== 'AUTORIZADO').reverse(); // más antiguas primero
+      if (!lista.length) return alert('No hay facturas pendientes de envío.');
+      if (!confirm(`¿Enviar ${lista.length} factura(s) pendiente(s) al SRI?`)) return;
+      let ok = 0;
+      for (const v of lista) { const r = await emitirFacturaSri(v.id, v.localId); if (r.success) ok++; }
+      filtrarFacturas();
+      alert(`Autorizadas: ${ok} de ${lista.length}.`);
+    }
+
+    // Desglose por tarifa de IVA para el ticket (misma regla que el backend)
+    function desgloseIvaTicket(v, localInfo) {
+      const ivaDef = Number(localInfo.ivaDefecto || 0), incluido = localInfo.preciosIncluyenIva !== false;
+      const activos = (v.items || []).filter(i => !i.anulado);
+      const bruto = activos.reduce((s, i) => s + i.precio * i.cantidad, 0) || 1;
+      const desc = Number(v.descuento || 0), r = {};
+      activos.forEach(i => {
+        const t = Number(i.iva ?? ivaDef);
+        let linea = i.precio * i.cantidad; linea -= desc * (linea / bruto);
+        const base = (incluido && t > 0) ? linea / (1 + t / 100) : linea;
+        r[t] = r[t] || { base: 0, iva: 0 }; r[t].base += base; r[t].iva += base * t / 100;
+      });
+      return r;
+    }
+
+    function verTicket(id) { const v = dbVentas.find(x => x.id === id); if (v) mostrarFactura(v); }
+
     function filtrarFacturas() {
       const q = (document.getElementById('filtro-buscar-factura')?.value || '').toLowerCase();
+      const puntoSel = document.getElementById('filtro-punto-emision')?.value || '';
+
       const facturasLista = dbVentas.filter(v => {
         if (v.localId !== String(usuarioActual.localId)) return false;
-        if (!v.id.toLowerCase().includes(q) && !v.clienteNombre.toLowerCase().includes(q)) return false;
+        if (puntoSel && v.punto_emision !== puntoSel) return false;
+        if (!v.id.toLowerCase().includes(q) && !(v.clienteNombre || '').toLowerCase().includes(q) && !(v.numeroComprobante || '').includes(q)) return false;
         return v.tipo_comprobante !== 'PEDIDO_WEB_DOMICILIO' && v.tipo_comprobante !== 'PEDIDO_RECHAZADO';
       }).sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
 
-      document.getElementById('tabla-facturas-body').innerHTML = facturasLista.map(v => `
-        <tr><td><b>${v.id}</b></td><td>${v.clienteNombre}</td><td>${new Date(v.fecha).toLocaleString()}</td><td>${v.punto_emision}</td><td>${v.tipo_comprobante}</td><td>$${v.total.toFixed(2)}</td><td>${v.metodoPago}</td><td><button class="btn btn-primary btn-sm" onclick='mostrarFactura(${JSON.stringify(v)})'>Ver</button></td></tr>
-      `).join('') || `<tr><td colspan="8" style="text-align:center;">Sin facturas registradas</td></tr>`;
+      const estadoBadge = (v) => {
+        const e = v.tipo_comprobante === 'NOTA_VENTA_LOCAL' ? 'LOCAL' : (v.estado_sri || 'PENDIENTE');
+        const col = { AUTORIZADO: '#16a34a', LOCAL: '#64748b', PENDIENTE: '#f59e0b', EN_PROCESO: '#f59e0b', DEVUELTA: '#ef4444', RECHAZADO: '#ef4444' }[e] || '#64748b';
+        return `<span class="badge" style="background:${col}22; color:${col}; font-size:0.72rem;">${e.replace('_', ' ')}</span>`;
+      };
+
+      document.getElementById('tabla-facturas-body').innerHTML = facturasLista.map(v => {
+        let numComprobante = v.numeroComprobante || v.id;
+        const clave = v.claveAcceso || v.clave_acceso || '';
+        const esSri = v.tipo_comprobante !== 'NOTA_VENTA_LOCAL';
+        const autorizado = v.estado_sri === 'AUTORIZADO' && clave.length === 49;
+        let acciones = `<button class="btn btn-success btn-sm" style="padding:4px 8px; font-size:0.78rem; background:#16a34a; border-color:#16a34a;" onclick="verTicket('${v.id}')" title="Imprimir Ticket Térmico">🧾 Ticket</button>`;
+        const lnk = 'class="btn btn-primary btn-sm" style="padding:4px 8px; font-size:0.78rem; text-decoration:none; display:inline-block;" target="_blank" rel="noopener"';
+        if (autorizado) {
+          acciones += ` <a ${lnk} href="${SRI_API_URL}/api/ride/${clave}">📄 RIDE</a> <a ${lnk} href="${SRI_API_URL}/api/xml/${clave}" download="${clave}.xml">⬇ XML</a>`;
+        } else if (esSri) {
+          acciones += ` <button class="btn btn-primary btn-sm" style="padding:4px 8px; font-size:0.78rem;" onclick="reenviarAlSri('${v.id}')">🔄 ${v.estado_sri === 'PENDIENTE' ? 'Enviar al SRI' : 'Reintentar'}</button>`;
+        }
+        return `
+          <tr>
+            <td><b style="color:var(--primary);">${numComprobante}</b></td>
+            <td>${v.cliente_nombre || v.clienteNombre}</td>
+            <td><small>${new Date(v.fecha).toLocaleString('es-EC')}</small></td>
+            <td><span class="badge" style="font-size:0.75rem;">${v.punto_emision || '001-100'}</span></td>
+            <td>${clave.length === 49 ? `<code style="font-size:0.72rem; word-break:break-all; color:var(--text); background:var(--bg); padding:2px 4px; border-radius:4px; border:1px solid var(--border); display:inline-block; max-width:210px;">${v.numeroAutorizacion || clave}</code>` : '<small>—</small>'}</td>
+            <td>${estadoBadge(v)}</td>
+            <td><b>$${Number(v.total).toFixed(2)}</b></td>
+            <td><small>${v.metodo_pago || v.metodoPago || 'Efectivo'}</small></td>
+            <td style="text-align:center; white-space:nowrap;">${acciones}</td>
+          </tr>
+        `;
+      }).join('') || `<tr><td colspan="9" style="text-align:center;">Sin facturas registradas</td></tr>`;
     }
-    async function reenviarAlSri(id) {}
-    async function enviarTodasPendientesSri() {}
+
 
     window.addEventListener('DOMContentLoaded', async () => {
       inicializarTema();
