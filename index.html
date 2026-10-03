@@ -200,7 +200,7 @@
 
     .table-responsive { width: 100%; overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; color: var(--text); }
-    th, td { padding: 10px; border-bottom: 1px solid var(--border); }
+    th, td { padding: 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
     th { color: var(--text-muted); font-weight: 600; background: var(--bg); }
     .text-success { color: var(--success); font-weight: bold; }
 
@@ -209,6 +209,90 @@
     .cart-tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); font-weight: bold; }
     
     .item-anulado { text-decoration: line-through; color: var(--danger); background-color: var(--bg); }
+
+    /* ESTILOS DE LA BARRA DE TOTALES EN POS CARRITO */
+    .pos-cart-totals-panel {
+      margin-top: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .pos-cart-row-fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .pos-input-group {
+      display: flex;
+      align-items: center;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      height: 38px;
+    }
+    .pos-input-group label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      padding: 0 10px;
+      margin: 0;
+      white-space: nowrap;
+      background: var(--card-bg);
+      height: 100%;
+      display: flex;
+      align-items: center;
+      border-right: 1px solid var(--border);
+    }
+    .pos-input-group input {
+      border: none;
+      background: transparent;
+      padding: 4px 10px;
+      margin: 0;
+      text-align: right;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text);
+      height: 100%;
+      width: 100%;
+    }
+    .pos-total-display-box {
+      display: flex;
+      align-items: center;
+      background: #008000;
+      color: #ffffff;
+      border-radius: 6px;
+      overflow: hidden;
+      height: 38px;
+    }
+    .pos-total-display-box .pos-total-label {
+      padding: 0 12px;
+      font-size: 0.9rem;
+      font-weight: 800;
+      background: rgba(0, 0, 0, 0.15);
+      height: 100%;
+      display: flex;
+      align-items: center;
+      letter-spacing: 0.5px;
+    }
+    .pos-total-display-box .pos-total-amount {
+      flex: 1;
+      text-align: right;
+      padding: 0 12px;
+      font-size: 1.15rem;
+      font-weight: 800;
+    }
+
+    .cart-price-select {
+      padding: 4px;
+      font-size: 0.78rem;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      height: 30px;
+    }
 
     /* ESTILOS TIENDA VIRTUAL PROFESIONAL */
     #vista-tienda-online { position: fixed; inset: 0; background: #f8fafc; z-index: 20000; overflow-y: auto; display: none; padding: 0; color: #0f172a; }
@@ -239,6 +323,36 @@
       text-decoration: none;
     }
     .whatsapp-flotante-tienda:hover { transform: scale(1.1); }
+
+    /* =========================================================
+       REGLA DE AISLAMIENTO: TODOS LOS MODALES Y REPORTES EN MODO CLARO
+       ========================================================= */
+    #factura-impresion,
+    #factura-impresion *,
+    #modal-detalle-arqueo .modal-box,
+    #modal-detalle-arqueo .modal-box *,
+    #modal-detalle-pedido-web .modal-box,
+    #modal-detalle-pedido-web .modal-box * {
+      color: #000000 !important;
+    }
+
+    #factura-impresion .modal-ticket-box,
+    #modal-detalle-arqueo .modal-box,
+    #modal-detalle-pedido-web .modal-box,
+    #factura-impresion table,
+    #factura-impresion th,
+    #factura-impresion td,
+    #modal-detalle-arqueo table,
+    #modal-detalle-arqueo th,
+    #modal-detalle-arqueo td,
+    #modal-detalle-pedido-web table,
+    #modal-detalle-pedido-web th,
+    #modal-detalle-pedido-web td,
+    #modal-ped-info-cliente {
+      background-color: #ffffff !important;
+      color: #000000 !important;
+      border-color: #cbd5e1 !important;
+    }
 
     @media print {
       body * { visibility: hidden; }
@@ -392,7 +506,7 @@
         <h3 style="font-size: 1.2rem; margin:0;" id="modal-ped-titulo">Detalle del Pedido</h3>
         <button class="btn btn-danger btn-sm" onclick="cerrarModalDetallePedidoWeb()" style="margin:0;">✕ Cerrar</button>
       </div>
-      <div id="modal-ped-info-cliente" style="font-size: 0.85rem; margin-bottom: 12px; background: var(--bg); padding: 10px; border-radius: 8px;"></div>
+      <div id="modal-ped-info-cliente" style="font-size: 0.85rem; margin-bottom: 12px; padding: 10px; border-radius: 8px;"></div>
       <h4 style="font-size: 0.95rem; margin-bottom: 6px;">Productos Solicitados:</h4>
       <div class="table-responsive" style="max-height: 200px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; padding: 4px;">
         <table>
@@ -490,8 +604,8 @@
             <div class="cart-tabs" id="pos-cart-tabs"></div>
             <div class="form-row">
               <div>
-                <label>Lista de Precio</label>
-                <select id="pos-tipo-precio" onchange="renderProductosPOS()" style="padding: 8px; font-size: 0.9rem;">
+                <label>Lista de Precio General</label>
+                <select id="pos-tipo-precio" onchange="cambiarListaPrecioGlobalCarrito()" style="padding: 8px; font-size: 0.9rem;">
                   <option value="normal">Normal / General</option>
                   <option value="revendedor">Revendedor</option>
                   <option value="proveedor">Proveedor</option>
@@ -507,13 +621,47 @@
               </div>
             </div>
 
+            <!-- TABLA DEL CARRITO CON COLUMNA DE ELECCIÓN DE PRECIOS POR PRODUCTO -->
             <div class="table-responsive" id="contenedor-tabla-carrito" style="max-height: 220px; overflow-y: auto; margin-top:5px; border: 1px solid var(--border); border-radius: 8px;">
               <table>
-                <thead><tr><th>Prod</th><th>Cant</th><th>Total</th><th>Acción</th></tr></thead>
+                <thead>
+                  <tr>
+                    <th>Prod</th>
+                    <th style="width: 45px;">Cant</th>
+                    <th style="width: 95px; text-align: center;" title="Elegir Lista de Precio">↕ P</th>
+                    <th>Total</th>
+                    <th style="width: 40px;"></th>
+                  </tr>
+                </thead>
                 <tbody id="pos-tabla-carrito"></tbody>
               </table>
             </div>
-            <h2 style="margin-top:10px; text-align:right; font-size: 1.5rem;">Total: $<span id="pos-total">0.00</span></h2>
+
+            <!-- SECCIÓN: DESCUENTO, PROPINA, TOTAL Y NOTA -->
+            <div class="pos-cart-totals-panel">
+              <div class="pos-cart-row-fields">
+                <div class="pos-input-group">
+                  <label for="pos-descuento-input">Desc</label>
+                  <input type="number" id="pos-descuento-input" step="0.01" min="0" value="0" oninput="recalcularTotalesCarritoPOS()">
+                </div>
+                <div class="pos-input-group" style="border: 1px solid var(--border); border-radius: 6px;">
+                  <input type="text" id="pos-subtotal-info" value="0.00" readonly style="border:none; text-align:right; font-weight:bold; background:transparent;">
+                </div>
+              </div>
+              <div class="pos-cart-row-fields">
+                <div class="pos-input-group">
+                  <label for="pos-propina-input">Propina</label>
+                  <input type="number" id="pos-propina-input" step="0.01" min="0" value="0.00" oninput="recalcularTotalesCarritoPOS()">
+                </div>
+                <div class="pos-total-display-box">
+                  <span class="pos-total-label">Total</span>
+                  <span class="pos-total-amount">$<span id="pos-total">0.00</span></span>
+                </div>
+              </div>
+              <div>
+                <input type="text" id="pos-nota-input" maxlength="40" placeholder="Nota MAX 40 Caracteres" oninput="actualizarNotaCarritoPOS(this.value)" style="margin-top: 4px; margin-bottom: 4px; font-size: 0.85rem; padding: 8px 10px;">
+              </div>
+            </div>
             
             <div style="font-size: 0.8rem; margin-top: 5px; display:flex; justify-content:space-between; align-items:center; border: 1px solid var(--border); padding: 6px 10px; border-radius: 8px;">
               <span class="text-muted fw-bold">Modo de Emisión:</span>
@@ -1022,50 +1170,55 @@
     </main>
   </div>
 
-  <!-- COMPROBANTE DE IMPRESIÓN -->
+  <!-- COMPROBANTE DE IMPRESIÓN FORZADO EN BLANCO Y NEGRO -->
   <div id="factura-impresion" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:30000; align-items:center; justify-content:center; overflow-y:auto; padding:20px;">
-    <div style="max-width: 320px; width: 100%; margin: auto; font-family: monospace; font-size: 12px; color: #000 !important; background: #fff !important; padding: 15px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
-      <div style="text-align: center; line-height: 1.3; color: #000;">
-        <h3 id="fac-local-nombre" style="margin: 0; font-size: 14px; font-weight: bold; color: #000;"></h3>
-        <p style="margin: 2px 0; color: #000;" id="fac-propietario"></p>
-        <p style="margin: 2px 0; color: #000;">RUC: <span id="fac-ruc"></span></p>
-        <p style="margin: 2px 0; font-size: 11px; color: #000;" id="fac-dir"></p>
-        <p style="margin: 2px 0; font-size: 11px; color: #000;">Obligado contabilidad: <span id="fac-contabilidad">NO</span></p>
-        <p style="margin: 2px 0; color: #000;">Usuario Venta: <span id="fac-usuario"></span></p>
+    <div class="modal-ticket-box" style="max-width: 320px; width: 100%; margin: auto; font-family: monospace; font-size: 12px; color: #000000 !important; background: #ffffff !important; padding: 15px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+      <div style="text-align: center; line-height: 1.3; color: #000000 !important;">
+        <h3 id="fac-local-nombre" style="margin: 0; font-size: 14px; font-weight: bold; color: #000000 !important;"></h3>
+        <p style="margin: 2px 0; color: #000000 !important;" id="fac-propietario"></p>
+        <p style="margin: 2px 0; color: #000000 !important;">RUC: <span id="fac-ruc"></span></p>
+        <p style="margin: 2px 0; font-size: 11px; color: #000000 !important;" id="fac-dir"></p>
+        <p style="margin: 2px 0; font-size: 11px; color: #000000 !important;">Obligado contabilidad: <span id="fac-contabilidad">NO</span></p>
+        <p style="margin: 2px 0; color: #000000 !important;">Usuario Venta: <span id="fac-usuario"></span></p>
       </div>
-      <div style="margin-top: 8px; border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 5px 0; line-height: 1.3; color: #000;">
-        <p style="margin: 2px 0; font-weight: bold; color: #000;">Comprobante #: <span id="fac-id"></span></p>
-        <p style="margin: 2px 0; font-size: 11px; color: #000;">Fecha Emisión: <span id="fac-fecha"></span></p>
+      <div style="margin-top: 8px; border-top: 1px dashed #000000; border-bottom: 1px dashed #000000; padding: 5px 0; line-height: 1.3; color: #000000 !important;">
+        <p style="margin: 2px 0; font-weight: bold; color: #000000 !important;">Comprobante #: <span id="fac-id"></span></p>
+        <p style="margin: 2px 0; font-size: 11px; color: #000000 !important;">Fecha Emisión: <span id="fac-fecha"></span></p>
       </div>
-      <div style="margin-top: 5px; line-height: 1.3; font-size: 11px; color: #000;">
-        <p style="margin: 2px 0; color: #000;"><b>Cliente:</b> <span id="fac-cliente">CONSUMIDOR FINAL</span></p>
-        <p style="margin: 2px 0; color: #000;"><b>RUC/CI:</b> <span id="fac-cedula">9999999999999</span></p>
+      <div style="margin-top: 5px; line-height: 1.3; font-size: 11px; color: #000000 !important;">
+        <p style="margin: 2px 0; color: #000000 !important;"><b>Cliente:</b> <span id="fac-cliente">CONSUMIDOR FINAL</span></p>
+        <p style="margin: 2px 0; color: #000000 !important;"><b>RUC/CI:</b> <span id="fac-cedula">9999999999999</span></p>
       </div>
-      <hr style="border: none; border-top: 1px dashed #000; margin: 6px 0;">
-      <table style="width: 100%; font-size: 11px; border-collapse: collapse; color: #000;">
+      <hr style="border: none; border-top: 1px dashed #000000; margin: 6px 0;">
+      <table style="width: 100%; font-size: 11px; border-collapse: collapse; color: #000000 !important; background-color: #ffffff !important;">
         <thead>
-          <tr style="border-bottom: 1px solid #000;">
-            <th style="text-align: left; padding-bottom: 3px; color: #000; background: #fff;">Cant.</th>
-            <th style="text-align: left; padding-bottom: 3px; color: #000; background: #fff;">Descripción</th>
-            <th style="text-align: right; padding-bottom: 3px; color: #000; background: #fff;">P.Unit</th>
-            <th style="text-align: right; padding-bottom: 3px; color: #000; background: #fff;">Total</th>
+          <tr style="border-bottom: 1px solid #000000;">
+            <th style="text-align: left; padding-bottom: 3px; color: #000000 !important; background-color: #ffffff !important;">Cant.</th>
+            <th style="text-align: left; padding-bottom: 3px; color: #000000 !important; background-color: #ffffff !important;">Descripción</th>
+            <th style="text-align: right; padding-bottom: 3px; color: #000000 !important; background-color: #ffffff !important;">P.Unit</th>
+            <th style="text-align: right; padding-bottom: 3px; color: #000000 !important; background-color: #ffffff !important;">Total</th>
           </tr>
         </thead>
-        <tbody id="fac-items"></tbody>
+        <tbody id="fac-items" style="background-color: #ffffff !important;"></tbody>
       </table>
-      <hr style="border: none; border-top: 1px dashed #000; margin: 6px 0;">
-      <div style="text-align: right; font-size: 12px; line-height: 1.4; color: #000;">
-        <p style="margin: 2px 0; color: #000;">Subtotal: $<span id="fac-subtotal">0.00</span></p>
-        <p style="margin: 2px 0; font-weight: bold; font-size: 13px; color: #000;">TOTAL: $<span id="fac-total">0.00</span></p>
+      <hr style="border: none; border-top: 1px dashed #000000; margin: 6px 0;">
+      <div style="text-align: right; font-size: 12px; line-height: 1.4; color: #000000 !important;">
+        <p style="margin: 2px 0; color: #000000 !important;">Subtotal: $<span id="fac-subtotal">0.00</span></p>
+        <p style="margin: 2px 0; color: #000000 !important; display: none;" id="fac-row-descuento">Descuento: -$<span id="fac-descuento">0.00</span></p>
+        <p style="margin: 2px 0; color: #000000 !important; display: none;" id="fac-row-propina">Propina: +$<span id="fac-propina">0.00</span></p>
+        <p style="margin: 2px 0; font-weight: bold; font-size: 13px; color: #000000 !important;">TOTAL: $<span id="fac-total">0.00</span></p>
       </div>
-      <hr style="border: none; border-top: 1px dashed #000; margin: 6px 0;">
-      <div style="font-size: 11px; line-height: 1.3; color: #000;">
-        <p style="margin: 2px 0; font-weight: bold; color: #000;">FORMA DE PAGO:</p>
-        <p style="margin: 2px 0; color: #000;">Pago <span id="fac-metodo">Efectivo</span></p>
+      <div id="fac-container-nota" style="display: none; border-top: 1px dashed #000000; margin-top: 6px; padding-top: 4px; font-size: 10px; color: #000000 !important;">
+        <p style="margin: 2px 0; color: #000000 !important;"><b>Nota:</b> <span id="fac-nota"></span></p>
       </div>
-      <div style="text-align: center; margin-top: 10px; font-size: 10px; color: #000;">
-        <p style="margin: 2px 0; color: #000;">Gracias por su compra</p>
-        <p style="margin: 2px 0; color: #000;" id="fac-leyenda-doc">Documento electrónico autorizado</p>
+      <hr style="border: none; border-top: 1px dashed #000000; margin: 6px 0;">
+      <div style="font-size: 11px; line-height: 1.3; color: #000000 !important;">
+        <p style="margin: 2px 0; font-weight: bold; color: #000000 !important;">FORMA DE PAGO:</p>
+        <p style="margin: 2px 0; color: #000000 !important;">Pago <span id="fac-metodo">Efectivo</span></p>
+      </div>
+      <div style="text-align: center; margin-top: 10px; font-size: 10px; color: #000000 !important;">
+        <p style="margin: 2px 0; color: #000000 !important;">Gracias por su compra</p>
+        <p style="margin: 2px 0; color: #000000 !important;" id="fac-leyenda-doc">Documento electrónico autorizado</p>
       </div>
       <div class="no-print" style="margin-top: 15px; display: flex; gap: 8px;">
         <button class="btn btn-primary" style="flex:1; margin:0;" onclick="window.print()">Imprimir</button>
@@ -1090,7 +1243,7 @@
     let dbMovimientosCaja = []; 
     
     let usuarioActual = JSON.parse(localStorage.getItem('usuarioActual')) || null;
-    let carritos = [{ id: 1, nombre: 'Principal 1', items: [] }];
+    let carritos = [{ id: 1, nombre: 'Principal 1', items: [], descuento: 0, propina: 0, nota: '' }];
     let carritoActivoId = 1;
     let html5QrCode = null;
     let clienteVentaSeleccionado = { cedula: '9999999999001', nombre: 'Consumidor Final' };
@@ -1105,7 +1258,7 @@
       const temaGuardado = localStorage.getItem('pos_theme') || 'dark';
       document.body.setAttribute('data-theme', temaGuardado);
       const btnTema = document.getElementById('btn-tema');
-      if (btnTema) btnTema.innerText = temaGuardado === 'dark' ? '☀️' : '🌙';
+      if (btnTema) btnTema.innerText = temaGuardado === 'dark' ? '☀' : '🌙';
     }
 
     function toggleTema() {
@@ -1204,6 +1357,7 @@
             clienteCedula: v.cliente_cedula || v.clientecedula || v.clienteCedula || '',
             cliente_cedula: v.cliente_cedula || v.clientecedula || v.clienteCedula || '',
             metodoPago: v.metodo_pago || v.metodoPago, fecha: v.fecha, items: v.items || [], total: v.total,
+            subtotal: v.subtotal || v.total, descuento: v.descuento || 0, propina: v.propina || 0, nota: v.nota || '',
             usuario: v.usuario || '', tipo_comprobante: v.tipo_comprobante || '', estado_sri: v.estado_sri || '',
             punto_emision: v.punto_emision || '', claveAcceso: v.clave_acceso || v.claveAcceso || ''
           })).sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
@@ -1275,6 +1429,7 @@
           id: v.id, localId: String(v.local_id || '').trim(), localNombre: v.local_nombre || '',
           clienteNombre: v.cliente_nombre || '', clienteCedula: v.cliente_cedula || '',
           metodoPago: v.metodo_pago || '', fecha: v.fecha, items: v.items || [], total: v.total,
+          subtotal: v.subtotal || v.total, descuento: v.descuento || 0, propina: v.propina || 0, nota: v.nota || '',
           usuario: v.usuario || '', tipo_comprobante: v.tipo_comprobante || '', estado_sri: v.estado_sri || '',
           punto_emision: v.punto_emision || ''
         })).sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
@@ -1489,7 +1644,14 @@
     }
 
     function obtenerCarritoActual() {
-      return carritos.find(c => c.id === carritoActivoId) || carritos[0];
+      let cart = carritos.find(c => c.id === carritoActivoId);
+      if (!cart) {
+        cart = carritos[0];
+      }
+      if (cart.descuento === undefined) cart.descuento = 0;
+      if (cart.propina === undefined) cart.propina = 0;
+      if (cart.nota === undefined) cart.nota = '';
+      return cart;
     }
 
     function renderizarCarritosTabs() {
@@ -1506,7 +1668,7 @@
     function cambiarCarritoActivo(id) { carritoActivoId = id; renderizarCarritosTabs(); }
     function crearNuevoCarrito() {
       const nuevoId = Date.now();
-      carritos.push({ id: nuevoId, nombre: `Ticket ${carritos.length + 1}`, items: [] });
+      carritos.push({ id: nuevoId, nombre: `Ticket ${carritos.length + 1}`, items: [], descuento: 0, propina: 0, nota: '' });
       cambiarCarritoActivo(nuevoId);
     }
     function ponerCarritoEnEspera() {
@@ -1565,8 +1727,8 @@
       }
     }
 
-    function obtenerPrecioSegunLista(prod) {
-      const tipo = document.getElementById('pos-tipo-precio')?.value || 'normal';
+    function obtenerPrecioSegunLista(prod, tipoLista) {
+      const tipo = tipoLista || document.getElementById('pos-tipo-precio')?.value || 'normal';
       switch(tipo) {
         case 'revendedor': return prod.precio_rovendedor || prod.precio;
         case 'proveedor': return prod.precio_proveedor || prod.precio;
@@ -1574,6 +1736,32 @@
         case 'mayorista': return prod.precio_mayorista || prod.precio;
         default: return prod.precio;
       }
+    }
+
+    function cambiarListaPrecioGlobalCarrito() {
+      const tipoGlobal = document.getElementById('pos-tipo-precio').value;
+      const cart = obtenerCarritoActual();
+      cart.items.forEach(item => {
+        item.tipoPrecio = tipoGlobal;
+        const prod = dbProductos.find(p => String(p.id) === String(item.id));
+        if (prod) {
+          item.precio = obtenerPrecioSegunLista(prod, tipoGlobal);
+        }
+      });
+      renderProductosPOS();
+      renderCarrito();
+    }
+
+    function cambiarTipoPrecioItemCarrito(idx, nuevoTipo) {
+      const cart = obtenerCarritoActual();
+      const item = cart.items[idx];
+      if (!item) return;
+      item.tipoPrecio = nuevoTipo;
+      const prod = dbProductos.find(p => String(p.id) === String(item.id));
+      if (prod) {
+        item.precio = obtenerPrecioSegunLista(prod, nuevoTipo);
+      }
+      renderCarrito();
     }
 
     function renderProductosPOS() {
@@ -1598,7 +1786,8 @@
     function agregarAlCarrito(id) {
       const prod = dbProductos.find(p => String(p.id) === String(id));
       if (!prod) return;
-      const precioAplicado = obtenerPrecioSegunLista(prod);
+      const tipoActual = document.getElementById('pos-tipo-precio')?.value || 'normal';
+      const precioAplicado = obtenerPrecioSegunLista(prod, tipoActual);
       const unidad = prod.unidad_medida || 'unidad';
       let cantidad = 1;
       if (unidad === 'Kilo' || unidad === 'Libra') {
@@ -1608,26 +1797,76 @@
         if (isNaN(cantidad) || cantidad <= 0) return alert('Cantidad no válida.');
       }
       const cart = obtenerCarritoActual();
-      cart.items.unshift({ id: prod.id, nombre: prod.nombre, precio: precioAplicado, costo: prod.costo || 0, cantidad: cantidad, unidad: unidad, anulado: false });
+      cart.items.unshift({ 
+        id: prod.id, 
+        nombre: prod.nombre, 
+        precio: precioAplicado, 
+        costo: prod.costo || 0, 
+        cantidad: cantidad, 
+        unidad: unidad, 
+        tipoPrecio: tipoActual,
+        anulado: false 
+      });
       renderizarCarritosTabs();
       document.getElementById('contenedor-tabla-carrito').scrollTop = 0;
     }
 
     function renderCarrito() {
       const cart = obtenerCarritoActual();
-      let total = 0;
+      let subtotal = 0;
       document.getElementById('pos-tabla-carrito').innerHTML = cart.items.map((item, idx) => {
         const sub = item.precio * item.cantidad;
-        if (!item.anulado) total += sub;
+        if (!item.anulado) subtotal += sub;
+        const tipoP = item.tipoPrecio || 'normal';
         return `
           <tr class="${item.anulado ? 'item-anulado' : ''}">
-            <td>${item.nombre} ${item.anulado ? '<br><small><b>[ANULADO]</b></small>' : ''}</td>
-            <td>${item.cantidad} ${item.unidad || ''}</td>
-            <td>$${sub.toFixed(2)}</td>
-            <td>${!item.anulado ? `<button class="btn btn-danger btn-sm" onclick="anularItemCarrito(${idx})">Anular</button>` : ''}</td>
+            <td><b>${item.nombre}</b> ${item.anulado ? '<br><small><b>[ANULADO]</b></small>' : ''}</td>
+            <td style="text-align:center;">${item.cantidad}</td>
+            <td style="text-align:center;">
+              <select class="cart-price-select" ${item.anulado ? 'disabled' : ''} onchange="cambiarTipoPrecioItemCarrito(${idx}, this.value)">
+                <option value="normal" ${tipoP === 'normal' ? 'selected' : ''}>Normal</option>
+                <option value="revendedor" ${tipoP === 'revendedor' ? 'selected' : ''}>Revendedor</option>
+                <option value="proveedor" ${tipoP === 'proveedor' ? 'selected' : ''}>Proveedor</option>
+                <option value="familia" ${tipoP === 'familia' ? 'selected' : ''}>Familia</option>
+                <option value="mayorista" ${tipoP === 'mayorista' ? 'selected' : ''}>Mayorista</option>
+              </select>
+            </td>
+            <td><b>$${sub.toFixed(2)}</b></td>
+            <td>${!item.anulado ? `<button class="btn btn-danger btn-sm" style="padding: 2px 6px; font-size: 0.75rem;" onclick="anularItemCarrito(${idx})">✕</button>` : ''}</td>
           </tr>`;
       }).join('');
-      document.getElementById('pos-total').innerText = total.toFixed(2);
+
+      document.getElementById('pos-subtotal-info').value = subtotal.toFixed(2);
+      document.getElementById('pos-descuento-input').value = cart.descuento;
+      document.getElementById('pos-propina-input').value = cart.propina.toFixed(2);
+      document.getElementById('pos-nota-input').value = cart.nota || '';
+
+      recalcularTotalesCarritoPOS();
+    }
+
+    function recalcularTotalesCarritoPOS() {
+      const cart = obtenerCarritoActual();
+      let subtotal = cart.items.filter(i => !i.anulado).reduce((s, x) => s + (x.precio * x.cantidad), 0);
+      
+      let descVal = parseFloat(document.getElementById('pos-descuento-input').value) || 0;
+      let propVal = parseFloat(document.getElementById('pos-propina-input').value) || 0;
+
+      if (descVal < 0) descVal = 0;
+      if (propVal < 0) propVal = 0;
+
+      cart.descuento = descVal;
+      cart.propina = propVal;
+
+      let netTotal = subtotal - descVal + propVal;
+      if (netTotal < 0) netTotal = 0;
+
+      document.getElementById('pos-subtotal-info').value = subtotal.toFixed(2);
+      document.getElementById('pos-total').innerText = netTotal.toFixed(2);
+    }
+
+    function actualizarNotaCarritoPOS(val) {
+      const cart = obtenerCarritoActual();
+      cart.nota = val;
     }
 
     async function anularItemCarrito(index) {
@@ -1645,7 +1884,11 @@
       const cart = obtenerCarritoActual();
       let activos = cart.items.filter(i => !i.anulado);
       if (activos.length === 0) return alert('El carrito está vacío');
-      let total = activos.reduce((s, x) => s + (x.precio * x.cantidad), 0);
+      
+      recalcularTotalesCarritoPOS();
+      let subtotal = activos.reduce((s, x) => s + (x.precio * x.cantidad), 0);
+      let total = Math.max(0, subtotal - cart.descuento + cart.propina);
+
       document.getElementById('modal-total-txt').innerText = `$${total.toFixed(2)}`;
       document.getElementById('modal-metodo-pago').value = 'Efectivo';
       document.getElementById('modal-pago').value = total.toFixed(2);
@@ -1679,7 +1922,9 @@
       const contenedorQr = document.getElementById('contenedor-qr-imagen');
       contenedorQr.innerHTML = `<span>Generando QR Deuna...</span>`;
       const cart = obtenerCarritoActual();
-      const total = cart.items.filter(i => !i.anulado).reduce((s, x) => s + (x.precio * x.cantidad), 0);
+      let subtotal = cart.items.filter(i => !i.anulado).reduce((s, x) => s + (x.precio * x.cantidad), 0);
+      let total = Math.max(0, subtotal - cart.descuento + cart.propina);
+
       contenedorQr.innerHTML = `
         <div style="background:var(--card-bg); padding:10px; border-radius:6px; text-align:center;">
           <p style="font-size:0.75font; font-weight:bold; color:var(--primary);">PAGO QR DEUNA</p>
@@ -1690,7 +1935,9 @@
 
     function calcularVuelto() {
       const cart = obtenerCarritoActual();
-      let total = cart.items.filter(i => !i.anulado).reduce((s, x) => s + (x.precio * x.cantidad), 0);
+      let subtotal = cart.items.filter(i => !i.anulado).reduce((s, x) => s + (x.precio * x.cantidad), 0);
+      let total = Math.max(0, subtotal - cart.descuento + cart.propina);
+
       let pago = parseFloat(document.getElementById('modal-pago').value) || 0;
       let vuelto = pago - total;
       const vueltoTxt = document.getElementById('modal-vuelto-txt');
@@ -1702,7 +1949,9 @@
       const metodo = document.getElementById('modal-metodo-pago').value;
       const cart = obtenerCarritoActual();
       let activos = cart.items.filter(i => !i.anulado);
-      let total = activos.reduce((s, x) => s + (x.precio * x.cantidad), 0);
+      let subtotal = activos.reduce((s, x) => s + (x.precio * x.cantidad), 0);
+      let total = Math.max(0, subtotal - cart.descuento + cart.propina);
+
       if (metodo === 'Efectivo') {
         let pago = parseFloat(document.getElementById('modal-pago').value) || 0;
         if (pago < total) return alert('Monto pagado insuficiente.');
@@ -1712,40 +1961,120 @@
     }
 
     async function procesarVenta(metodoPago) {
-      const cart = obtenerCarritoActual();
-      const clienteNombre = clienteVentaSeleccionado?.nombre ? `${clienteVentaSeleccionado.nombre} ${clienteVentaSeleccionado.apellido || ''}`.trim() : 'Consumidor Final';
-      const clienteCedula = clienteVentaSeleccionado?.cedula || '9999999999001';
-      const esFacturaSri = document.getElementById('checkModoSri').checked;
+      try {
+        const cart = obtenerCarritoActual();
+        const clienteNombre = clienteVentaSeleccionado?.nombre ? `${clienteVentaSeleccionado.nombre} ${clienteVentaSeleccionado.apellido || ''}`.trim() : 'Consumidor Final';
+        const clienteCedula = clienteVentaSeleccionado?.cedula || '9999999999001';
+        const esFacturaSri = document.getElementById('checkModoSri').checked;
 
-      for (const i of cart.items) {
-        if (i.anulado) continue;
-        const p = dbProductos.find(x => String(x.id) === String(i.id));
-        if (p) {
-          p.stock -= i.cantidad;
-          await supabaseClient.from('productos').update({ stock: p.stock }).eq('id', p.id);
+        // Descontar stock
+        for (const i of cart.items) {
+          if (i.anulado) continue;
+          const p = dbProductos.find(x => String(x.id) === String(i.id));
+          if (p) {
+            p.stock -= i.cantidad;
+            await supabaseClient.from('productos').update({ stock: p.stock }).eq('id', p.id);
+          }
         }
+
+        let subtotalVal = cart.items.filter(i => !i.anulado).reduce((s, x) => s + (x.precio * x.cantidad), 0);
+        let descuentoVal = parseFloat(cart.descuento) || 0;
+        let propinaVal = parseFloat(cart.propina) || 0;
+        let totalVal = Math.max(0, subtotalVal - descuentoVal + propinaVal);
+
+        const localActualId = String(usuarioActual ? usuarioActual.localId : 'LOC-001').trim();
+        const localObj = dbLocales.find(l => String(l.id) === localActualId);
+        const localNombre = localObj ? localObj.nombre : 'Mi Tienda';
+
+        const ventaIdGenerado = 'FAC-' + Date.now().toString().slice(-5);
+        const tipoComprobanteVal = esFacturaSri ? 'FACTURA_PENDIENTE_SRI' : 'NOTA_VENTA_LOCAL';
+        const estadoSriVal = esFacturaSri ? 'PENDIENTE' : 'LOCAL';
+        const puntoEmisionVal = document.getElementById('punto-emision')?.value || "001-100";
+        const claveAccesoVal = esFacturaSri ? "3108202601" + ventaIdGenerado : "NOTA-" + ventaIdGenerado;
+
+        // Intento 1: Campos completos
+        const ventaSupabaseCompleta = {
+          id: ventaIdGenerado,
+          local_id: localActualId,
+          local_nombre: localNombre,
+          cliente_nombre: clienteNombre,
+          cliente_cedula: clienteCedula,
+          metodo_pago: metodoPago,
+          fecha: new Date().toISOString(),
+          items: cart.items,
+          subtotal: subtotalVal,
+          descuento: descuentoVal,
+          propina: propinaVal,
+          total: totalVal,
+          nota: cart.nota || '',
+          usuario: usuarioActual ? usuarioActual.user : 'Cajero',
+          tipo_comprobante: tipoComprobanteVal,
+          estado_sri: estadoSriVal,
+          punto_emision: puntoEmisionVal,
+          clave_acceso: claveAccesoVal
+        };
+
+        let { error } = await supabaseClient.from('ventas').insert([ventaSupabaseCompleta]);
+
+        // Intento 2: Fallback si la BD no tiene las columnas adicionales en el esquema
+        if (error && error.message.includes('column')) {
+          const ventaSupabaseBasica = {
+            id: ventaIdGenerado,
+            local_id: localActualId,
+            local_nombre: localNombre,
+            cliente_nombre: clienteNombre,
+            cliente_cedula: clienteCedula,
+            metodo_pago: metodoPago,
+            fecha: ventaSupabaseCompleta.fecha,
+            items: cart.items,
+            total: totalVal,
+            usuario: usuarioActual ? usuarioActual.user : 'Cajero',
+            tipo_comprobante: tipoComprobanteVal,
+            estado_sri: estadoSriVal,
+            punto_emision: puntoEmisionVal
+          };
+          const resRetry = await supabaseClient.from('ventas').insert([ventaSupabaseBasica]);
+          error = resRetry.error;
+        }
+
+        if (error) {
+          console.error("Error al guardar en Supabase:", error);
+        }
+
+        const ventaLocal = {
+          id: ventaIdGenerado,
+          localId: localActualId,
+          local_id: localActualId,
+          localNombre: localNombre,
+          clienteNombre: clienteNombre,
+          clienteCedula: clienteCedula,
+          cliente_cedula: clienteCedula,
+          metodoPago: metodoPago,
+          fecha: ventaSupabaseCompleta.fecha,
+          items: [...cart.items],
+          subtotal: subtotalVal,
+          descuento: descuentoVal,
+          propina: propinaVal,
+          total: totalVal,
+          nota: cart.nota || '',
+          usuario: usuarioActual ? usuarioActual.user : 'Cajero',
+          tipo_comprobante: tipoComprobanteVal,
+          estado_sri: estadoSriVal,
+          punto_emision: puntoEmisionVal
+        };
+
+        dbVentas.unshift(ventaLocal);
+        mostrarFactura(ventaLocal);
+
+        // Limpiar carrito activo
+        carritos = carritos.filter(c => c.id !== cart.id);
+        if (carritos.length === 0) carritos.push({ id: Date.now(), nombre: 'Principal 1', items: [], descuento: 0, propina: 0, nota: '' });
+        carritoActivoId = carritos[0].id;
+        renderizarCarritosTabs();
+      } catch (err) {
+        console.error("Error inesperado en procesarVenta:", err);
+        alert("Ocurrió un error al procesar la venta: " + err.message);
       }
-
-      const ventaIdGenerado = 'FAC-' + Date.now().toString().slice(-5);
-      const ventaSupabase = {
-        id: ventaIdGenerado, local_id: String(usuarioActual.localId),
-        local_nombre: dbLocales.find(l => String(l.id) === String(usuarioActual.localId))?.nombre || 'Mi Tienda',
-        cliente_nombre: clienteNombre, cliente_cedula: clienteCedula, metodo_pago: metodoPago,
-        fecha: new Date().toISOString(), items: [...cart.items],
-        total: cart.items.filter(i => !i.anulado).reduce((s, x) => s + (x.precio * x.cantidad), 0),
-        usuario: usuarioActual.user, tipo_comprobante: esFacturaSri ? 'FACTURA_PENDIENTE_SRI' : 'NOTA_VENTA_LOCAL',
-        estado_sri: esFacturaSri ? 'PENDIENTE' : 'LOCAL', punto_emision: document.getElementById('punto-emision')?.value || "001-100",
-        clave_acceso: esFacturaSri ? "3108202601" + ventaIdGenerado : "NOTA-" + ventaIdGenerado
-      };
-
-      await supabaseClient.from('ventas').insert([ventaSupabase]);
-      dbVentas.unshift(ventaSupabase);
-      mostrarFactura(ventaSupabase);
-
-      carritos = carritos.filter(c => c.id !== cart.id);
-      if (carritos.length === 0) carritos.push({ id: Date.now(), nombre: 'Principal 1', items: [] });
-      carritoActivoId = carritos[0].id;
-      renderizarCarritosTabs();
     }
 
     function mostrarFactura(v) {
@@ -1758,21 +2087,52 @@
       document.getElementById('fac-usuario').innerText = v.usuario || usuarioActual?.user || '';
       document.getElementById('fac-id').innerText = v.id;
       document.getElementById('fac-fecha').innerText = new Date(v.fecha).toLocaleString();
-      document.getElementById('fac-cliente').innerText = v.cliente_nombre || 'Consumidor Final';
-      document.getElementById('fac-cedula').innerText = v.cliente_cedula || '9999999999001';
-      document.getElementById('fac-metodo').innerText = v.metodo_pago || 'Efectivo';
+      document.getElementById('fac-cliente').innerText = v.cliente_nombre || v.clienteNombre || 'Consumidor Final';
+      document.getElementById('fac-cedula').innerText = v.cliente_cedula || v.clienteCedula || '9999999999001';
+      document.getElementById('fac-metodo').innerText = v.metodo_pago || v.metodoPago || 'Efectivo';
       
       document.getElementById('fac-items').innerHTML = (v.items || []).map(i => `
         <tr class="${i.anulado ? 'item-anulado' : ''}">
-          <td style="color:#000;">${i.cantidad} ${i.unidad ? i.unidad.substring(0,2) : ''}</td>
-          <td style="color:#000;">${i.nombre} ${i.anulado ? '<small><b>[ANULADO]</b></small>' : ''}</td>
-          <td style="text-align: right; color:#000;">$${Number(i.precio).toFixed(2)}</td>
-          <td style="text-align: right; color:#000;">$${(i.cantidad * i.precio).toFixed(2)}</td>
+          <td style="color:#000000 !important; background-color: #ffffff !important;">${i.cantidad} ${i.unidad ? i.unidad.substring(0,2) : ''}</td>
+          <td style="color:#000000 !important; background-color: #ffffff !important;">${i.nombre} ${i.anulado ? '<small><b>[ANULADO]</b></small>' : ''}</td>
+          <td style="text-align: right; color:#000000 !important; background-color: #ffffff !important;">$${Number(i.precio).toFixed(2)}</td>
+          <td style="text-align: right; color:#000000 !important; background-color: #ffffff !important;">$${(i.cantidad * i.precio).toFixed(2)}</td>
         </tr>
       `).join('');
 
-      document.getElementById('fac-total').innerText = Number(v.total).toFixed(2);
-      document.getElementById('fac-subtotal').innerText = Number(v.total).toFixed(2);
+      let subtotalVal = Number(v.subtotal !== undefined ? v.subtotal : v.total);
+      let descVal = Number(v.descuento || 0);
+      let propVal = Number(v.propina || 0);
+      let totalVal = Number(v.total);
+
+      document.getElementById('fac-subtotal').innerText = subtotalVal.toFixed(2);
+
+      const rowDesc = document.getElementById('fac-row-descuento');
+      if (descVal > 0) {
+        document.getElementById('fac-descuento').innerText = descVal.toFixed(2);
+        rowDesc.style.display = 'block';
+      } else {
+        rowDesc.style.display = 'none';
+      }
+
+      const rowProp = document.getElementById('fac-row-propina');
+      if (propVal > 0) {
+        document.getElementById('fac-propina').innerText = propVal.toFixed(2);
+        rowProp.style.display = 'block';
+      } else {
+        rowProp.style.display = 'none';
+      }
+
+      document.getElementById('fac-total').innerText = totalVal.toFixed(2);
+
+      const boxNota = document.getElementById('fac-container-nota');
+      if (v.nota && v.nota.trim() !== '') {
+        document.getElementById('fac-nota').innerText = v.nota;
+        boxNota.style.display = 'block';
+      } else {
+        boxNota.style.display = 'none';
+      }
+
       document.getElementById('factura-impresion').style.display = 'flex';
     }
 
@@ -1887,7 +2247,7 @@
       document.getElementById('modal-ped-titulo').innerText = `Pedido: ${pedido.id}`;
       document.getElementById('modal-ped-info-cliente').innerHTML = `
         <p><b>Cliente / Envío:</b> ${pedido.cliente_nombre || pedido.clienteNombre}</p>
-        <p><b>Cédula/RUC:</b> <span style="color:var(--text); font-weight:bold;">${cedulaMostrada}</span></p>
+        <p><b>Cédula/RUC:</b> <span style="color:#000000 !important; font-weight:bold;">${cedulaMostrada}</span></p>
         <p><b>Fecha:</b> ${new Date(pedido.fecha).toLocaleString()}</p>
         <p><b>Estado Actual:</b> <b>${pedido.estado_sri || 'PENDIENTE'}</b></p>
       `;
@@ -1909,7 +2269,7 @@
           <button class="btn btn-danger" style="flex:1; margin:0;" onclick="rechazarPedidoWebDesdeModal('${pedido.id}')">✕ Rechazar Pedido</button>
         `;
       } else {
-        accionesContainer.innerHTML = `<p style="text-align:center; width:100%; color:var(--text-muted); font-weight:bold;">Este pedido ya fue ${pedido.estado_sri.toLowerCase()}.</p>`;
+        accionesContainer.innerHTML = `<p style="text-align:center; width:100%; color:#000000 !important; font-weight:bold;">Este pedido ya fue ${pedido.estado_sri.toLowerCase()}.</p>`;
       }
 
       document.getElementById('modal-detalle-pedido-web').style.display = 'flex';
@@ -2094,9 +2454,50 @@
     function verDetalleArqueo(id) {
       const arqueo = dbArqueos.find(a => String(a.id) === String(id));
       if (!arqueo) return;
-      document.getElementById('contenido-detalle-arqueo').innerHTML = `<p>Usuario: <b>${arqueo.usuario}</b></p><p>Fondo Inicial: $${arqueo.fondoInicial}</p>`;
+      
+      const ventasTurno = dbVentas.filter(v => {
+        if (String(v.localId) !== String(arqueo.localId)) return false;
+        const fechaV = new Date(v.fecha);
+        if (fechaV < new Date(arqueo.fechaApertura)) return false;
+        if (arqueo.fechaCierre && fechaV > new Date(arqueo.fechaCierre)) return false;
+        return v.tipo_comprobante !== 'PEDIDO_WEB_DOMICILIO' && v.tipo_comprobante !== 'PEDIDO_RECHAZADO';
+      });
+
+      let totalEfectivo = 0, totalTarjeta = 0, totalTransferencia = 0;
+      ventasTurno.forEach(v => {
+        if (v.metodoPago === 'Tarjeta') totalTarjeta += v.total;
+        else if (v.metodoPago === 'Transferencia') totalTransferencia += v.total;
+        else totalEfectivo += v.total;
+      });
+
+      document.getElementById('contenido-detalle-arqueo').innerHTML = `
+        <div style="padding:10px; border-radius:8px; border:1px solid #cbd5e1; margin-bottom:15px; background:#ffffff;">
+          <p style="margin:4px 0;"><b>Cajero / Usuario:</b> ${arqueo.usuario}</p>
+          <p style="margin:4px 0;"><b>Apertura:</b> ${new Date(arqueo.fechaApertura).toLocaleString()}</p>
+          <p style="margin:4px 0;"><b>Cierre:</b> ${arqueo.fechaCierre ? new Date(arqueo.fechaCierre).toLocaleString() : 'Turno Activo'}</p>
+          <p style="margin:4px 0;"><b>Estado:</b> ${arqueo.estado}</p>
+        </div>
+
+        <h4 style="margin-bottom:8px; font-size:1rem; color:#000000 !important;">Resumen Financiero del Turno:</h4>
+        <table style="width:100%; font-size:0.85rem; border-collapse:collapse; margin-bottom:15px;">
+          <thead>
+            <tr>
+              <th style="border-bottom:1px solid #cbd5e1; padding:6px; text-align:left;">Concepto</th>
+              <th style="border-bottom:1px solid #cbd5e1; padding:6px; text-align:right;">Monto</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td style="padding:6px; border-bottom:1px solid #cbd5e1;">Fondo Inicial</td><td style="padding:6px; border-bottom:1px solid #cbd5e1; text-align:right;">$${arqueo.fondoInicial.toFixed(2)}</td></tr>
+            <tr><td style="padding:6px; border-bottom:1px solid #cbd5e1;">Ventas Efectivo</td><td style="padding:6px; border-bottom:1px solid #cbd5e1; text-align:right; font-weight:bold;">$${totalEfectivo.toFixed(2)}</td></tr>
+            <tr><td style="padding:6px; border-bottom:1px solid #cbd5e1;">Ventas Tarjeta</td><td style="padding:6px; border-bottom:1px solid #cbd5e1; text-align:right;">$${totalTarjeta.toFixed(2)}</td></tr>
+            <tr><td style="padding:6px; border-bottom:1px solid #cbd5e1;">Ventas Transferencia</td><td style="padding:6px; border-bottom:1px solid #cbd5e1; text-align:right;">$${totalTransferencia.toFixed(2)}</td></tr>
+            <tr><td style="padding:6px; border-bottom:1px solid #cbd5e1;">Conteo Físico Final</td><td style="padding:6px; border-bottom:1px solid #cbd5e1; text-align:right; font-weight:bold;">$${arqueo.efectivoFisico !== null ? arqueo.efectivoFisico.toFixed(2) : '-'}</td></tr>
+          </tbody>
+        </table>
+      `;
       document.getElementById('modal-detalle-arqueo').style.display = 'flex';
     }
+    
     function cerrarModalDetalleArqueo() { document.getElementById('modal-detalle-arqueo').style.display = 'none'; }
 
     function renderContabilidadFlujo() {
@@ -2131,7 +2532,7 @@
 
     async function consultarSRI() {
       const cedula = document.getElementById('cli-cedula').value.trim();
-      if (!cedula) return alert('Ingresa Cédula or RUC.');
+      if (!cedula) return alert('Ingresa Cédula o RUC.');
       try {
         const res = await fetch(`https://pos-sistema-y075.onrender.com/api/sri/${cedula}`);
         const data = await res.json();
@@ -2403,23 +2804,20 @@
     }
 
     function abrirModalQrTiendaStock() {
-  const link = document.getElementById('link-tienda-local').href;
-  if (!link || link === '#') return alert('Link de tienda no disponible.');
-  
-  // Mostrar el modal
-  document.getElementById('modal-qr-tienda').style.display = 'flex';
-  
-  const contenedor = document.getElementById('contenedor-qr-generado');
-  document.getElementById('qr-url-texto').innerText = link;
-  
-  // Usamos un servicio estándar y gratuito de generación de QR por URL directa en un <img>
-  // Esto funciona 100% en entorno local sin bloqueos de canvas o CORS.
-  const urlQrApi = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(link)}`;
-  
-  contenedor.innerHTML = `
-    <img id="imagen-qr-descarga" src="${urlQrApi}" style="width: 200px; height: 200px; display: block; margin: 0 auto; border-radius: 8px;" alt="QR Tienda">
-  `;
-}
+      const link = document.getElementById('link-tienda-local').href;
+      if (!link || link === '#') return alert('Link de tienda no disponible.');
+      
+      document.getElementById('modal-qr-tienda').style.display = 'flex';
+      
+      const contenedor = document.getElementById('contenedor-qr-generado');
+      document.getElementById('qr-url-texto').innerText = link;
+      
+      const urlQrApi = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(link)}`;
+      
+      contenedor.innerHTML = `
+        <img id="imagen-qr-descarga" src="${urlQrApi}" style="width: 200px; height: 200px; display: block; margin: 0 auto; border-radius: 8px;" alt="QR Tienda">
+      `;
+    }
 
     function cerrarModalQrTienda() {
       document.getElementById('modal-qr-tienda').style.display = 'none';
@@ -2662,6 +3060,9 @@
         metodo_pago: tipoEntrega === 'RetiroLocal' ? 'Pedido Online (Retiro en Local)' : 'Pedido Online (Envío a Domicilio)',
         fecha: new Date().toISOString(),
         items: [...carritoTiendaWeb],
+        subtotal: totalPedido,
+        descuento: 0,
+        propina: 0,
         total: totalPedido,
         usuario: 'Tienda Online',
         tipo_comprobante: 'PEDIDO_WEB_DOMICILIO',
@@ -2990,4 +3391,4 @@
     });
   </script>
 </body>
-  </html>
+</html>
